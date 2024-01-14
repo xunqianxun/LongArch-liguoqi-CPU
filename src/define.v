@@ -13,11 +13,37 @@
 `define MicOperateCode  7:0
 `define MulStateBus     2:0
 `define MulIdle         3'b000
-`define MulBooth        3'b001
 `define L1MulWallec     3'b010
 `define L2MulWallec     3'b011
 `define L3MulWallec     3'b100 
-`define L4MulWallec     3'b101 
+`define MulOutDate      3'b101 
+`define MulBoothBus     32:0
+`define ZeroBoothDate   64'h0
+`define ZeorDate        32'h0
+// `define BoothCodeBus    2:0
+// `define BoothCodeP0     3'b000
+// `define BoothCodep1     3'b001 
+// `define BoothCodeP2     3'b010 
+// `define BoothCoden1     3'b011    
+// `define BoothCoden2     3'b100
+
+//Decode Mic Operate
+`define ArchRegBUs     4:0
+`define InstMulw       8'h00000001
+`define InstMulhw      8'h00000010
+`define InstMulHuw     8'h00000011  
+`define InstAddw       8'b00000100
+`define InstSubw       8'b00000101
+`define InstAddiw      8'b00000110
+`define InstLu12iw     8'b00000111
+`define InstSlt        8'b00001000
+`define InstSltu       8'b00001001
+`define InstSlti       8'b00001010
+`define InstSltui      8'b00001011
+`define InstAddu12i    8'b00001100
+`define InstAnd        8'b00001101 
+`define InstOr         8'b00001110 
+`define InstNor        8'b00001111
 
 
 

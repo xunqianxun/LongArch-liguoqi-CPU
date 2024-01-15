@@ -3,6 +3,8 @@
 `define TwoInstAddrBus     31:0*2
 `define InstDateBus        31:0
 `define TwoInstDateBus     31:0*2 
+`define AbleValue          1'b1 
+`define EnableValue        1'b0
 
 //if stage
 `define StartAddr       32'h0000*2
@@ -44,6 +46,29 @@
 `define InstAnd        8'b00001101 
 `define InstOr         8'b00001110 
 `define InstNor        8'b00001111
+`define InstXor        8'b00010000 
+`define InstAndi       8'b00010001 
+`define InstOri        8'b00010010 
+`define InstXori       8'b00010011 
+`define InstSllw       8'b00010100 
+`define InstSrlw       8'b00010101 
+`define InstSraw       8'b00010110 
+`define InstSlliw      8'b00010111 
+`define InstSrliw      8'b00011000 
+`define InstSraiw      8'b00011001 
+`define InstBeq        8'b00011010 
+`define InstBne        8'b00011011 
+`define InstBlt        8'b00011100 
+`define InstBge        8'b00011101 
+`define InstBltu       8'b00011110 
+`define InstBgeu       8'b00011111 
+`define InstB          8'b00100000 
+`define InstBl         8'b00100001 
+`define InstJirl       8'b00100010 
+
+
+
+
 
 
 

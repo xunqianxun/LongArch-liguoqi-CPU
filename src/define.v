@@ -33,7 +33,7 @@
 //Decode Mic Operate
 `define ArchRegBUs     4:0
 `define InstMulw       8'h00000001
-`define InstMulhw      8'h00000010
+`define InstMulHw      8'h00000010
 `define InstMulHuw     8'h00000011  
 `define InstAddw       8'b00000100
 `define InstSubw       8'b00000101

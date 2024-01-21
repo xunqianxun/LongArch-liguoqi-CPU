@@ -5,6 +5,9 @@
 `define TwoInstDateBus     31:0*2 
 `define AbleValue          1'b1 
 `define EnableValue        1'b0
+`define ZeroBoothDate   68'h0
+`define ZeorDate        32'h0
+`define FzeroDate       64'h0
 
 //if stage
 `define StartAddr       32'h0000*2
@@ -20,8 +23,6 @@
 `define L3MulWallec     3'b100 
 `define MulOutDate      3'b101 
 `define MulBoothBus     32:0
-`define ZeroBoothDate   64'h0
-`define ZeorDate        32'h0
 // `define BoothCodeBus    2:0
 // `define BoothCodeP0     3'b000
 // `define BoothCodep1     3'b001 

@@ -73,6 +73,13 @@
 `define FlotRP         2'd2 
 `define FlotRM         2'd3 
 
+//for div
+`define PosiQuit2      3'b000
+`define PosiQuit1      3'b001 
+`define ZeroQuit0      3'b010 
+`define NegiQuit1      3'b011 
+`define NegiQuit2      3'b100
+
 
 
 

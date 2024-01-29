@@ -120,7 +120,23 @@ module FAlu #(
     assign AdderNumber  = {RoundoffFra[26],F32ExponentNb,RoundoffFra[23:0]};
 
 
-    
+    reg           [WIDTH_FALU*2-1:0]  FaluReg      ;
+    reg                               TrapSign     ;
+    reg                               FaluWriteAble;
+
+    always @(posedge Clk) begin
+        if(!Rest)begin
+            FaluReg      <= `FzeroDate;
+            TrapSign     <= `EnableValue;
+            FaluInstAddr <= `EnableValue;
+        end 
+        else begin
+            case (FAluMicOperate)
+                : 
+                default: 
+            endcase
+        end
+    end
 
 
     

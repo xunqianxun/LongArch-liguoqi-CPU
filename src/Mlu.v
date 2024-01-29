@@ -332,8 +332,6 @@ module Mul #(
     always @(posedge Clk) begin
         if(!Rest) begin
             IqReqReg <= `AbleValue      ;
-            MulLeve2 <= `EnableValue    ;
-            MulLeve3 <= `EnableValue    ;
         end 
         else begin
             if(MultipAbleValue | MulLeve2 | MulLeve3) begin
@@ -341,6 +339,7 @@ module Mul #(
             end
         end
     end
+    
 
     assign ProductDate = (MultipMicOperate == `InstMulw)   ? MulOutReg[31:0]  :
                          (MultipMicOperate == `InstMulHw)  ? MulOutReg[63:32] :

@@ -95,7 +95,7 @@ module Div #(
 
     wire   [5:0]         ShiftCode ;
     assign ShiftCode = Code1Selct ? {3'b0,Code1ShiftSrc}: //+0
-                       Code2Selct ? (Code2ShiftSrc[2]? {2'b0,1'b1,3'b0}: {3'b0,1'b1 Code2ShiftSrc[1:0]}) : //+4
+                       Code2Selct ? (Code2ShiftSrc[2]? {2'b0,1'b1,3'b0}: {3'b0,1'b1, Code2ShiftSrc[1:0]}) : //+4
                        Code3Selct ? {2'b0,1'b1,Code3ShiftSrc} : //+8
                        Code4Selct ? (Code4ShiftSrc[2]? {1'b0,1'b1,3'b0}: {2'b0,2'b11,Code4ShiftSrc[1:0]}) : //+12
                        Code5Selct ? {1'b0,1'b1,1'b0,Code5ShiftSrc} : //+16
@@ -110,6 +110,68 @@ module Div #(
     assign DividendTemp = ShiftCode[0] ? {3'b0,Dividend} : {2'b0,Dividend,1'b0};
     assign IterationsDub= ShiftCode[0] ? ShiftCode+1 : ShiftCode ;
     
+
+    wire   [WIDTH_DIV+2:0]  DivDataNext= (QOut == `PosiQuit2)? DivedRegdata - {1'b1,UnsignDivisior,2'b0} :
+                                         (QOut == `PosiQuit1)? DivedRegdata - {2'b0,UnsignDivisior,1'b0} :
+                                         (QOut == `ZeroQuit0)? DivedRegdata                              :
+                                         (QOut == `NegiQuit1)? DivedRegdata + {2'b0,UnsignDivisior,1'b0} :
+                                         (QOut == `NegiQuit1)? DivedRegdata + {1'b0,UnsignDivisior,2'b0} :
+                                         34'h0              ;
+
+    reg    [WIDTH_DIV+2:0]  DivedRegdata;
+    reg    [2:0]            DivState    ;
+    reg    [5:0]            Iteration   ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            DivedRegdata <= `35'd0  ;
+            DivState     <= `DivIdle;
+            Iteration    <= 6'd0    ;
+        end 
+        else begin
+            if(DivAbleValue) begin
+                case (DivState)
+                    `DivIdle: begin DivedRegdata <=  DividendTemp; DivState <= `DivItir; Iteration <=ShiftCode end 
+                    `DivItir: begin  
+                                if(Iteration > 0)begin 
+                                    DivedRegdata <=  DivDataNext ; iv
+                                end 
+                                else begin
+
+                                end 
+                              end 
+                    default: 
+                endcase
+            end 
+            else begin
+                DivedRegdata <= `35'd0  ;
+                DivState     <= `DivIdle;
+                Iteration    <= 6'd0    ;
+            end 
+        end
+    end
+
+    wire [3:0] DivisiorIn ;
+    wire [5:0] DividendIn ;
+    wire [2:0] QOut       ;
+    SelecQuotient SDQ(
+        .DivisiorSq (DivisiorIn),
+        .DividendSq (DividendIn),
+        .Quotient   (QOut      )
+    );
+
+    wire [2:0]      SelectIn    ;
+    wire            OFCAble     ;
+    wire [`DataBus] QuotientOut ;
+    
+    OneFlyConversion OFC (
+        .Clk           (Clk         ),
+        .Rest          (Rest        ),
+    
+        .SelectQuite   (SelectIn    ),
+        .FlyConverStart(OFCAble     ),
+        .QuotientData  (QuotientOut )
+    );
 
 
     
@@ -197,22 +259,22 @@ module SelecQuotient (
     wire For1110QN2 = (SelectDivisior1110 & ~ForDivsorN22)                            ;
 
     wire For1111QP2 = (SelectDivisior1111 &  ForDivsorP24)                            ;  
-    wire For1111QP2 = (SelectDivisior1111 & ~ForDivsorP24 & ForDivsorP8)              ;
-    wire For1111QP2 = (SelectDivisior1111 & ~ForDivsorP8  & ForDivsorN8)              ;
-    wire For1111QP2 = (SelectDivisior1111 & ~ForDivsorN8  & ForDivsorN24)             ;
-    wire For1111QP2 = (SelectDivisior1111 & ~ForDivsorN24)                            ;
+    wire For1111QP1 = (SelectDivisior1111 & ~ForDivsorP24 & ForDivsorP8)              ;
+    wire For1111Q00 = (SelectDivisior1111 & ~ForDivsorP8  & ForDivsorN8)              ;
+    wire For1111QN1 = (SelectDivisior1111 & ~ForDivsorN8  & ForDivsorN24)             ;
+    wire For1111QN2 = (SelectDivisior1111 & ~ForDivsorN24)                            ;
 
-    wire Positive2  = For1001QP2 | For1001QP2 | For1010QP2 | For1011QP2 | For1100QP2 | For1101QP2 | For1110QP2 | For1111QP2 ;
-    wire Positive1  = For1001QP1 | For1001QP1 | For1010QP1 | For1011QP1 | For1100QP1 | For1101QP1 | For1110QP1 | For1111QP1 ;
-    wire Zero       = For1001Q00 | For1001Q00 | For1010Q00 | For1011Q00 | For1100Q00 | For1101Q00 | For1110Q00 | For1111Q00 ;
-    wire Negitive1  = For1001QN1 | For1001QN1 | For1010QN1 | For1011QN1 | For1100QN1 | For1101QN1 | For1110QN1 | For1111QN1 ;
-    wire Negitive2  = For1001QN2 | For1001QN2 | For1010QN2 | For1011QN2 | For1100QN2 | For1101QN2 | For1110QN2 | For1111QN2 ;
+    wire Positive2  = For1000QP2 | For1001QP2 | For1010QP2 | For1011QP2 | For1100QP2 | For1101QP2 | For1110QP2 | For1111QP2 ;
+    wire Positive1  = For1000QP1 | For1001QP1 | For1010QP1 | For1011QP1 | For1100QP1 | For1101QP1 | For1110QP1 | For1111QP1 ;
+    wire Zero       = For1000Q00 | For1001Q00 | For1010Q00 | For1011Q00 | For1100Q00 | For1101Q00 | For1110Q00 | For1111Q00 ;
+    wire Negitive1  = For1000QN1 | For1001QN1 | For1010QN1 | For1011QN1 | For1100QN1 | For1101QN1 | For1110QN1 | For1111QN1 ;
+    wire Negitive2  = For1000QN2 | For1001QN2 | For1010QN2 | For1011QN2 | For1100QN2 | For1101QN2 | For1110QN2 | For1111QN2 ;
 
     assign Quotient = Positive2 ? `PosiQuit2 :
                       Positive1 ? `PosiQuit1 :
                       Zero      ? `ZeroQuit0 :
-                      NegiQuit1 ? `NegiQuit1 :
-                      NegiQuit2 ? `NegiQuit2 : 3'b111 ;
+                      Negitive1 ? `NegiQuit1 :
+                      Negitive2 ? `NegiQuit2 : 3'b111 ;
 endmodule
 
 module OneFlyConversion (
@@ -227,19 +289,19 @@ module OneFlyConversion (
     reg  [`DataBus] QuotiRegPreSub  ;
     reg  [`DataBus] QuotiReg        ;
 
-    wire [`DataBus] QuotiTempPreSub ;
-    wire [`DataBus] QuotiTemp       ;
-    assign QuotiTempPreSub =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b01}       :
-                              (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b00}       :
-                              (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiRegPreSub,2'b11} :
-                              (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b10} :
-                              (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b01} : `ZeorDate;
+    // wire [`DataBus] QuotiTempPreSub ;
+    // wire [`DataBus] QuotiTemp       ;
+    // assign QuotiTempPreSub =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b01}       :
+    //                           (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b00}       :
+    //                           (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiRegPreSub,2'b11} :
+    //                           (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b10} :
+    //                           (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b01} : `ZeorDate;
 
-    assign QuotiTemp       =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b10}       :
-                              (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b01}       :
-                              (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiReg,2'b00}       :
-                              (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b11} :
-                              (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b10} : `ZeorDate;
+    // assign QuotiTemp       =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b10}       :
+    //                           (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b01}       :
+    //                           (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiReg,2'b00}       :
+    //                           (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b11} :
+    //                           (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b10} : `ZeorDate;
 
     always @(posedge Clk) begin
         if(!Rest)begin
@@ -247,8 +309,20 @@ module OneFlyConversion (
             QuotiReg       <= `ZeorDate ;
         end 
         else begin
-            QuotiRegPreSub <= `ZeorDate ;
-            QuotiReg       <= `ZeorDate ;
+            if(FlyConverStart) begin
+                case (SelectQuite)
+                    `PosiQuit2: begin QuotiRegPreSub <= {QuotiReg[29:0],2'b01}      ; QuotiReg <= {QuotiReg[29:0],2'b10}      ; end 
+                    `PosiQuit1: begin QuotiRegPreSub <= {QuotiReg[29:0],2'b00}      ; QuotiReg <= {QuotiReg[29:0],2'b01}      ; end 
+                    `ZeroQuit0: begin QuotiRegPreSub <= {QuotiRegPreSub[29:0],2'b11}; QuotiReg <= {QuotiReg[29:0],2'b00}      ; end 
+                    `NegiQuit1: begin QuotiRegPreSub <= {QuotiRegPreSub[29:0],2'b10}; QuotiReg <= {QuotiRegPreSub[29:0],2'b11}; end 
+                    `NegiQuit2: begin QuotiRegPreSub <= {QuotiRegPreSub[29:0],2'b01}; QuotiReg <= {QuotiRegPreSub[29:0],2'b10}; end 
+                    default   : begin QuotiRegPreSub <= `ZeorDate                   ; QuotiReg <= `ZeorDate                   ; end
+                endcase
+            end 
+            else begin 
+                QuotiRegPreSub <= `ZeorDate ;
+                QuotiReg       <= `ZeorDate ;
+            end 
         end 
     end
     

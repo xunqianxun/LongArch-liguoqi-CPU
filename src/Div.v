@@ -111,12 +111,13 @@ module Div #(
     assign IterationsDub= ShiftCode[0] ? ShiftCode+1 : ShiftCode ;
     
 
-    wire   [WIDTH_DIV+2:0]  DivDataNext= (QOut == `PosiQuit2)? DivedRegdata - {1'b1,UnsignDivisior,2'b0} :
+    wire   [WIDTH_DIV+2:0]  DivTempNext= (QOut == `PosiQuit2)? DivedRegdata - {1'b1,UnsignDivisior,2'b0} :
                                          (QOut == `PosiQuit1)? DivedRegdata - {2'b0,UnsignDivisior,1'b0} :
                                          (QOut == `ZeroQuit0)? DivedRegdata                              :
                                          (QOut == `NegiQuit1)? DivedRegdata + {2'b0,UnsignDivisior,1'b0} :
                                          (QOut == `NegiQuit1)? DivedRegdata + {1'b0,UnsignDivisior,2'b0} :
                                          34'h0              ;
+    wire   [WIDTH_DIV+2:0]  DivDataNext = DivTempNext << 2 ;
 
     reg    [WIDTH_DIV+2:0]  DivedRegdata;
     reg    [2:0]            DivState    ;
@@ -134,12 +135,13 @@ module Div #(
                     `DivIdle: begin DivedRegdata <=  DividendTemp; DivState <= `DivItir; Iteration <=ShiftCode end 
                     `DivItir: begin  
                                 if(Iteration > 0)begin 
-                                    DivedRegdata <=  DivDataNext ; iv
+                                    DivedRegdata <=  DivDataNext ; DivState <= `DivItir; Iteration <= Iteration-2;
                                 end 
                                 else begin
-
+                                    DivedRegdata <=  DivedRegdata ; DivState <= `DivOut; Iteration <= Iteration;
                                 end 
                               end 
+                    `DivOut :
                     default: 
                 endcase
             end 
@@ -154,6 +156,10 @@ module Div #(
     wire [3:0] DivisiorIn ;
     wire [5:0] DividendIn ;
     wire [2:0] QOut       ;
+
+    assign DivisiorIn = DivisiorTemp[WIDTH_DIV-1:WIDTH_DIV-5];
+    assign DividendIn = DivedRegdata[WIDTH_DIV+2:WIDTH_DIV-4]
+
     SelecQuotient SDQ(
         .DivisiorSq (DivisiorIn),
         .DividendSq (DividendIn),

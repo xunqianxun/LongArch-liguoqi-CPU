@@ -80,6 +80,9 @@
 `define NegiQuit1      3'b011 
 `define NegiQuit2      3'b100
 
+`define DivIdle        3'b001 
+`define DivItir        3'b010
+`define DivOut         3'b100 
 
 
 

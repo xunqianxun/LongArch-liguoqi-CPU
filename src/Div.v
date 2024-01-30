@@ -15,12 +15,15 @@ module Div #(
 
     output     wire       [WIDTH_DIV-1:0]            WriteBackData,
     output     wire       [`ArchRegBUs]              WriteBackAddr,
+    output     wire                                  WriteAble    ,
     output     wire                                  DivIqReq      
 
 );
     
     wire     [WIDTH_DIV-1:0]    UnsignDivisior  ;
     wire     [WIDTH_DIV-1:0]    UnsignDivdend   ;
+    wire                        DivsignValue    ;
+    assign DivsignValue   = Divisior[31] ^ Dividend[31];
     assign UnsignDivisior = (Divisior[31])? ~Divisior+1 : Divisior ;
     assign UnsignDivdend  = (Dividend[31])? ~Dividend+1 : Dividend ;
 
@@ -64,31 +67,31 @@ module Div #(
                            ~UnsignDivisior[31] & ~UnsignDivisior[30] &  UnsignDivisior[29]  ? 3'd2 :
                            ~UnsignDivisior[31] & ~UnsignDivisior[30] & ~UnsignDivisior[29] &  UnsignDivisior[28] ? 3'd3 :
                            ~UnsignDivisior[31] & ~UnsignDivisior[30] & ~UnsignDivisior[29] & ~UnsignDivisior[28] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[27] &  UnsignDivisior[26] ? 3'd1 :
+    assign Code2ShiftSrc = ~UnsignDivisior[27] &  UnsignDivisior[26] ? 3'd1 :
                            ~UnsignDivisior[27] & ~UnsignDivisior[26] &  UnsignDivisior[25]  ? 3'd2 :
                            ~UnsignDivisior[27] & ~UnsignDivisior[26] & ~UnsignDivisior[25] &  UnsignDivisior[24] ? 3'd3 :
                            ~UnsignDivisior[27] & ~UnsignDivisior[26] & ~UnsignDivisior[25] & ~UnsignDivisior[24] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[23] &  UnsignDivisior[22] ? 3'd1 :
+    assign Code3ShiftSrc = ~UnsignDivisior[23] &  UnsignDivisior[22] ? 3'd1 :
                            ~UnsignDivisior[23] & ~UnsignDivisior[22] &  UnsignDivisior[21]  ? 3'd2 :
                            ~UnsignDivisior[23] & ~UnsignDivisior[22] & ~UnsignDivisior[21] &  UnsignDivisior[20] ? 3'd3 :
                            ~UnsignDivisior[23] & ~UnsignDivisior[22] & ~UnsignDivisior[21] & ~UnsignDivisior[20] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[19] &  UnsignDivisior[18] ? 3'd1 :
+    assign Code4ShiftSrc = ~UnsignDivisior[19] &  UnsignDivisior[18] ? 3'd1 :
                            ~UnsignDivisior[19] & ~UnsignDivisior[18] &  UnsignDivisior[17]  ? 3'd2 :
                            ~UnsignDivisior[19] & ~UnsignDivisior[18] & ~UnsignDivisior[17] &  UnsignDivisior[16] ? 3'd3 :
                            ~UnsignDivisior[19] & ~UnsignDivisior[18] & ~UnsignDivisior[17] & ~UnsignDivisior[16] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[15] &  UnsignDivisior[14] ? 3'd1 :
+    assign Code5ShiftSrc = ~UnsignDivisior[15] &  UnsignDivisior[14] ? 3'd1 :
                            ~UnsignDivisior[15] & ~UnsignDivisior[14] &  UnsignDivisior[13]  ? 3'd2 :
                            ~UnsignDivisior[15] & ~UnsignDivisior[14] & ~UnsignDivisior[13] &  UnsignDivisior[12] ? 3'd3 :
                            ~UnsignDivisior[15] & ~UnsignDivisior[14] & ~UnsignDivisior[13] & ~UnsignDivisior[12] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[11] &  UnsignDivisior[10] ? 3'd1 :
+    assign Code6ShiftSrc = ~UnsignDivisior[11] &  UnsignDivisior[10] ? 3'd1 :
                            ~UnsignDivisior[11] & ~UnsignDivisior[10] &  UnsignDivisior[9 ]  ? 3'd2 :
                            ~UnsignDivisior[11] & ~UnsignDivisior[10] & ~UnsignDivisior[9 ] &  UnsignDivisior[8 ] ? 3'd3 :
                            ~UnsignDivisior[11] & ~UnsignDivisior[10] & ~UnsignDivisior[9 ] & ~UnsignDivisior[8 ] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[7 ] &  UnsignDivisior[6 ] ? 3'd1 :
+    assign Code7ShiftSrc = ~UnsignDivisior[7 ] &  UnsignDivisior[6 ] ? 3'd1 :
                            ~UnsignDivisior[7 ] & ~UnsignDivisior[6 ] &  UnsignDivisior[5 ]  ? 3'd2 : 
                            ~UnsignDivisior[7 ] & ~UnsignDivisior[6 ] & ~UnsignDivisior[5 ] &  UnsignDivisior[4 ] ? 3'd3 :
                            ~UnsignDivisior[7 ] & ~UnsignDivisior[6 ] & ~UnsignDivisior[5 ] & ~UnsignDivisior[4 ] ? 3'd4 :3'd0 ;
-    assign Code1ShiftSrc = ~UnsignDivisior[3 ] &  UnsignDivisior[2 ] ? 3'd1 :
+    assign Code8ShiftSrc = ~UnsignDivisior[3 ] &  UnsignDivisior[2 ] ? 3'd1 :
                            ~UnsignDivisior[3 ] & ~UnsignDivisior[2 ] &  UnsignDivisior[1 ]  ? 3'd2 :
                            ~UnsignDivisior[3 ] & ~UnsignDivisior[2 ] & ~UnsignDivisior[1 ] &  UnsignDivisior[0 ] ? 3'd3 :
                            ~UnsignDivisior[3 ] & ~UnsignDivisior[2 ] & ~UnsignDivisior[1 ] & ~UnsignDivisior[0 ] ? 3'd4 :3'd0 ;
@@ -97,7 +100,7 @@ module Div #(
     assign ShiftCode = Code1Selct ? {3'b0,Code1ShiftSrc}: //+0
                        Code2Selct ? (Code2ShiftSrc[2]? {2'b0,1'b1,3'b0}: {3'b0,1'b1, Code2ShiftSrc[1:0]}) : //+4
                        Code3Selct ? {2'b0,1'b1,Code3ShiftSrc} : //+8
-                       Code4Selct ? (Code4ShiftSrc[2]? {1'b0,1'b1,3'b0}: {2'b0,2'b11,Code4ShiftSrc[1:0]}) : //+12
+                       Code4Selct ? (Code4ShiftSrc[2]? {1'b0,1'b1,4'b0}: {2'b0,2'b11,Code4ShiftSrc[1:0]}) : //+12
                        Code5Selct ? {1'b0,1'b1,1'b0,Code5ShiftSrc} : //+16
                        Code6Selct ? (Code6ShiftSrc[2]? {1'b0,2'b11,3'b0}: {1'b0,1'b1,1'b0,1'b1,Code6ShiftSrc[1:0]}) : //+20
                        Code7Selct ? {1'b0,2'b11,Code7ShiftSrc} : //+24
@@ -107,49 +110,97 @@ module Div #(
     wire   [WIDTH_DIV+2:0]  DividendTemp;
     wire   [5:0]            IterationsDub;
     assign DivisiorTemp = Divisior <<ShiftCode ;
-    assign DividendTemp = ShiftCode[0] ? {3'b0,Dividend} : {2'b0,Dividend,1'b0};
+    assign DividendTemp = ShiftCode[0] ? {3'b0,UnsignDivdend} : {2'b0,UnsignDivdend,1'b0};
     assign IterationsDub= ShiftCode[0] ? ShiftCode+1 : ShiftCode ;
     
 
-    wire   [WIDTH_DIV+2:0]  DivTempNext= (QOut == `PosiQuit2)? DivedRegdata - {1'b1,UnsignDivisior,2'b0} :
-                                         (QOut == `PosiQuit1)? DivedRegdata - {2'b0,UnsignDivisior,1'b0} :
-                                         (QOut == `ZeroQuit0)? DivedRegdata                              :
-                                         (QOut == `NegiQuit1)? DivedRegdata + {2'b0,UnsignDivisior,1'b0} :
-                                         (QOut == `NegiQuit1)? DivedRegdata + {1'b0,UnsignDivisior,2'b0} :
-                                         34'h0              ;
+    wire   [WIDTH_DIV+2:0]  DivTempNext= (QOut == `PosiQuit2)? DivedRegdata - {1'b1,DivisiorData,2'b0} :
+                                         (QOut == `PosiQuit1)? DivedRegdata - {2'b0,DivisiorData,1'b0} :
+                                         (QOut == `ZeroQuit0)? DivedRegdata                            :
+                                         (QOut == `NegiQuit1)? DivedRegdata + {2'b0,DivisiorData,1'b0} :
+                                         (QOut == `NegiQuit1)? DivedRegdata + {1'b0,DivisiorData,2'b0} :
+                                         35'h0              ;
     wire   [WIDTH_DIV+2:0]  DivDataNext = DivTempNext << 2 ;
 
     reg    [WIDTH_DIV+2:0]  DivedRegdata;
+    reg    [WIDTH_DIV-1:0]  DivisiorData;
+    reg                     DivSignReg  ;
+    reg    [`MicOperateCode]DivOpcodeReg;
+    reg    [`ArchRegBUs]    DivDataAddr ;
     reg    [2:0]            DivState    ;
     reg    [5:0]            Iteration   ;
+    reg    [WIDTH_DIV-1:0]  DivsiorTemp ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            DivedRegdata <= `35'd0  ;
-            DivState     <= `DivIdle;
-            Iteration    <= 6'd0    ;
+            DivedRegdata <=  35'd0   ;
+            DivisiorData <= `ZeorDate;
+            DivSignReg   <= 1'b0     ;
+            DivOpcodeReg <= 8'd0     ;
+            DivDataAddr  <= 5'd0     ;
+            DivState     <= `DivIdle ;
+            Iteration    <= 6'd0     ;
+            DivsiorTemp  <= `ZeorDate;
         end 
         else begin
-            if(DivAbleValue) begin
-                case (DivState)
-                    `DivIdle: begin DivedRegdata <=  DividendTemp; DivState <= `DivItir; Iteration <=ShiftCode end 
-                    `DivItir: begin  
-                                if(Iteration > 0)begin 
-                                    DivedRegdata <=  DivDataNext ; DivState <= `DivItir; Iteration <= Iteration-2;
-                                end 
+                case (DivState) 
+                    `DivIdle: begin if(DivAbleValue) begin //还缺少一种除零的情况，后续添加
+                                    DivedRegdata <=  DividendTemp; 
+                                    DivisiorData <=  DivisiorTemp;
+                                    DivSignReg   <=  DivsignValue;
+                                    DivOpcodeReg <=  DivMicopcode;
+                                    DivDataAddr  <=  DivWriteBack; 
+                                    DivState     <=  `DivItir    ; 
+                                    Iteration    <=  IterationsDub;
+                                    DivsiorTemp  <=  UnsignDivisior;end 
+                              else begin
+                                    DivedRegdata <=  35'd0   ;
+                                    DivisiorData <= `ZeorDate;
+                                    DivSignReg   <= 1'b0     ;
+                                    DivOpcodeReg <= 8'd0     ;
+                                    DivDataAddr  <= 5'd0     ;
+                                    DivState     <= `DivIdle ;
+                                    Iteration    <= 6'd0     ;
+                                    DivsiorTemp  <= `ZeorDate;end
+                    end 
+                    `DivItir: begin  if(Iteration > 0)begin 
+                                    DivedRegdata <=  DivDataNext ; 
+                                    DivisiorData <=  DivisiorData;
+                                    DivSignReg   <=  DivSignReg  ;
+                                    DivOpcodeReg <=  DivOpcodeReg;
+                                    DivDataAddr  <=  DivDataAddr ; 
+                                    DivState     <=  `DivItir    ; 
+                                    Iteration    <=  Iteration-2 ;
+                                    DivsiorTemp  <=  DivsiorTemp ;end 
                                 else begin
-                                    DivedRegdata <=  DivedRegdata ; DivState <= `DivOut; Iteration <= Iteration;
-                                end 
-                              end 
-                    `DivOut :
-                    default: 
+                                    DivedRegdata <=  DivedRegdata;
+                                    DivisiorData <=  DivisiorData;
+                                    DivSignReg   <=  DivSignReg  ;
+                                    DivOpcodeReg <=  DivOpcodeReg;
+                                    DivDataAddr  <=  DivDataAddr ; 
+                                    DivState     <=  `DivOut     ; 
+                                    Iteration    <=  Iteration   ;
+                                    DivsiorTemp  <=  DivsiorTemp ;end 
+                    end 
+                    `DivOut : begin
+                                    DivedRegdata <=  DivedRegdata;
+                                    DivisiorData <=  DivisiorData;
+                                    DivSignReg   <=  DivSignReg  ;
+                                    DivOpcodeReg <=  DivOpcodeReg;
+                                    DivDataAddr  <=  DivDataAddr ; 
+                                    DivState     <=  `DivIdle    ; 
+                                    Iteration    <=  Iteration   ;
+                                    DivsiorTemp  <=  DivsiorTemp ;end  
+                    default : begin
+                                    DivedRegdata <=  35'd0   ;
+                                    DivisiorData <= `ZeorDate;
+                                    DivSignReg   <= 1'b0     ;
+                                    DivOpcodeReg <= 8'd0     ;
+                                    DivDataAddr  <= 5'd0     ;
+                                    DivState     <= `DivIdle ;
+                                    Iteration    <= 6'd0     ;
+                                    DivsiorTemp  <= `ZeorDate;end
                 endcase
-            end 
-            else begin
-                DivedRegdata <= `35'd0  ;
-                DivState     <= `DivIdle;
-                Iteration    <= 6'd0    ;
-            end 
         end
     end
 
@@ -157,8 +208,8 @@ module Div #(
     wire [5:0] DividendIn ;
     wire [2:0] QOut       ;
 
-    assign DivisiorIn = DivisiorTemp[WIDTH_DIV-1:WIDTH_DIV-5];
-    assign DividendIn = DivedRegdata[WIDTH_DIV+2:WIDTH_DIV-4]
+    assign DivisiorIn = DivisiorData[WIDTH_DIV-1:WIDTH_DIV-4];
+    assign DividendIn = DivedRegdata[WIDTH_DIV+2:WIDTH_DIV-3];
 
     SelecQuotient SDQ(
         .DivisiorSq (DivisiorIn),
@@ -169,6 +220,9 @@ module Div #(
     wire [2:0]      SelectIn    ;
     wire            OFCAble     ;
     wire [`DataBus] QuotientOut ;
+
+    assign SelectIn = QOut ;
+    assign OFCAble  = (DivState <= `DivItir);
     
     OneFlyConversion OFC (
         .Clk           (Clk         ),
@@ -179,6 +233,15 @@ module Div #(
         .QuotientData  (QuotientOut )
     );
 
+    wire [WIDTH_DIV+2:0] ReminderTemp ;
+    wire [WIDTH_DIV-1:0] QuotitentTemp;
+    wire [WIDTH_DIV-1:0] QuotitentSign;
+    assign ReminderTemp = DivedRegdata[WIDTH_DIV+2]? DivedRegdata+{2'b0,DivsiorTemp} : DivedRegdata;
+    assign QuotitentTemp= DivedRegdata[WIDTH_DIV+2]? QuotientOut-1 : QuotientOut;
+    assign QuotitentSign= DivSignReg ? ~QuotitentTemp + 1 : QuotitentTemp ;
+    assign DivIqReq = (Iteration == 2);
+    assign {WriteAble,WriteBackAddr,WriteBackData} = ((DivState == `DivOut) & ((DivOpcodeReg == `InstDivw) | (DivOpcodeReg == `InstDivwu)))? {`AbleValue,DivDataAddr,QuotitentSign} :
+                                                     ((DivState == `DivOut) & ((DivOpcodeReg == `InstModw) | (DivOpcodeReg == `InstModwu)))? {`AbleValue,DivDataAddr,ReminderTemp[31:0] } : {`EnableValue,5'b0,`ZeorDate};
 
     
 endmodule
@@ -331,5 +394,7 @@ module OneFlyConversion (
             end 
         end 
     end
+
+    assign QuotientData = QuotiReg ;
     
 endmodule

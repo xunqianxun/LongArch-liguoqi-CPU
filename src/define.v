@@ -66,6 +66,10 @@
 `define InstB          8'b00100000 
 `define InstBl         8'b00100001 
 `define InstJirl       8'b00100010 
+`define InstDivw       8'b00100011 
+`define InstDivwu      8'b00100100 
+`define InstModw       8'b00100101 
+`define InstModwu      8'b00100110 
 
 //Flot alu module
 `define FlotRNE        2'd0

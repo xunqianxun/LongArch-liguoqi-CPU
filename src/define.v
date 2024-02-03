@@ -88,6 +88,8 @@
 `define DivItir        3'b010
 `define DivOut         3'b100 
 
+//for BTB
+`define BTBTageBus     17:0
 
 
 

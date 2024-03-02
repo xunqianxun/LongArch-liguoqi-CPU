@@ -216,6 +216,7 @@ module Mul #(
         end
     endgenerate  
 
+    //need delay assign with this loop boday
     reg  [16:0] SwitchData [1:68] ;
     reg  [6 :0] SwitchLoop        ;
     always @(posedge Clk) begin
@@ -226,10 +227,10 @@ module Mul #(
         end
         else begin
             for (SwitchLoop = 1;SwitchLoop < 69 ;SwitchLoop = SwitchLoop+1) begin
-                SwitchData[SwitchLoop] <= {Booth[17][SwitchLoop],Booth[16][SwitchLoop],Booth[15][SwitchLoop],Booth[14][SwitchLoop],
-                                           Booth[13][SwitchLoop],Booth[12][SwitchLoop],Booth[11][SwitchLoop],Booth[10][SwitchLoop],
-                                           Booth[9][SwitchLoop] ,Booth[8][SwitchLoop] ,Booth[7][SwitchLoop] ,Booth[6][SwitchLoop] ,
-                                           Booth[5][SwitchLoop] ,Booth[4][SwitchLoop] ,Booth[3][SwitchLoop] ,Booth[2][SwitchLoop] ,Booth[1][SwitchLoop]} ;
+                SwitchData[SwitchLoop] <= {Booth[SwitchLoop][16],Booth[SwitchLoop][15],Booth[SwitchLoop][14],Booth[SwitchLoop][13],
+                                           Booth[SwitchLoop][12],Booth[SwitchLoop][11],Booth[SwitchLoop][10],Booth[SwitchLoop][9],
+                                           Booth[SwitchLoop][8] ,Booth[SwitchLoop][7] ,Booth[SwitchLoop][6] ,Booth[SwitchLoop][5] ,
+                                           Booth[SwitchLoop][4] ,Booth[SwitchLoop][3] ,Booth[SwitchLoop][2] ,Booth[SwitchLoop][1] ,Booth[SwitchLoop][0]} ;
             end            
         end
     end
@@ -334,12 +335,12 @@ module Mul #(
             IqReqReg <= `AbleValue      ;
         end 
         else begin
-            if(MultipAbleValue | MulLeve2 | MulLeve3) begin
+            if(MultipAbleValue | MulLeve1 | MulLeve2) begin
                 IqReqReg <= `EnableValue;
             end
         end
     end
-    
+
 
     assign ProductDate = (MultipMicOperate == `InstMulw)   ? MulOutReg[31:0]  :
                          (MultipMicOperate == `InstMulHw)  ? MulOutReg[63:32] :

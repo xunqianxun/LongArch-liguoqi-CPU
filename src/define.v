@@ -89,7 +89,20 @@
 `define DivOut         3'b100 
 
 //for BTB
-`define BTBTageBus     17:0
+`define BTBTageBus     18:0
+
+//for Tage
+`define TageGHRBus     63:0
+
+//for pre decode state
+`define FetchInstBus   127:0
+`define TypeCALL       3'b000 
+`define TypeRTURN      3'b001 
+`define TypeDIRECTB    3'b010 
+`define TypeBRANCH     3'b011 
+`define TypeFALT       3'b111
+`define JumpAble       1'b1 
+`define JumpEnbale     1'b0       
 
 
 

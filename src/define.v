@@ -70,6 +70,18 @@
 `define InstDivwu      8'b00100100 
 `define InstModw       8'b00100101 
 `define InstModwu      8'b00100110 
+`define InstCsrrd      8'b00100111 
+`define InstCsrwr      8'b00101000 
+`define InstCsrxchg    8'b00101001 
+`define InstCacop      8'b00101010 
+`define InstTlbsrch    8'b00101011 
+`define InstTlbrd      8'b00101100 
+`define InstTlbfill    8'b00101101 
+`define InstInvtlb     8'b00101110 
+`define InstEntry      8'b00101111 
+`define InstIdle       8'b00110000 
+
+
 
 //Flot alu module
 `define FlotRNE        2'd0

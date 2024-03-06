@@ -8,12 +8,38 @@ module Csr (
     //ROB
 
     //wirte Csr
+    input       wire      [`MicOperateCode]               CsrMicOperate      ,
+    input       wire      [`DataBus]                      ArchRegister1      ,
+    input       wire      [`DataBus]                      ArchRegister2      ,
+    input       wire      [`ArchRegBUs]                   ReDataAddr         ,
+    // input       wire                                      CsrWAble           ,
+    // input       wire        [13:0]                        CsrWAddr           ,
+    // input       wire        [31:0]                        CsrWMask           ,                             
 
 );
 
+    reg   [13:0]     CsrWAddr ;
+    reg   [31:0]     CsrWMask ;
+    reg              CsrWAble ;
+    reg              CsrRAble ;
+    always @(posedge Clk) begin
+        if(!Rest)begin
+            CsrWAddr <= 14'd0 ;
+            CsrWMask <= 32'd0 ;
+            CsrWAble <= `EnableValue;
+            CsrRAble <= `EnableValue;
+        end
+        else begin
+            case (CsrMicOperate)
+                : 
+                default: 
+            endcase
+        end
+    end
+
     localparam CRMD  = 14'h0;
     localparam PRMD  = 14'h1;
-    localparam ECTL  = 14'h4;
+    localparam ECFG  = 14'h4;
     localparam ESTAT = 14'h5;
     localparam ERA   = 14'h6;
     localparam BADV  = 14'h7;
@@ -43,39 +69,39 @@ module Csr (
     localparam BRK = 14'h100;
     localparam DISABLE_CACHE = 14'h101;
 
-    wire CrmdWenTemp   = CsrWAble & (wr_addr == CRMD);
-    wire prmd_wen   = csr_wr_en & (wr_addr == PRMD);
-    wire ectl_wen   = csr_wr_en & (wr_addr == ECTL);
-    wire estat_wen  = csr_wr_en & (wr_addr == ESTAT);
-    wire era_wen    = csr_wr_en & (wr_addr == ERA);
-    wire badv_wen   = csr_wr_en & (wr_addr == BADV);
-    wire eentry_wen = csr_wr_en & (wr_addr == EENTRY);
-    wire tlbidx_wen = csr_wr_en & (wr_addr == TLBIDX);
-    wire tlbehi_wen = csr_wr_en & (wr_addr == TLBEHI);
-    wire tlbelo0_wen= csr_wr_en & (wr_addr == TLBELO0);
-    wire tlbelo1_wen= csr_wr_en & (wr_addr == TLBELO1);
-    wire asid_wen   = csr_wr_en & (wr_addr == ASID);
-    wire pgdl_wen   = csr_wr_en & (wr_addr == PGDL);
-    wire pgdh_wen   = csr_wr_en & (wr_addr == PGDH);
-    wire pgd_wen    = csr_wr_en & (wr_addr == PGD);
-    wire cpuid_wen  = csr_wr_en & (wr_addr == CPUID);
-    wire save0_wen  = csr_wr_en & (wr_addr == SAVE0);
-    wire save1_wen  = csr_wr_en & (wr_addr == SAVE1);
-    wire save2_wen  = csr_wr_en & (wr_addr == SAVE2);
-    wire save3_wen  = csr_wr_en & (wr_addr == SAVE3);
-    wire tid_wen    = csr_wr_en & (wr_addr == TID);
-    wire tcfg_wen   = csr_wr_en & (wr_addr == TCFG);
-    wire tval_wen   = csr_wr_en & (wr_addr == TVAL);
-    wire cntc_wen   = csr_wr_en & (wr_addr == CNTC);
-    wire ticlr_wen  = csr_wr_en & (wr_addr == TICLR);
-    wire llbctl_wen = csr_wr_en & (wr_addr == LLBCTL);
-    wire tlbrentry_wen = csr_wr_en & (wr_addr == TLBRENTRY);
-    wire DMW0_wen   = csr_wr_en & (wr_addr == DMW0);
-    wire DMW1_wen   = csr_wr_en & (wr_addr == DMW1);
-    wire BRK_wen    = csr_wr_en & (wr_addr == BRK);
-    wire disable_cache_wen = csr_wr_en & (wr_addr == DISABLE_CACHE);
+    wire CrmdWenTemp   = CsrWAble & (CsrWAddr == CRMD);
+    wire PrmdWenTemp   = CsrWAble & (CsrWAddr == PRMD);
+    wire EcfgWenTemp   = CsrWAble & (CsrWAddr == ECFG);
+    wire EstatWenTemp  = CsrWAble & (CsrWAddr == ESTAT);
+    wire EraWenTemp    = CsrWAble & (CsrWAddr == ERA);
+    wire BadvWenTemp   = CsrWAble & (CsrWAddr == BADV);
+    wire EentryWenTemp = CsrWAble & (CsrWAddr == EENTRY);
+    wire TlbidcWenTemp = CsrWAble & (CsrWAddr == TLBIDX);
+    wire TlbehiWenTemp = CsrWAble & (CsrWAddr == TLBEHI);
+    wire Tlbelo0WenTemp= CsrWAble & (CsrWAddr == TLBELO0);
+    wire Tlbelo1WenTemp= CsrWAble & (CsrWAddr == TLBELO1);
+    wire AsidWenTemp   = CsrWAble & (CsrWAddr == ASID);
+    wire PgdlWenTemp   = CsrWAble & (CsrWAddr == PGDL);
+    wire PgdhWenTemp   = CsrWAble & (CsrWAddr == PGDH);
+    wire PgdWenTemp    = CsrWAble & (CsrWAddr == PGD);
+    wire CpuidWenTemp  = CsrWAble & (CsrWAddr == CPUID);
+    wire Save0WenTemp  = CsrWAble & (CsrWAddr == SAVE0);
+    wire Save1WenTemp  = CsrWAble & (CsrWAddr == SAVE1);
+    wire Save2WenTemp  = CsrWAble & (CsrWAddr == SAVE2);
+    wire Save3WenTemp  = CsrWAble & (CsrWAddr == SAVE3);
+    wire TidWenTemp    = CsrWAble & (CsrWAddr == TID);
+    wire TcfgWenTemp   = CsrWAble & (CsrWAddr == TCFG);
+    wire TvalWenTemp   = CsrWAble & (CsrWAddr == TVAL);
+    wire CntcWenTemp   = CsrWAble & (CsrWAddr == CNTC);
+    wire TiclrWenTemp  = CsrWAble & (CsrWAddr == TICLR);
+    wire LlbctlWenTemp = CsrWAble & (CsrWAddr == LLBCTL);
+    wire TlbrentryWenTemp = CsrWAble & (CsrWAddr == TLBRENTRY);
+    wire Dmw0WenTemp   = CsrWAble & (CsrWAddr == DMW0);
+    wire Dmw1WenTemp   = CsrWAble & (CsrWAddr == DMW1);
+    wire BrkWenTemp    = CsrWAble & (CsrWAddr == BRK);
+    wire DisAbleCacheTemp = CsrWAble & (CsrWAddr == DISABLE_CACHE);
 
-    wire CrmdWenCommit   = CsrWAble & (wr_addr == CRMD);
+    wire CrmdWenCommit   = CsrWAble & (CsrWAddr == CRMD);
 
     reg [31:0] csr_crmd;
     reg [31:0] csr_prmd;

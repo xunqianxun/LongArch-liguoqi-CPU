@@ -31,7 +31,7 @@
 // `define BoothCoden2     3'b100
 
 //Decode Mic Operate
-`define ReNameRegBUs   7:0
+`define ReNameRegBUs   6:0
 `define ArchRegBUs     4:0
 `define InstMulw       8'h00000001
 `define InstMulHw      8'h00000010

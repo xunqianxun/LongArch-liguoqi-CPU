@@ -10,6 +10,7 @@ module ReOrderBuffer #(
     parameter UPDATEWIDE = 49 ,
     parameter INSTFORM   = 21 ,
 
+
     parameter STBPTR     = 2 ,
     parameter EXCENTRY   = 32,
     parameter FTQPTR     = 6 ,
@@ -42,10 +43,10 @@ module ReOrderBuffer #(
     input        wire          [UPDATEWIDE-1:0]      BRUUpdate    ,
     input        wire                                CSRUAble     ,
     input        wire          [ROBPTRWIDE-1:0]      CSRUPtr      ,
-    input        wire          [UPDATEWIDE-1:0]      CSRUUpdate   ,
+    input        wire          [UPDATEWIDE-1:0]      CSRUUpdate   , 
     input        wire                                LSUAble      ,
     input        wire          [ROBPTRWIDE-1:0]      LSUPtr       ,
-    input        wire          [UPDATEWIDE-1:0]      LSUUpdate    ,
+    input        wire          [UPDATEWIDE-1:0]      LSUUpdate    , 
 
     //from issue 
     input        wire                                Inst1Able    ,
@@ -62,11 +63,16 @@ module ReOrderBuffer #(
     output       wire                                Inst3Full    ,
     output       wire                                Inst4Full    ,
     //to LSU
-    output       wire                                ExStoreAble  , //这里的STORE buffer预计设置为4行，那么当store指令进入buffer才会给指令EX ok的信号
-    output       wire         [STBPTR-1:0]           EcStorePtr   ,
+    output       wire                                ExStore1Able  , //这里的STORE buffer预计设置为4行，那么当store指令进入buffer才会给指令EX ok的信号
+    output       wire         [STBPTR-1:0]           EcStore1Ptr   ,
+    output       wire                                ExStore1Able  ,
+    output       wire         [STBPTR-1:0]           EcStore1Ptr   ,
+    output       wire                                ExStore1Able  , 
+    output       wire         [STBPTR-1:0]           EcStore1Ptr   ,
+    output       wire                                ExStore1Able  , 
+    output       wire         [STBPTR-1:0]           EcStore1Ptr   ,
     //to CSRU
-    output       wire                                ExCsruAble   , //LSU 同
-    output       wire         [STBPTR-1:0]           EcCsruPtr    ,
+    output       wire                                ExCsruAble    , //CSRU只支持一个写，因为毕竟他不写cheche不会miss，也就是说当这条指令进入readybuffer在会给ROBready
     //to FTQ
     output       wire                                FTQUpAble    ,
     output       wire                                FTQReDirect  ,
@@ -219,7 +225,10 @@ module ReOrderBuffer #(
     wire                   Rable2 ;
     wire                   Rable3 ;
     wire                   Rable4 ;
-    wire 
+    wire                   CriqFull1;
+    wire                   CriqFull2;
+    wire                   CriqFull3;
+    wire                   CriqFull4;
 
     assign Din1 = (Frontd1 == 0) ? 0 : Frontd1 + 4 ;//
     assign Din2 = (Frontd2 == 0) ? 1 : Frontd2 + 4 ;
@@ -240,7 +249,7 @@ module ReOrderBuffer #(
         .Wable       ( Wu1_CRIQable),
         .Din         ( Din1        ),
         .CriqClean   ( CriqClean   ),
-        .CriqFull    ( CriqFull    ),
+        .CriqFull    ( CriqFull1   ),
         .CriqEmpty   ( CriqEmpty   )
     );
 
@@ -258,7 +267,7 @@ module ReOrderBuffer #(
         .Wable       ( Wu2_CRIQable),
         .Din         ( Din2        ),
         .CriqClean   ( CriqClean   ),
-        .CriqFull    ( CriqFull    ),
+        .CriqFull    ( CriqFull2   ),
         .CriqEmpty   ( CriqEmpty   )
     );
 
@@ -276,7 +285,7 @@ module ReOrderBuffer #(
         .Wable       ( Wu3_CRIQable),
         .Din         ( Din3        ),
         .CriqClean   ( CriqClean   ),
-        .CriqFull    ( CriqFull    ),
+        .CriqFull    ( CriqFull3   ),
         .CriqEmpty   ( CriqEmpty   )
     );
 
@@ -294,11 +303,14 @@ module ReOrderBuffer #(
         .Wable       ( Wu4_CRIQable),
         .Din         ( Din4        ),
         .CriqClean   ( CriqClean   ),
-        .CriqFull    ( CriqFull    ),
+        .CriqFull    ( CriqFull4   ),
         .CriqEmpty   ( CriqEmpty   )
     );
 
-    assign Inst1Full = 
+    assign Inst1Full = CriqFull1 ;
+    assign Inst2Full = CriqFull2 ;
+    assign Inst3Full = CriqFull3 ; 
+    assign Inst4Full = CriqFull4 ;
 
     wire   [2:0]    SubTrilCOunt ;
     always @(posedge Clk) begin
@@ -310,34 +322,34 @@ module ReOrderBuffer #(
         end
     end
 
-    wire     NodirectAble1 ;
-    wire     NodirectAble2 ;   
-    wire     NodirectAble3 ;
-    wire     NodirectAble4 ;
-    assign   {NodirectAble1, NodirectAble2, NodirectAble3, NodirectAble4} 
-     =  (ReadOffset == 0) ? {~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1], 
+    wire     CanPopInst1ForDri     ;
+    wire     CanPopInst2ForDri     ;
+    wire     CanPopInst3ForDri     ;
+    wire     CanPopInst4ForDri     ;
+    assign   {CanPopInst1ForDri, CanPopInst2ForDri, CanPopInst3ForDri, CanPopInst4ForDri} 
+     =  (ReadOffset == 0) ? {`AbleValue,
+                            ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1], 
                             (~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
-                            ((~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
-                            (((~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1])} :
-        (ReadOffset == 1) ? {(((~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]),
+                            ((~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1])} :
+        (ReadOffset == 1) ? {((~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]),
+                            `AbleValue,
                             ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1],  
-                            (~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
-                            ((~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1])} :
-        (ReadOffset == 2) ? {((~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
-                            (((~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]),
-                            ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1],  
-                            (~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) } :
-        (ReadOffset == 3) ? {(~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
+                            (~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), } :
+        (ReadOffset == 2) ? {(~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) ,
+                            ((~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
+                            `AbleValue,
+                            ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]} :
+        (ReadOffset == 3) ? {~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1],
+                            (~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
                             ((~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]), 
-                            (((~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) && ~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1]) ,
-                            ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT-1] } : {4'b0000} ;
+                            `AbleValue} : {4'b0000} ;
 
 
-    wire     CanExInst1     ;
-    wire     CanExInst2     ;
-    wire     CanExInst3     ;
-    wire     CanExInst4     ;
-    assign {CanExInst1, CanExInst2, CanExInst3, CanExInst4} 
+    wire     CanPopInst1ForEx      ;
+    wire     CanPopInst2ForEx      ;
+    wire     CanPopInst3ForEx      ;
+    wire     CanPopInst4ForEx      ;
+    assign {CanPopInst1ForEx, CanPopInst2ForEx, CanPopInst3ForEx, CanPopInst4ForEx} 
      =  (ReadOffset == 0) ? {~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1], 
                             (~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1]), 
                             ((~InstInfo[CriqPreOut1][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1] && ~InstInfo[CriqPreOut2][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1]) && ~InstInfo[CriqPreOut3][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1]), 
@@ -356,22 +368,18 @@ module ReOrderBuffer #(
                             ~InstInfo[CriqPreOut4][STBPTR+EXCENTRY+FTQPTR+REDIRECT+EXSTATE-1] } : {4'b0000} ;
 
     
-    assign Rable1 = NodirectAble1 && CanExInst1 ;
-    assign Rable2 = NodirectAble2 && CanExInst2 ;
-    assign Rable3 = NodirectAble3 && CanExInst3 ;
-    assign Rable4 = NodirectAble4 && CanExInst4 ;
+    assign Rable1 = CanPopInst1ForDri && CanPopInst1ForEx ;
+    assign Rable2 = CanPopInst2ForDri && CanPopInst2ForEx ;
+    assign Rable3 = CanPopInst3ForDri && CanPopInst3ForEx ;
+    assign Rable4 = CanPopInst4ForDri && CanPopInst4ForEx ;
 
-    assign SubTrilCOunt = ({Rable1, Rable2, Rable3, Rable4} == 4'b0000) ? 3'd0  :
-                          ({Rable1, Rable2, Rable3, Rable4} == 4'b1000) ? 3'd1  :
-                          ({Rable1, Rable2, Rable3, Rable4} == 4'b1100) ? 3'd2  :
-                          ({Rable1, Rable2, Rable3, Rable4} == 4'b1110) ? 3'd3  : 
-                          ({Rable1, Rable2, Rable3, Rable4} == 4'b1111) ? 3'd4  : 3'd0 ;
-    assign {FTQUpAble, FTQReDirect, FTQRePc, FTQInstPtr, FTQRePcDate, ROBReLoad} =
-           ({Rable1, Rable2, Rable3, Rable4} == 4'b0000) ? {`EnableValue, `EnableValue, `EnableValue, {FTQPTR{1'b0}}, `ZeorDate, `EnableValue}  :
-           ({Rable1, Rable2, Rable3, Rable4} == 4'b1000) ? {`EnableValue, `EnableValue, `EnableValue, {FTQPTR{1'b0}}, `ZeorDate}  :
-           ({Rable1, Rable2, Rable3, Rable4} == 4'b1100) ? {`EnableValue, `EnableValue, `EnableValue, {FTQPTR{1'b0}}, `ZeorDate}  :
-           ({Rable1, Rable2, Rable3, Rable4} == 4'b1110) ? {`EnableValue, `EnableValue, `EnableValue, {FTQPTR{1'b0}}, `ZeorDate}  :
-           ({Rable1, Rable2, Rable3, Rable4} == 4'b1111) ? {`EnableValue, `EnableValue, `EnableValue, {FTQPTR{1'b0}}, `ZeorDate}  :
+    assign SubTrilCOunt = Rable1 + Rable2 + Rable3 + Rable4 ;
+
+
+    wire  [UPDATEWIDE+INSTFORM-1:0]  
+
+
+    
 
 
 

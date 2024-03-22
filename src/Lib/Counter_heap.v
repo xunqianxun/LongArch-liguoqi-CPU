@@ -3,8 +3,8 @@
 
 module Counter_heap #(
     parameter COUNTERWIDE = 2 ,
-    parameter COUNTERPW   = 5 ,
-    parameter COUNTERDEEP = 32 
+    parameter COUNTERPW   = 6 ,
+    parameter COUNTERDEEP = 64 
 ) (
     input      wire                                Clk             ,
     input      wire                                Rest            ,
@@ -14,7 +14,7 @@ module Counter_heap #(
     input      wire                                Attenuation     ,//衰减需要在判断的周期i里面进行这样不会和update争抢端口
     input      wire                                UpdateAble      ,
     input      wire                                ReadAble        ,
-    input      wire      [COUNTERWIDE-1:0]         RightOrFault    ,
+    input      wire                                RightOrFault    ,
     output     wire      [COUNTERWIDE-1:0]         DoutCounter     
 );
 

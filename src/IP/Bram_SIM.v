@@ -3,8 +3,8 @@
 module Bram_SIM #( //Simple dual port RAM
     parameter BRAMWIDE  =  32 ,
     //parameter BRAMPTRW  =  5  ,
-    parameter BRAMDEPW  =  5  ,
-    parameter BRAMDEEP  =  32  
+    parameter BRAMDEPW  =  7  ,
+    parameter BRAMDEEP  =  128  
 ) (
     input       wire                                 Clk        ,
     input       wire                                 Rest       , //sim use only, for bram no this pin

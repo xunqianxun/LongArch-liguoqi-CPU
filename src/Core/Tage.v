@@ -32,7 +32,7 @@ module Tage #(
     parameter T6PW           = 7    ,
     parameter T6GHR          = 64   ,
     parameter T6TGE          = 9    ,
-    parameter TAGEBANK       = 6    ,
+    parameter TAGEBANK       = 7    ,
     parameter TAGEPRW        = 2    ,
     parameter GHRWIDE        = 64  
 ) (
@@ -42,13 +42,13 @@ module Tage #(
     input          wire                                           ForceAble         ,
     input          wire           [`InstAddrBus]                  Pc                ,
     //from BTB about This block  inst type
-    input          wire                                           PredictType       ,
+    input          wire           [2:0]                           PredictType       ,
 
     //out to FTQ predict outcome
     output         wire                                           FoutAble          ,
     output         wire                                           Fpredict          ,
-    output         wire           [`TAGEBANNUM-1:0]               FinaSelectBank    ,
-    output         wire           [`GHRWIDE-1:0]                  FGHR              ,
+    output         wire           [TAGEBANK-1:0]                  FinaSelectBank    ,
+    output         wire           [GHRWIDE-1:0]                   FGHR              ,
     output         wire           [`InstAddrBus]                  FPc               ,
 
     //from FTQ upfate sugn 
@@ -88,6 +88,19 @@ module Tage #(
 
     wire AttenuationAble = (AttenuationCounter == 18'b111111111111111111);
 
+    reg                 TageReady ;
+    reg [`InstAddrBus]  PcReg     ;
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            TageReady <= `EnableValue ;
+            PcReg     <= `ZeorDate    ;
+        end 
+        else begin 
+            TageReady <= ForceAble ; 
+            PcReg     <= Pc        ;
+        end 
+    end  
+
     reg [GHRWIDE-1:0] GHR  ; // oldest---------->> new
     always @(posedge Clk) begin
         if(!Rest) 
@@ -96,7 +109,7 @@ module Tage #(
             if(UpDateAble)
                 GHR <= UpdateGHR ;
             if(FoutAble)
-                GHR <= FoutAble ? {GHR[GHRWIDE-1-1:0],Fpredict} : GHR ;
+                GHR <= TageReady & (PredictType == `TypeBRANCH) ? {GHR[GHRWIDE-1-1:0],Fpredict} : GHR ;
         end
     end
 
@@ -122,14 +135,6 @@ module Tage #(
     wire  [BASEPW-1:0]   BaseIndex ;
     assign BaseIndex = Part1PcFor7 ^ Part2PcFor7 ^ Part3PcFor7 ^ Part4PcFor7 ^ Part5PcFor7 ;
     wire  [1:0]          PHTregBase ;    
-    reg   TageReady ;
-    always @(posedge Clk) begin
-        if(!Rest)
-            TageReady <= `EnableValue ;
-        else 
-            TageReady <= ForceAble ; 
-    end  
-
     Tage_T1_128 base (
     .clka     (Clk),    // input wire clka
     .ena      (`AbleValue),      // input wire ena
@@ -447,7 +452,31 @@ module Tage #(
     assign T6JumpSign   = BankDateT6[1:0] ;
     assign T6UseFul     = CounterT6       ;
 
+    wire FristSelect = T6Hit ? 
 
 
+    reg                    FoutAbleReg ;
+    reg                    FpredictReg ;
+    reg   [TAGEBANK-1:0]   FinaSelectBank ;
+    reg   [GHRWIDE-1:0]    FGHRReg        ;
+    reg   [`InstAddrBus]   FPcReg         ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            FoutAbleReg     <= `EnableValue;
+            FpredictReg     <= `EnableValue;
+            FinaSelectBank  <= {TAGEBANK{1'b0}};
+            FGHRReg         <= {GHRWIDE{1'b0}} ;
+            FPcReg          <= `ZeorDate; 
+        end
+        else begin
+            FoutAbleReg     <= TageReady   ;
+            FpredictReg     <= `EnableValue;
+            FinaSelectBank  <= {TAGEBANK{1'b0}};
+            FGHRReg         <= {GHRWIDE{1'b0}} ;
+            FPcReg          <= PcReg       ; 
+        end
+    end
+ 
 
 endmodule

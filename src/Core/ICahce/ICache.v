@@ -1,7 +1,7 @@
 `timescale 1ps/1ps
-`include "define.v"
-`include "../IP/data_bank_sram.xcix"
-`include "../IP/tag_icache_sram.xcix"
+`include "../define.v"
+`include "../../IP/data_bank_sram.xcix"
+`include "../../IP/tag_icache_sram.xcix"
 
 module ICache #(
     parameter SRAMEWIDE     = 32 ,
@@ -11,7 +11,6 @@ module ICache #(
 )(
     input        wire                                     Clk           ,
     input        wire                                     Rest          ,
-
     //from FTQ
     input        wire                                     InstFetch     , //in from FTQ the time must be unbusy
     input        wire      [`InstAddrBus]                 VritualAddr   ,
@@ -30,10 +29,27 @@ module ICache #(
     //for AXIBridge
     input        wire                                     MemoryAble    ,
     input        wire                                     MemoryBrustAble,
+    input        wire      [`InstAddrBus]                 MemoryAddr    ,
     input        wire      [`InstDateBus]                 MemoryDate    ,
-    //input        wire      
+    //to AXIBridge
+    output       wire                                     ReadMAble     ,
+    output       wire                                     ReadMBrustAble,
+    output       wire      [`InstAddrBus]                 ReadMAddr     ,
+    output       wire      [7:0]                          ReadMlen      ,
+    output       wire      [2:0]                          ReadMsize     ,
+    output       wire      [1:0]                          ReadMBurstTy
+    //icache needn't  write back memory     
     
 );
+
+    reg                RegInstFetch ;
+    always @(posedge Clk) begin
+        if(!Rest)
+            RegInstFetch <= `EnableValue ;
+        else 
+            RegInstFetch <= InstFetch    ;
+
+    end
 
     //State One Read 
     wire [5:0] ReadAddr = VritualAddr[11:6] ;
@@ -55,6 +71,8 @@ module ICache #(
     wire [`InstDateBus] Way1Part8 ;
     wire [TAGWIDE-1:0]  Way0Tag   ;
     wire [TAGWIDE-1:0]  Way1Tag   ;
+    wire [1:0]          ReadCounter0;
+    wire [1:0]          ReadCounter1;
     
     data_bank_sram way0_31to0(
         .addra      (ReadAddr        )  ,
@@ -221,31 +239,31 @@ module ICache #(
     Cache_counter#(
         .COUNTERWIDE ( 2 ),
         .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP )
+        .COUNTERDEEP ( ICACHEDEEP  )
     )Way0_Cache_counter(
         .Clk         ( Clk         ),
         .Rest        ( Rest        ),
-        .RABLE       ( `AbleValue  ),
+        .RABLE       ( InstFetch   ),
         .WABLE       ( WABLE       ),
         .RADDR       ( ReadAddr    ),
         .WADDR       ( WADDR       ),
         .CLEAN       ( CLEAN       ),
-        .RDATE       ( RDATE       )
+        .RDATE       ( ReadCounter0)
     );
 
     Cache_counter#(
         .COUNTERWIDE ( 2 ),
         .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP )
+        .COUNTERDEEP ( ICACHEDEEP  )
     )Way1_Cache_counter(
         .Clk         ( Clk         ),
         .Rest        ( Rest        ),
-        .RABLE       ( RABLE       ),
+        .RABLE       ( InstFetch   ),
         .WABLE       ( WABLE       ),
-        .RADDR       ( RADDR       ),
+        .RADDR       ( ReadAddr    ),
         .WADDR       ( WADDR       ),
         .CLEAN       ( CLEAN       ),
-        .RDATE       ( RDATE       )
+        .RDATE       ( ReadCounter1)
     );
 
 
@@ -256,7 +274,28 @@ module ICache #(
     assign  HitWay1 = (Way1Tag== PhysicalAddr[SRAMEWIDE-1:12]) ;
 
     wire                         HitSentPreC     = HitWay0 | HitWay1 ;
-    wire  [(SRAMEWIDE*4)-1:0]    HitSentPrecDate = HitWay0 ? {} ;
+    wire  [(SRAMEWIDE*4)-1:0]    HitSentPrecDate = HitWay0 ? {Way0Part8, Way0Part7, Way0Part6, Way0Part4, Way0Part4, Way0Part3, Way0Part2, Way0Part1} :
+                                                   HitWay1 ? {Way1Part8, Way1Part7, Way1Part6, Way1Part4, Way1Part4, Way1Part3, Way1Part2, Way1Part1} :
+                                                  256'd0 ;
+    
+    reg                             RegInstReady  ;
+    reg  [(SRAMEWIDE*4)-1:0]        RegInstDateIc ;
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            RegInstReady <= `EnableValue ;
+            RegInstDateIc <= 256'd0 ;
+        end
+        else begin
+            if(HitSentPreC) begin
+                RegInstReady <= `AbleValue ;
+                RegInstDateIc <= HitSentPrecDate ;
+            end 
+            if(RegInstFetch) begin
+
+            end 
+
+        end 
+    end
 
 
 

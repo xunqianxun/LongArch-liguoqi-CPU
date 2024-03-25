@@ -124,5 +124,53 @@
 //for ROB 
 `define ROBLineNumBus  6:0
 
+//for csr
+`define PLV  1:0
+`define IE   2:2
+`define DA   3:3
+`define PG   4:4 
+`define DATF 6:5
+`define DATM 8:7
+`define SAVE 31:9
+`define PPLV 1:0
+`define PIE  2:2
+
+`define INT  7'h0 
+`define PIL  7'h1
+`define PIS  7'h2
+`define PIF  7'h3 
+`define PME  7'h4 
+`define PPI  7'h7 
+`define ADEF {1'b0, 6'h8} 
+`define ADEM {1'b1, 6'h8}
+`define ALE  7'h9 
+`define SYS  7'hb 
+`define BRK  7'hc 
+`define INE  7'hd 
+`define IPE  7'he 
+`define FPD  7'hf 
+`define FPE  7'h12 
+`define TLBR 7'h3f
+
+`define IS1_0   1:0
+`define IS9_2   9:2 
+`define IS11    11:11
+`define IS12    12:12
+`define ECODE   21:16
+`define ESUBCODE 30:22
+
+`define ROLLB 0
+`define WCLLB 1
+`define KLO   2
+
+`define INDEX 5:0
+`define PS    29:24
+`define NE    31
+
+`define EN    0
+`define PERIODIC 1
+`define INITVAL 31:2
+
+`define CLR 0
 
 

@@ -16,6 +16,7 @@ module Csr (
     //to ROB                                
     output       wire                                       EndowInterrupt  ,
     output       wire      [6:0]                            EndowCode       ,
+    output       wire                                       LlbetlKlo       ,
     //to mmu   
     output       wire      [9:0]                            CsrAsidDate     ,
     output       wire      [`DataBus]                       CsrDmw0Date     ,
@@ -76,7 +77,7 @@ module Csr (
     localparam TID   = 14'h40;
     localparam TCFG  = 14'h41;
     localparam TVAL  = 14'h42;
-    localparam CNTC  = 14'h43;
+    //localparam CNTC  = 14'h43;
     localparam TICLR = 14'h44;
     localparam LLBCTL= 14'h60;
     localparam TLBRENTRY = 14'h88;
@@ -99,7 +100,7 @@ module Csr (
     wire WriteAsidEna      = ((WAddr == ASID)      && (WEn)) ;
     wire WritePgdlEna      = ((WAddr == PGDL)      && (WEn)) ;
     wire WritePgdhEna      = ((WAddr == PGDH)      && (WEn)) ;
-    wire WritePgdEna       = ((WAddr == PGD)       && (WEn)) ;
+    //wire WritePgdEna       = ((WAddr == PGD)       && (WEn)) ;
     wire WriteCpuidEna     = ((WAddr == CPUID)     && (WEn)) ;
     wire WriteSave0Ena     = ((WAddr == SAVE0)     && (WEn)) ;
     wire WriteSave1Ena     = ((WAddr == SAVE1)     && (WEn)) ;
@@ -108,7 +109,7 @@ module Csr (
     wire WriteTidEna       = ((WAddr == TID)       && (WEn)) ;
     wire WriteTcfgEna      = ((WAddr == TCFG)      && (WEn)) ;
     wire WriteTvalEna      = ((WAddr == TVAL)      && (WEn)) ;
-    wire WriteCntcEna      = ((WAddr == CNTC)      && (WEn)) ;
+    //wire WriteCntcEna      = ((WAddr == CNTC)      && (WEn)) ;
     wire WriteTiclrEna     = ((WAddr == TICLR)     && (WEn)) ;
     wire WriteLlbctlEna    = ((WAddr == LLBCTL)    && (WEn)) ;
     wire WriteTlbrentryEna = ((WAddr == TLBRENTRY) && (WEn)) ;
@@ -131,7 +132,7 @@ module Csr (
     reg [`DataBus] CsrAsid ;
     reg [`DataBus] CsrPgdl ;
     reg [`DataBus] CsrPgdh ;
-    reg [`DataBus] CsrPgd  ;
+    //reg [`DataBus] CsrPgd  ;
     reg [`DataBus] CsrCpuid;
     reg [`DataBus] CsrSave0;
     reg [`DataBus] CsrSave1;
@@ -140,7 +141,7 @@ module Csr (
     reg [`DataBus] CsrTid  ;
     reg [`DataBus] CsrTcfg ;
     reg [`DataBus] CsrTval ;
-    reg [`DataBus] CsrCntc ;
+    //reg [`DataBus] CsrCntc ;
     reg [`DataBus] CsrTiclr;
     reg [`DataBus] CsrLlbctl;
     reg [`DataBus] CsrTlbrentry;
@@ -218,6 +219,7 @@ module Csr (
             CsrEstat[`ECODE] <= 6'b0 ;
             CsrEstat[`ESUBCODE] <= 9'd0 ;
             CsrEstat[31]     <= 1'b0 ;
+            CsrEstat[15:13]  <= 3'd0 ;
         end
         else begin
             CsrEstat[`IS9_2] <= SocInterrupt ;
@@ -309,6 +311,7 @@ module Csr (
             CsrSave3 <= WDate ;
     end
 
+    // TODO TODO TODO TODO 原子操作
     always @(posedge Clk) begin
         if(!Rest) begin
             CsrLlbctl[`ROLLB] <= 1'b0  ;
@@ -317,7 +320,12 @@ module Csr (
             CsrLlbctl[31:3]   <= 29'b0 ;
         end 
         else begin
-            
+            if(WriteLlbctlEna)
+                CsrLlbctl <= WDate ;
+            if((WriteLlbctlEna) && (WDate[1] ==1))
+                CsrLlbctl <= `ZeorDate ;
+            if(TrapEntry)
+                CsrLlbctl[2] <= 1'b0 ;
         end
     end
 
@@ -494,7 +502,7 @@ module Csr (
     wire ReadTidEna       = ((RAddr == TID)      && REn);
     wire ReadTcfgEna      = ((RAddr == TCFG)     && REn);
     wire ReadTvalEna      = ((RAddr == TVAL)     && REn);
-    wire ReadCntcEna      = ((RAddr == CNTC)     && REn);
+    //wire ReadCntcEna      = ((RAddr == CNTC)     && REn);
     wire ReadTiclrEna     = ((RAddr == TICLR)    && REn);
     wire ReadLlbctlEna    = ((RAddr == LLBCTL)   && REn);
     wire ReadTlbrentryEna = ((RAddr == TLBRENTRY)&& REn);
@@ -515,7 +523,7 @@ module Csr (
                    {32{ReadAsidEna}}      & CsrAsid      |
                    {32{ReadPgdlEna}}      & CsrPgdl      |
                    {32{ReadPgdhEna}}      & CsrPgdh      |
-                   {32{ReadPgdEna}}       & CsrPgd       |
+                   {32{ReadPgdEna}}       & (({32{CsrBadv[31]}} & CsrPgdh) | (~{32{CsrBadv[31]}} & CsrPgdl)) |
                    {32{ReadCpuidEna}}     & CsrCpuid     |
                    {32{ReadSave0Ena}}     & CsrSave0     |
                    {32{ReadSave1Ena}}     & CsrSave1     |
@@ -524,7 +532,7 @@ module Csr (
                    {32{ReadTidEna}}       & CsrTid       |
                    {32{ReadTcfgEna}}      & CsrTcfg      |
                    {32{ReadTvalEna}}      & CsrTval      |
-                   {32{ReadCntcEna}}      & CsrCntc      |
+                   //{32{ReadCntcEna}}      & CsrCntc      |
                    {32{ReadTiclrEna}}     & CsrTiclr     |
                    {32{ReadLlbctlEna}}    & CsrLlbctl    |
                    {32{ReadTlbrentryEna}} & CsrTlbrentry |
@@ -546,4 +554,3 @@ module Csr (
     assign CsrAsidTLB  = CsrAsid   ;
 
 endmodule
- 

@@ -29,7 +29,7 @@ module Csr (
     input        wire                                       REn             ,
     input        wire      [13:0]                           RAddr           ,
     output       wire      [`DataBus]                       RDate           ,
-    //csr operate tlb use
+    //csr operate tlb use To csr
     output       wire      [`DataBus]                       CsrIndex        ,
     input        wire                                       InCsrIndexAble  ,
     input        wire      [`DataBus]                       InCsrIndexMask  ,
@@ -49,8 +49,11 @@ module Csr (
     output       wire      [`DataBus]                       CsrAsidTLB      ,
     input        wire                                       InCsrAsidTLBAble,
     input        wire      [`DataBus]                       InCsrAsidTLBMask,
-    input        wire      [`DataBus]                       InCsrAsidTLBDate
+    input        wire      [`DataBus]                       InCsrAsidTLBDate,
 
+    output       wire      [`DataBus]                       CsrCrmdDate     ,
+    output       wire      [`DataBus]                       CsrEraDate      ,
+    output       wire      [`DataBus]                       CsrEstatDate    
 
 );
 
@@ -552,5 +555,8 @@ module Csr (
     assign CsrElo0TLB  = CsrTlbelo0;
     assign CsrElo1TLB  = CsrTlbelo1;
     assign CsrAsidTLB  = CsrAsid   ;
+    assign CsrCrmdDate = CsrCrmd   ;
+    assign CsrEraDate  = CsrEra    ;
+    assign CsrEstatDate = CsrEstat ;
 
 endmodule

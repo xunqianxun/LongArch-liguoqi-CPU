@@ -72,11 +72,15 @@
 `define InstModw       8'b00100101 
 `define InstModwu      8'b00100110 
 `define InstCsrrd      8'b00100111 
-`define InstCsrwr      8'b00101000 
-`define InstCsrxchg    8'b00101001 
+`define InstSyscall    8'b00101000
+`define InstBreak      8'b00101001 
+`define InstCsrwr     8'b00101000 
+`define InstCsrxchg   8'b00101001 
 `define InstCacop      8'b00101010 
-`define InstTlbsrch    8'b00101011 
-`define InstTlbrd      8'b00101100 
+//inst divid
+`define InstTlbsrchr   8'b00101011 
+`define InstTlbsrchw   8'b10000010
+`define InstTlbrd     8'b00101100 
 `define InstTlbwr      8'b00110001 
 `define InstTlbfill    8'b00101101 
 `define InstInvtlb     8'b00101110 

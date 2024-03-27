@@ -33,6 +33,9 @@ module TlbEntry #(
     output       wire                                        S1D           ,
     output       wire      [ 1:0]                            S1Mat         ,
     output       wire      [ 1:0]                            S1Plv         ,  
+    //CSR serch
+    input        wire                                        CsrSerch      ,
+    input        wire      []
     // write TLB
     input        wire                                        We            ,
     input        wire      [$clog2(TLBNUM)-1:0]              WIndex        ,

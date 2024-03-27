@@ -193,6 +193,7 @@ module Csru (
                                 CsrwrOperate    ? CSRUREGTEMP[92:79]:
                                 CsrxchgOperate  ? CSRUREGTEMP[92:79]: 14'd0;
 
+
     //csr or tlb write 
     wire CsrWriteAble = CsrwrOperate | CsrxchgOperate | ErtnOperate | TlbsrchwOperate ;
     wire TlbWriteAble = TlbwrOperate | TlbfillOperate ;
@@ -204,6 +205,8 @@ module Csru (
 
     wire TlbWriteAble = TlbwrOperate       ? FromCsrIndex[5:0]  :
                         TlbfillOperate     ? LrfsBNumber        : 6'd0 ;
+    
+    wire [`DataBus]  CsrWriteDate 
 
 
 

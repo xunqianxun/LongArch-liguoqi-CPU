@@ -32,6 +32,52 @@ module Csru (
     // from ROB
     input        wire                                     InstRetireAble  ,
     input        wire      [7:0]                          InstRetireCode  ,
+    //csr
+    input        wire      [`DataBus]                     CrmdData        ,
+    input        wire      [`DataBus]                     EraDate         ,
+    input        wire      [`DataBus]                     EstatDate       ,
+    //read Csr
+    output       wire                                     ReadCsrAble     ,
+    output       wire      [13:0]                         ReadCsrAddr     ,
+    input        wire      [`DataBus]                     ReadCsrDate     ,
+    //write Csr
+    output       wire                                     WriteCsrAble    ,
+    output       wire      [13:0]                         WriteCsrAddr    ,
+    output       wire      [`DataBus]                     WriteCsrDate    ,
+    //direct use csr
+    input        wire      [`DataBus]                     IndexDate       ,
+    output       wire                                     WIndexAble      ,
+    output       wire      [`DataBus]                     WIndexMask      ,
+    output       wire      [`DataBus]                     WIndexDate      ,
+    input        wire      [`DataBus]                     TlbehiDate      ,
+    output       wire                                     WEhiTLBAble     ,
+    output       wire      [`DataBus]                     WEhiTLBMask     ,
+    output       wire      [`DataBus]                     WEhiTLBDate     ,
+    input        wire      [`DataBus]                     Elo0TLBDate     ,
+    output       wire                                     WElo0TLBAble    ,
+    output       wire      [`DataBus]                     WElo0TLBMask    ,
+    output       wire      [`DataBus]                     WElo0TLBDate    ,
+    input        wire      [`DataBus]                     Elo1TLBDate     ,
+    output       wire                                     WElo1TLBAble    ,
+    output       wire      [`DataBus]                     WElo1TLBMask    ,
+    output       wire      [`DataBus]                     WElo1TLBDate    ,
+    input        wire      [`DataBus]                     AsidTLBDate     ,
+    output       wire                                     WAsidTLBAble    ,
+    output       wire      [`DataBus]                     WAsidTLBMask    ,
+    output       wire      [`DataBus]                     WAsidTLBDate    ,
+    //read MMU
+    output       wire                                     ReadMmuAble     ,
+    output       wire      [5:0]                          ReadMmuAddr     ,
+    input        wire      [89-1:0]                       ReadMmuDate     ,
+    //write MMU 
+    output       wire                                     WriteMmuAble    ,
+    output       wire      [5:0]                          WriteMmuAddr    ,
+    output       wire      [89-1:0]                       WriteMmuDate    ,
+    //serch MMU
+    output       wire                                     SerchMmuAble    ,
+    output       wire      [28:0]                         SerchMmuInfr    ,
+    input        wire                                     SerchSuccess    ,
+    input        wire      [13:0]                         SerchIndexDate  ,                                         
     //from ctrlblock
     input        wire                                     CsruStop        ,
     input        wire                                     CsruFlash       
@@ -50,9 +96,9 @@ module Csru (
     reg   [6:0]          ReDirectCodeReg ;
     reg   [`InstAddrBus] ReDirectAddrReg ;
 
-    wire  [`DataBus]     CrmdData ; 
-    wire  [`DataBus]     EraDate  ;
-    wire  [`DataBus]     EstatDate;
+    //wire  [`DataBus]     CrmdData ; 
+    //wire  [`DataBus]     EraDate  ;
+    //wire  [`DataBus]     EstatDate;
 
     always @(posedge Clk) begin
         if(!Rest) begin
@@ -94,33 +140,29 @@ module Csru (
             InstAbleReg <= `AbleValue   ;
             InstPtrReg  <= InstRobPtr   ;
             case (CsrMicOpCOde)
-                `InstCsrrd, `InstCsrwr, `InstCsrxchg, `InstCacop, `InstTlbsrchr, `InstTlbsrchw,
-                `InstTlbrdr, `InstTlbrdw, `InstTlbwr, `InstTlbfill,`InstInvtlb 
-                        : begin     
+                `InstCsrrd, `InstCsrwr, `InstCsrxchg, `InstCacop, `InstTlbsrchr, `InstTlbsrchw, 
+                `InstTlbrd, `InstTlbwr, `InstTlbfill,`InstInvtlb : begin     
                             ReDirectAbleReg <= (CrmdData[`PLV] == 2'd0 & CrmdData[`IE]) ? `AbleValue : `EnableValue; 
                             ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
                             ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
                             ReDriectEntryReg <= `EnableValue ;
                             ReDirectIdleReg <= `EnableValue  ;
                         end 
-                `InstEntry  
-                        : begin
+                `InstEntry : begin
                             ReDirectAbleReg <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
                             ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;
                             ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ;
                             ReDriectEntryReg <= CrmdData[`IE] ? `AbleValue : `EnableValue          ; 
                             ReDirectIdleReg <= `EnableValue  ;
                         end 
-                `InstIdle
-                        : begin
+                `InstIdle : begin
                             ReDirectAbleReg <= `AbleValue ; 
                             ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
                             ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
                             ReDriectEntryReg <= `EnableValue ;
                             ReDirectIdleReg <= `AbleValue    ;
                         end 
-                `InstSyscall
-                        : begin
+                `InstSyscall : begin
                             ReDirectAbleReg <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
                             ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? `SYS : `PPI              ;   
                             ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ; 
@@ -186,13 +228,12 @@ module Csru (
     //csr or tlb read 
     wire CsrReadAble = CsrrdOperate | CsrwrOperate | CsrxchgOperate  ;
     wire TlbReadAble = TlbrdOperate ;
-    wire TlbSerch    = TlbsrchrOperate
+    wire TlbSerch    = TlbsrchrOperate ;
     wire [63:0] TlbSerchinform = {FromCsrAsid, FromCsrTlbehi};
     wire [5:0]  TlbReadaddr    = FromCsrIndex[5:0] ;
     wire [13:0] CsrReadAddr =   CsrrdOperate    ? CSRUREGTEMP[92:79]:
                                 CsrwrOperate    ? CSRUREGTEMP[92:79]:
                                 CsrxchgOperate  ? CSRUREGTEMP[92:79]: 14'd0;
-
 
     //csr or tlb write 
     wire CsrWriteAble = CsrwrOperate | CsrxchgOperate | ErtnOperate | TlbsrchwOperate ;
@@ -203,60 +244,8 @@ module Csru (
                         ErtnOperate        ? 14'h60            :
                         TlbsrchwOperate    ? 14'h10            : 14'd0 ;
 
-    wire TlbWriteAble = TlbwrOperate       ? FromCsrIndex[5:0]  :
-                        TlbfillOperate     ? LrfsBNumber        : 6'd0 ;
+    wire TlbWriteAddr = TlbwrOperate       ? FromCsrIndex[5:0]  :
+                        TlbfillOperate     ? CsrMicOpCOde[5:0]  : 6'd0 ; //伪随机
     
-    wire [`DataBus]  CsrWriteDate 
-
-
-
-    Csr u_Csr(
-        .Clk              ( Clk              ),
-        .Rest             ( Rest             ),
-        .Interrupt        ( Interrupt        ),
-        .InterruptPc      ( InterruptPc      ),
-        .InterruptAddr    ( InterruptAddr    ),
-        .InterruptType    ( InterruptType    ),
-        .TrapEntry        ( TrapEntry        ),
-        .SocInterrupt     ( SocInterrupt     ),
-        .EndowInterrupt   ( EndowInterrupt   ),
-        .EndowCode        ( EndowCode        ),
-        .LlbetlKlo        ( LlbetlKlo        ),
-        .CsrAsidDate      ( CsrAsidDate      ),
-        .CsrDmw0Date      ( CsrDmw0Date      ),
-        .CsrDmw1Date      ( CsrDmw1Date      ),
-        .WEn              ( WEn              ),
-        .WAddr            ( WAddr            ),
-        .WDate            ( WDate            ),
-        .REn              ( REn              ),
-        .RAddr            ( RAddr            ),
-        .RDate            ( RDate            ),
-        .CsrIndex         ( FromCsrIndex     ),
-        .InCsrIndexAble   ( InCsrIndexAble   ),
-        .InCsrIndexMask   ( InCsrIndexMask   ),
-        .InCsrIndexDate   ( InCsrIndexDate   ),
-        .CsrEhiTLB        ( CsrEhiTLB        ),
-        .InCsrEhiTLBAble  ( InCsrEhiTLBAble  ),
-        .InCsrEhiTLBMask  ( InCsrEhiTLBMask  ),
-        .InCsrEhiTLBDate  ( InCsrEhiTLBDate  ),
-        .CsrElo0TLB       ( CsrElo0TLB       ),
-        .InCsrElo0TLBAble ( InCsrElo0TLBAble ),
-        .InCsrElo0TLBMask ( InCsrElo0TLBMask ),
-        .InCsrElo0TLBDate ( InCsrElo0TLBDate ),
-        .CsrElo1TLB       ( CsrElo1TLB       ),
-        .InCsrElo1TLBAble ( InCsrElo1TLBAble ),
-        .InCsrElo1TLBMask ( InCsrElo1TLBMask ),
-        .InCsrElo1TLBDate ( InCsrElo1TLBDate ),
-        .CsrAsidTLB       ( CsrAsidTLB       ),
-        .InCsrAsidTLBAble ( InCsrAsidTLBAble ),
-        .InCsrAsidTLBMask ( InCsrAsidTLBMask ),
-        .InCsrAsidTLBDate ( InCsrAsidTLBDate ),
-        .CsrCrmdDate      ( CrmdData         ),
-        .CsrEraDate       ( EraDate          ),
-        .CsrEstatDate     ( EstatDate        )
-    );
-
-
-
-    
+  
 endmodule

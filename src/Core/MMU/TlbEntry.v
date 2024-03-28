@@ -13,7 +13,7 @@ module TlbEntry #(
     input        wire                                        S0OddPage     ,
     input        wire      [ 9:0]                            S0Asid        ,
     output       wire                                        S0Fund        ,
-    output       wire      [$clog2(TLBNUM)-1:0]              S0Index       ,
+    //output       wire      [$clog2(TLBNUM)-1:0]              S0Index       ,
     output       wire      [ 5:0]                            S0Ps          ,
     output       wire      [19:0]                            S0Ppn         ,
     output       wire                                        S0V           ,
@@ -26,7 +26,7 @@ module TlbEntry #(
     input        wire                                        S1OddPage     ,
     input        wire      [ 9:0]                            S1Asid        ,
     output       wire                                        S1Fund        ,
-    output       wire      [$clog2(TLBNUM)-1:0]              S1Index       ,
+    //output       wire      [$clog2(TLBNUM)-1:0]              S1Index       ,
     output       wire      [ 5:0]                            S1Ps          ,
     output       wire      [19:0]                            S1Ppn         ,
     output       wire                                        S1V           ,
@@ -34,8 +34,10 @@ module TlbEntry #(
     output       wire      [ 1:0]                            S1Mat         ,
     output       wire      [ 1:0]                            S1Plv         ,  
     //CSR serch
-    input        wire                                        CsrSerch      ,
-    input        wire      []
+    //input        wire                                        CsrSerch      ,
+    input        wire      [29-1:0]                          CsrSerchInfrom,
+    output       wire                                        CsrSerchSucces,
+    output       wire      [5:0]                             csrSerchDate  ,
     // write TLB
     input        wire                                        We            ,
     input        wire      [$clog2(TLBNUM)-1:0]              WIndex        ,
@@ -98,6 +100,7 @@ module TlbEntry #(
     wire [TLBNUM-1:0]       DateMatchS0   ;
     wire [TLBNUM-1:0]       TwoChioseS1   ;
     wire [TLBNUM-1:0]       DateMatchS1   ;
+    wire [TLBNUM-1:0]       DateMatchC0   ;
     //fror search 
     genvar i ;
     generate
@@ -106,11 +109,13 @@ module TlbEntry #(
             assign DateMatchS0[i] = (TLBE[i] && (TLBPS[i] == 6'd12)) ? (TLBVPPN[i] == S0Vppn) : ((TLBVPPN[i][18:9] == S0Vppn[18:9]) && ((TLBASID[i] == S0Asid) || (TLBG)));
             assign TwoChioseS1[i] = (TLBPS[i] == 6'd12) ? S1OddPage : S1Vppn[8];
             assign DateMatchS1[i] = (TLBE[i] && (TLBPS[i] == 6'd12)) ? (TLBVPPN[i] == S1Vppn) : ((TLBVPPN[i][18:9] == S1Vppn[18:9]) && ((TLBASID[i] == S1Asid) || (TLBG)));
+            assign DateMatchC0[i] = (TLBE[i] && (TLBPS[i] == 6'd12)) ? (TLBVPPN[i] == CsrSerchInfrom[18:0]) : ((TLBVPPN[i][18:9] == CsrSerchInfrom[18:9]) && ((TLBASID[i] == CsrSerchInfrom[28:19]) || (TLBG)));
         end
     endgenerate
     
     wire [$clog2(TLBNUM)-1:0] S0SearchIndex;
     wire [$clog2(TLBNUM)-1:0] S1SearchIndex;
+    wire [$clog2(TLBNUM)-1:0] C0SearchIndex;
     
     assign S0SearchIndex = ({6{DateMatchS0[0]}}  & 6'd0) | 
                            ({6{DateMatchS0[1]}}  & 6'd1) | 
@@ -242,20 +247,76 @@ module TlbEntry #(
                            ({6{DateMatchS1[62]}} & 6'd62)| 
                            ({6{DateMatchS1[63]}} & 6'd63); 
 
-    // reg                        RegS0Fund      ;
-    // reg                        RegS1Fund      ;
-    // reg  [$clog2(TLBNUM)-1:0]  RegS0Index     ;
-    // reg  [$clog2(TLBNUM)-1:0]  RegS1Index     ;
-    // reg  [ 5:0]                RegS0Ps        ;
-    // reg  [ 5:0]                RegS1Ps        ;
-    // reg  [19:0]                RegS0Ppn       ;
-    // reg  [19:0]                RegS1Ppn       ;
-    // reg                        RegS0V         ;
-    // reg                        RegS1V         ;
-    // reg                        RegS0D         ;
-    // reg                        RegS1D         ;
+    assign C0SearchIndex=  ({6{DateMatchC0[0]}}  & 6'd0) | 
+                           ({6{DateMatchC0[1]}}  & 6'd1) | 
+                           ({6{DateMatchC0[2]}}  & 6'd2) | 
+                           ({6{DateMatchC0[3]}}  & 6'd3) | 
+                           ({6{DateMatchC0[4]}}  & 6'd4) | 
+                           ({6{DateMatchC0[5]}}  & 6'd5) | 
+                           ({6{DateMatchC0[6]}}  & 6'd6) | 
+                           ({6{DateMatchC0[7]}}  & 6'd7) | 
+                           ({6{DateMatchC0[8]}}  & 6'd8) | 
+                           ({6{DateMatchC0[9]}}  & 6'd9) | 
+                           ({6{DateMatchC0[10]}} & 6'd10)| 
+                           ({6{DateMatchC0[11]}} & 6'd11)| 
+                           ({6{DateMatchC0[12]}} & 6'd12)| 
+                           ({6{DateMatchC0[13]}} & 6'd13)| 
+                           ({6{DateMatchC0[14]}} & 6'd14)| 
+                           ({6{DateMatchC0[15]}} & 6'd15)| 
+                           ({6{DateMatchC0[16]}} & 6'd16)| 
+                           ({6{DateMatchC0[17]}} & 6'd17)| 
+                           ({6{DateMatchC0[18]}} & 6'd18)| 
+                           ({6{DateMatchC0[19]}} & 6'd19)| 
+                           ({6{DateMatchC0[20]}} & 6'd20)| 
+                           ({6{DateMatchC0[21]}} & 6'd21)| 
+                           ({6{DateMatchC0[22]}} & 6'd22)| 
+                           ({6{DateMatchC0[23]}} & 6'd23)| 
+                           ({6{DateMatchC0[24]}} & 6'd24)| 
+                           ({6{DateMatchC0[25]}} & 6'd25)| 
+                           ({6{DateMatchC0[26]}} & 6'd26)| 
+                           ({6{DateMatchC0[27]}} & 6'd27)| 
+                           ({6{DateMatchC0[28]}} & 6'd28)| 
+                           ({6{DateMatchC0[29]}} & 6'd29)| 
+                           ({6{DateMatchC0[30]}} & 6'd30)| 
+                           ({6{DateMatchC0[31]}} & 6'd31)| 
+                           ({6{DateMatchC0[32]}} & 6'd32)| 
+                           ({6{DateMatchC0[33]}} & 6'd33)| 
+                           ({6{DateMatchC0[34]}} & 6'd34)| 
+                           ({6{DateMatchC0[35]}} & 6'd35)| 
+                           ({6{DateMatchC0[36]}} & 6'd36)| 
+                           ({6{DateMatchC0[37]}} & 6'd37)| 
+                           ({6{DateMatchC0[38]}} & 6'd38)| 
+                           ({6{DateMatchC0[39]}} & 6'd39)| 
+                           ({6{DateMatchC0[40]}} & 6'd40)| 
+                           ({6{DateMatchC0[41]}} & 6'd41)| 
+                           ({6{DateMatchC0[42]}} & 6'd42)| 
+                           ({6{DateMatchC0[43]}} & 6'd43)| 
+                           ({6{DateMatchC0[44]}} & 6'd44)| 
+                           ({6{DateMatchC0[45]}} & 6'd45)| 
+                           ({6{DateMatchC0[46]}} & 6'd46)| 
+                           ({6{DateMatchC0[47]}} & 6'd47)| 
+                           ({6{DateMatchC0[48]}} & 6'd48)| 
+                           ({6{DateMatchC0[49]}} & 6'd49)| 
+                           ({6{DateMatchC0[50]}} & 6'd50)| 
+                           ({6{DateMatchC0[51]}} & 6'd51)| 
+                           ({6{DateMatchC0[52]}} & 6'd52)| 
+                           ({6{DateMatchC0[53]}} & 6'd53)| 
+                           ({6{DateMatchC0[54]}} & 6'd54)| 
+                           ({6{DateMatchC0[55]}} & 6'd55)| 
+                           ({6{DateMatchC0[56]}} & 6'd56)| 
+                           ({6{DateMatchC0[57]}} & 6'd57)| 
+                           ({6{DateMatchC0[58]}} & 6'd58)| 
+                           ({6{DateMatchC0[59]}} & 6'd59)| 
+                           ({6{DateMatchC0[60]}} & 6'd60)| 
+                           ({6{DateMatchC0[61]}} & 6'd61)| 
+                           ({6{DateMatchC0[62]}} & 6'd62)| 
+                           ({6{DateMatchC0[63]}} & 6'd63); 
+
+    assign   CsrSerchSucces = |C0SearchIndex ;
+    assign   csrSerchDate   = C0SearchIndex   ;
+
     assign   S0Fund       = |DateMatchS0         ;
-    assign   S0Index      = S0SearchIndex        ;    
+    //assign   S0Index      = S0SearchIndex        ;    
     assign   S0Ps         = TLBPS[S0SearchIndex] ;
     assign   S0Ppn        = TwoChioseS0[S0SearchIndex] ? TLBPPN1 : TLBPPN0 ;
     assign   S0V          = TwoChioseS0[S0SearchIndex] ? TLBV1   : TLBV0   ;
@@ -263,7 +324,7 @@ module TlbEntry #(
     assign   S0Mat        = TwoChioseS0[S0SearchIndex] ? TLBMAT1 : TLBMAT0 ;
     assign   S0Plv        = TwoChioseS0[S0SearchIndex] ? TLBPLV1 : TLBPLV0 ;
     assign   S1Fund       = |DateMatchS1         ;
-    assign   S1Index      = S1SearchIndex        ;    
+    //assign   S1Index      = S1SearchIndex        ;    
     assign   S1Ps         = TLBPS[S1SearchIndex] ;
     assign   S1Ppn        = TwoChioseS1[S1SearchIndex] ? TLBPPN1 : TLBPPN0 ;
     assign   S1V          = TwoChioseS1[S1SearchIndex] ? TLBV1   : TLBV0   ;

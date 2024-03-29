@@ -12,8 +12,7 @@ module STACK_reload #(
     input         wire                            Rest          ,
 
     input         wire                            RABLE         ,
-    output        wire       [STACKWIDE-1:0]      DOUT          , //23 wide
-
+    output        wire       [STACKWIDE-1:0]      DOUT          , 
 
     input         wire                            WABLE         ,
     input         wire       [STACKWIDE-1:0]      DIN           ,
@@ -38,7 +37,6 @@ module STACK_reload #(
     input         wire [STACKWIDE+RECURCOUNT-1:0] RELOADLINE13  ,
     input         wire [STACKWIDE+RECURCOUNT-1:0] RELOADLINE14  ,
     input         wire [STACKWIDE+RECURCOUNT-1:0] RELOADLINE15  
-    //input         wire       [STACKWIDE-1:0]      RELOADLINE16  
 );
 
     reg [STACKWIDE+RECURCOUNT-1:0] STACKREG [0:STACKDEEP-1] ;

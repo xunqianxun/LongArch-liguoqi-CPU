@@ -86,6 +86,21 @@
 `define InstInvtlb     8'b00101110 
 `define InstEntry      8'b00101111 
 `define InstIdle       8'b00110000 
+//load or store
+`define InstLdb        8'b00110001 
+`define InstLdh        8'b00110010 
+`define InstLdw        8'b00110011 
+`define InstLdbu       8'b00110100 
+`define InstLdhu       8'b00110101 
+`define InstStb        8'b00110110 
+`define InstSth        8'b00110111 
+`define InstStw        8'b00111000 
+`define InstLlw        8'b00111001 
+`define InstScw        8'b00111010 
+`define InstDbar       8'b00111011 
+`define InstIbar       8'b00111100 
+
+
 
 
 

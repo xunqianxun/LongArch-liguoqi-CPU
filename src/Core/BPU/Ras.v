@@ -4,22 +4,34 @@
 `include "../Lib/STACK_reload.v"
 
 module Ras #(
-    parameter RASDEEP = 16 ,
-    parameter RASPTRW = 4 
+    parameter RASWODE   = 32 ,
+    parameter RASCOUNTW = 7  ,
+    parameter RASDEEP   = 16 ,
+    parameter RASPTRW   = 4 
 ) (
     input    wire                               Clk           ,
     input    wire                               Rest          ,
 
-    //speculate ex
-    input    wire                               InStackAble   ,
-    input    wire        [`InstAddrBus]         InStackDate   , 
+    //from BTB
+    input    wire        [2:0]                  BPredictTypr  ,
+    //speculate update with PreCheck
+    input    wire                               PreCFault     , 
+    input    wire        [RASPTRW-1:0]          PreCFDatePtr  ,
+    input    wire        [RASWODE+RASCOUNTW-1:0]PreCFDateOne  ,
+    input    wire        [RASWODE+RASCOUNTW-1:0]PreCFDatetwo  ,
+    input    wire        [RASWODE+RASCOUNTW-1:0]PreCFDatethrea,
+    //speculate ex to FTQ
     output   wire                               OutStackAble  ,
-    output   wire        [`InstAddrBus]         OutStackDate  ,
-    //Date update
+    output   wire        [RASWODE-1:0]          OutStackDate  ,
+    output   wire        [RASPTRW-1:0]          TopDatePtr    ,
+    output   wire        [RASWODE+RASCOUNTW-1:0]TopeDateOne   ,
+    output   wire        [RASWODE+RASCOUNTW-1:0]TopeDatetwo   ,
+    output   wire        [RASWODE+RASCOUNTW-1:0]TopeDatethrea ,
+    //Date update with retire
     input    wire                               UpdateInAble  ,
-    input    wire        [`InstAddrBus]         UpdateInDate  ,
-    output   wire                               UpdateOutAble ,
-    output   wire        [`InstAddrBus]         UpdateOutDate 
+    input    wire                               UpdateReload  ,
+    input    wire        [RASWODE-1:0]          UpdateInDate  ,
+    input    wire        [2:0]                  UpdateType    
 );
 
 

@@ -32,7 +32,7 @@ module Tage #(
     parameter T6PW           = 7    ,
     parameter T6GHR          = 64   ,
     parameter T6TGE          = 9    ,
-    parameter TAGEBANK       = 7    ,
+    parameter TAGEBANKW      = 3    ,
     parameter TAGEPRW        = 2    ,
     parameter GHRWIDE        = 64  
 ) (
@@ -43,18 +43,24 @@ module Tage #(
     input          wire           [`InstAddrBus]                  Pc                ,
     //from BTB about This block  inst type
     input          wire           [2:0]                           PredictType       ,
-
     //out to FTQ predict outcome
     output         wire                                           FoutAble          ,
-    output         wire                                           Fpredict          ,
-    output         wire           [TAGEBANK-1:0]                  FinaSelectBank    ,
+    output         wire           [1:0]                           Fpredict          ,
+    output         wire           [1:0]                           FpredictAlt       ,
+    output         wire           [1:0]                           FCounter          ,
+    output         wire           [1:0]                           FCounterAlt       ,
+    output         wire           [TAGEBANKW-1:0]                 FinaSelectBank    ,
+    output         wire           [TAGEBANKW-1:0]                 FinaSelectBankAlt ,
     output         wire           [GHRWIDE-1:0]                   FGHR              ,
     output         wire           [`InstAddrBus]                  FPc               ,
-
     //from FTQ upfate sugn 
     input          wire                                           UpDateAble        ,
-    input          wire                                           UpDatePredict     ,
-    input          wire           [`TAGEBANNUMBANK-1:0]           UpDateSelectB     ,
+    input          wire           [1:0]                           UpDatepredict     ,
+    input          wire           [1:0]                           UpDatepredictAlt  ,
+    input          wire           [1:0]                           UpDateCounter     ,
+    input          wire           [1:0]                           UpDateCounterAlt  ,
+    input          wire           [TAGEBANKW-1:0]                 UpDateSelectBank  ,
+    input          wire           [TAGEBANKW-1:0]                 UpDateSelectBankAlt,
     input          wire           [`GHRWIDE-1:0]                  UpdateGHR         ,
     input          wire           [`InstAddrBus]                  UpdatePc                           
 );
@@ -88,18 +94,6 @@ module Tage #(
 
     wire AttenuationAble = (AttenuationCounter == 18'b111111111111111111);
 
-    reg                 TageReady ;
-    reg [`InstAddrBus]  PcReg     ;
-    always @(posedge Clk) begin
-        if(!Rest) begin
-            TageReady <= `EnableValue ;
-            PcReg     <= `ZeorDate    ;
-        end 
-        else begin 
-            TageReady <= ForceAble ; 
-            PcReg     <= Pc        ;
-        end 
-    end  
 
     reg [GHRWIDE-1:0] GHR  ; // oldest---------->> new
     always @(posedge Clk) begin
@@ -112,6 +106,23 @@ module Tage #(
                 GHR <= TageReady & (PredictType == `TypeBRANCH) ? {GHR[GHRWIDE-1-1:0],Fpredict} : GHR ;
         end
     end
+
+
+    reg                 TageReady ;
+    reg [`InstAddrBus]  PcReg     ;
+    reg [GHRWIDE-1:0]   GHRReg    ;
+    always @(posedge Clk) begin //打拍供二级判断和输出使用
+        if(!Rest) begin
+            TageReady <= `EnableValue ;
+            PcReg     <= `ZeorDate    ;
+            GHRReg    <= {GHRWIDE{1'b0}}
+        end 
+        else begin 
+            TageReady <= ForceAble ; 
+            PcReg     <= Pc        ;
+            GHHReg    <= GHR       ;
+        end 
+    end  
 
     //pc 折叠 for 7
     wire  [6:0]   Part1PcFor7 = Pc[3+7-1:3]                       ;
@@ -452,29 +463,62 @@ module Tage #(
     assign T6JumpSign   = BankDateT6[1:0] ;
     assign T6UseFul     = CounterT6       ;
 
-    wire FristSelect = T6Hit ? 
+    wire [2:0] FristSelectNumber   ;
+    wire [1:0] FristSelectPartentH ;
+    wire [1:0] FristSelectCounter  ;
+    wire [2:0] SecondSelectNumber  ;
+    wire [1:0] SecondSelectPartentH;
+    wire [1:0] SecondSelectCounter ;
 
+    assign {FristSelectNumber, FristSelectPartentH, FristSelectCounter} = T6Hit ? {3'd6, T6JumpSign, CounterT6} : 
+                                                                          T5Hit ? {3'd5, T5JumpSign, CounterT5} : 
+                                                                          T4Hit ? {3'd4, T4JumpSign, CounterT4} : 
+                                                                          T3Hit ? {3'd3, T3JumpSign, CounterT3} : 
+                                                                          T2Hit ? {3'd2, T2JumpSign, CounterT2} : 
+                                                                          T1Hit ? {3'd1, T1JumpSign, CounterT1} : {3'd0, BaseJumpSign, 2'd11};
+     
+    assign {SecondSelectNumber, SecondSelectPartentH, SecondSelectCounter} = (T5Hit & (FristSelectNumber == 3'd6)) ? {3'd5, T5JumpSign, CounterT5} : 
+                                                                             (T4Hit & (FristSelectNumber >= 3'd5)) ? {3'd4, T4JumpSign, CounterT4} : 
+                                                                             (T3Hit & (FristSelectNumber >= 3'd4)) ? {3'd3, T3JumpSign, CounterT3} :
+                                                                             (T2Hit & (FristSelectNumber >= 3'd3)) ? {3'd2, T2JumpSign, CounterT2} :
+                                                                             (T1Hit & (FristSelectNumber >= 3'd2)) ? {3'd1, T1JumpSign, CounterT1} : {3'd0, BaseJumpSign, 2'd11} ;
+    //优化策略暂不使用
+    // wire [TAGEBANKW-1:0] OutBankDate ;
+    // wire [1:0]           OutPredict  ;
+    // assign {OutPredict, OutBankDate} = (FristSelectCounter >=2'd1) || (SecondSelectNumber == 2'd0)  ?  {FristSelectPartentH, FristSelectNumber} : {SecondSelectPartentH, SecondSelectCounter} ;
 
-    reg                    FoutAbleReg ;
-    reg                    FpredictReg ;
-    reg   [TAGEBANK-1:0]   FinaSelectBank ;
-    reg   [GHRWIDE-1:0]    FGHRReg        ;
-    reg   [`InstAddrBus]   FPcReg         ;
+    reg                    FoutAbleReg      ;
+    reg   [1:0]            FpredictReg      ;
+    reg   [1:0]            FpredictRegAlt   ;
+    reg   [1:0]            Fcounter         ;
+    reg   [1:0]            FcounterAlt      ;
+    reg   [TAGEBANKW-1:0]  FinaSelectBank   ;
+    reg   [TAGEBANKW-1:0]  FinaSelectBankAlt;
+    reg   [GHRWIDE-1:0]    FGHRReg          ;
+    reg   [`InstAddrBus]   FPcReg           ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            FoutAbleReg     <= `EnableValue;
-            FpredictReg     <= `EnableValue;
-            FinaSelectBank  <= {TAGEBANK{1'b0}};
-            FGHRReg         <= {GHRWIDE{1'b0}} ;
-            FPcReg          <= `ZeorDate; 
+            FoutAbleReg       <= `EnableValue;
+            FpredictReg       <= 2'b0        ;
+            FpredictRegAlt    <= 2'b0        ;
+            Fcounter          <= 2'd0        ;
+            FcounterAlt       <= 2'd0        ;
+            FinaSelectBank    <= {TAGEBANKW{1'b0}};
+            FinaSelectBankAlt <= {TAGEBANKW{1'b0}}
+            FGHRReg           <= {GHRWIDE{1'b0}} ;
+            FPcReg            <= `ZeorDate; 
         end
         else begin
-            FoutAbleReg     <= TageReady   ;
-            FpredictReg     <= `EnableValue;
-            FinaSelectBank  <= {TAGEBANK{1'b0}};
-            FGHRReg         <= {GHRWIDE{1'b0}} ;
-            FPcReg          <= PcReg       ; 
+            FoutAbleReg       <= TageReady           ;
+            FpredictReg       <= FristSelectPartentH ;
+            FpredictRegAlt    <= SecondSelectPartentH;
+            Fcounter          <= FristSelectCounter  ;
+            FcounterAlt       <= SecondSelectCounter ;
+            FinaSelectBank    <= FristSelectNumber   ;
+            FinaSelectBankAlt <= SecondSelectNumber  ;
+            FGHRReg           <= GHRReg      ;
+            FPcReg            <= PcReg       ; 
         end
     end
  

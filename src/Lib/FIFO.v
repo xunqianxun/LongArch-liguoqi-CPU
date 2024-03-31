@@ -10,7 +10,7 @@ module FIFO #(
     input         wire                            Rable         ,
     output        wire       [FIFOWIDE-1:0]       Dout          , //23 wide
 
-    output        wire       [FIFOWIDE-1:0]       FifoPreOut    ,
+    //output        wire       [FIFOWIDE-1:0]       FifoPreOut    ,
 
     input         wire                            Wable         ,
     input         wire       [FIFOWIDE-1:0]       Din           ,
@@ -60,9 +60,9 @@ module FIFO #(
     end
 
     assign Dout = FifoOutReg ;
-    assign FifoFull = (((Fifotril - Fifofront) == 2) || ((Fifotril == 0) && (Fifofront == 15))) && Wable ;
+    assign FifoFull = (((Fifotril - Fifofront) == 1) || ((Fifotril == 0) && (Fifofront == 8))) ;
     assign FifoEmpty = (Fifotril == Fifofront) ;
-    assign FifoPreOut = FIFOREG[Fifotril] ;
+   // assign FifoPreOut = FIFOREG[Fifotril] ;
     
 
     

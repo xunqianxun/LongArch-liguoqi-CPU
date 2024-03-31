@@ -71,7 +71,7 @@ module Lsu (
     input      wire                               MemMmuTrap     ,
     input      wire      [6:0]                    MemMmuTrapCode ,
     input      wire      [`InstAddrBus]           MemPhysicalAddr, //如果发生中断此处就是发生中断的虚拟地址
-    //to Cache 
+    //to D Cache 
     output     wire                               LoadAble       ,
     output     wire                               StoreAble      ,
     output     wire      [1:0]                    LoadType       ,
@@ -82,6 +82,8 @@ module Lsu (
     output     wire      [`DataBus]               StoreDate      ,
     output     wire                               LoadTrapAble   ,
     output     wire      [`DataBus]               StoreMask      ,
+    output     wire                               LoadUncache    ,
+    output     wire                               StoreUncache   ,
     input      wire                               LoadSuccess    ,
     input      wire      [`DataBus]               LoadInDate     ,
     input      wire      [4:0]                    LoadBackPtr    ,
@@ -404,8 +406,12 @@ module Lsu (
     assign StoreMask = (STOREBUFFER[WriteIndex][8:1] == `InstCacop) ? 32'h00000000 :
                        (STOREBUFFER[WriteIndex][8:1] == `InstStb)   ? 32'h000000ff :
                        (STOREBUFFER[WriteIndex][8:1] == `InstSth)   ? 32'h0000ffff :
-                       (STOREBUFFER[WriteIndex][8:1] == `InstScw)   ? 32'hffffffff : //这个的处理是在ROB 中进行的
+                       (STOREBUFFER[WriteIndex][8:1] == `InstScw)   ? 32'hffffffff : 
+//********************************************************************************//
+//这里的原子操作都应该在ROB中做判断并且操作llbit位，因为在lsu中都是推测执行如果放在lsu中写llit \
+//也就是LLW执行可能会提前，最好的方式就是在ROB中直接判断在lsu中直接作为普通访存指令。并且正常mmu
 
+//preld将他定义为load指令
     
     
 

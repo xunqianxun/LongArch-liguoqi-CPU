@@ -34,10 +34,10 @@ module InstIssueQue # (
     input      wire                                       FromPre4Part ,
     input      wire      [`InstAddrBus]                   FromPre4NAdr ,    
     //to decode 
-    input      wire                                       ReqInstPort1 ,
-    input      wire                                       ReqInstPort2 ,
-    input      wire                                       ReqInstPort3 ,
-    input      wire                                       ReqInstPort4 ,
+    output     wire                                       OutInstPort1 ,
+    output     wire                                       OutInstPort2 ,
+    output     wire                                       OutInstPort3 ,
+    output     wire                                       OutInstPort4 ,
     output     wire      [`InstAddrBus]                   OutInstAddr1 ,
     output     wire      [`InstDateBus]                   OutInstDate1 ,
     output     wire                                       OutInstPart1 ,
@@ -53,13 +53,26 @@ module InstIssueQue # (
     output     wire      [`InstAddrBus]                   OutInstAddr4 ,
     output     wire      [`InstDateBus]                   OutInstDate4 ,
     output     wire                                       OutInstPart4 ,
-    output     wire      [`InstAddrBus]                   OutInstNAdr4 ,
-    output     wire                                       InstQEmpty   
+    output     wire      [`InstAddrBus]                   OutInstNAdr4 
 );
 
 
     reg  [2:0]  WritePtr ;
     reg  [2:0]  ReadPtr  ;
+
+    wire U1Clean = InstQFlash ;
+    wire U1Full  ;
+    wire U1Empty ;
+    wire U2Clean = InstQFlash ;
+    wire U2Full  ;
+    wire U2Empty ;
+    wire U3Clean = InstQFlash ;
+    wire U3Full  ;
+    wire U3Empty ;
+    wire U4Clean = InstQFlash ;
+    wire U4Full  ;
+    wire U4Empty ;
+
 
     wire  [2:0] InInstNum = (FromPre1Able & FromPre2Able & FromPre3Able & FromPre4Able) ? 3'd4 : 
                             (FromPre1Able & FromPre2Able & FromPre3Able &~FromPre4Able) ? 3'd3 : 
@@ -75,49 +88,52 @@ module InstIssueQue # (
         end
     end
 
-    wire [2:0] ReqInstNum = (ReqInstPort1 & ReqInstPort2 & ReqInstPort3 & ReqInstPort4) ? 3'd4 : 
-                            (ReqInstPort1 & ReqInstPort2 & ReqInstPort3 & ReqInstPort4) ? 3'd3 : 
-                            (ReqInstPort1 & ReqInstPort2 & ReqInstPort3 & ReqInstPort4) ? 3'd2 : 
-                            (ReqInstPort1 & ReqInstPort2 & ReqInstPort3 & ReqInstPort4) ? 3'd1 : 3'd0 ;
+    wire [2:0] ReqInstNum = (~U1Empty & ~U2Empty & ~U3Empty & ~U4Empty) ? 3'd4 : 
+                            (~U1Empty & ~U2Empty & ~U3Empty &  U4Empty) ? 3'd3 : 
+                            (~U1Empty & ~U2Empty &  U3Empty &  U4Empty) ? 3'd2 : 
+                            (~U1Empty &  U2Empty &  U3Empty &  U4Empty) ? 3'd1 : 3'd0 ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
             ReadPtr <= 3'd0 ;
         end
         else begin
-            ReadPtr <= ReadPtr[1:0] + ReqInstNum ;
+            ReadPtr <= ~InstQStop ?  ReadPtr[1:0] + ReqInstNum : ReadPtr;
         end
     end
     // late one clk sent infromation
     reg [1:0] TempReadPtr ;
+    reg [2:0] TempNumber  ;
     always @(posedge Clk) begin
         if(!Rest) begin
             TempReadPtr <= 2'd0 ;
+            TempNumber  <= 3'd0 ;
         end
         else begin
             TempReadPtr <= ReadPtr[1:0] ;
+            TempNumber  <= ReqInstNum   ;
         end
     end
 
-    wire  Read1Able   = (ReadPtr[1:0] == 0) ? ReqInstPort1 :
-                        (ReadPtr[1:0] == 1) ? ReqInstPort4 :
-                        (ReadPtr[1:0] == 2) ? ReqInstPort3 :
-                        (ReadPtr[1:0] == 3) ? ReqInstPort2 : `EnableValue ;
+    wire  Read1Able   = (ReadPtr[1:0] == 0) ? (ReqInstNum == 1) :
+                        (ReadPtr[1:0] == 1) ? (ReqInstNum == 4) :
+                        (ReadPtr[1:0] == 2) ? (ReqInstNum == 3) :
+                        (ReadPtr[1:0] == 3) ? (ReqInstNum == 2) : `EnableValue ;
 
-    wire  Read2Able   = (ReadPtr[1:0] == 0) ? ReqInstPort2 :
-                        (ReadPtr[1:0] == 1) ? ReqInstPort1 :
-                        (ReadPtr[1:0] == 2) ? ReqInstPort4 :
-                        (ReadPtr[1:0] == 3) ? ReqInstPort3 : `EnableValue ;
+    wire  Read2Able   = (ReadPtr[1:0] == 0) ? (ReqInstNum == 2) :
+                        (ReadPtr[1:0] == 1) ? (ReqInstNum == 1) :
+                        (ReadPtr[1:0] == 2) ? (ReqInstNum == 4) :
+                        (ReadPtr[1:0] == 3) ? (ReqInstNum == 3) : `EnableValue ;
 
-    wire  Read3Able   = (ReadPtr[1:0] == 0) ? ReqInstPort3 :
-                        (ReadPtr[1:0] == 1) ? ReqInstPort2 :
-                        (ReadPtr[1:0] == 2) ? ReqInstPort1 :
-                        (ReadPtr[1:0] == 3) ? ReqInstPort4 : `EnableValue ;
+    wire  Read3Able   = (ReadPtr[1:0] == 0) ? (ReqInstNum == 3) :
+                        (ReadPtr[1:0] == 1) ? (ReqInstNum == 2) :
+                        (ReadPtr[1:0] == 2) ? (ReqInstNum == 1) :
+                        (ReadPtr[1:0] == 3) ? (ReqInstNum == 4) : `EnableValue ;
 
-    wire  Read4Able   = (ReadPtr[1:0] == 0) ? ReqInstPort4 :
-                        (ReadPtr[1:0] == 1) ? ReqInstPort3 :
-                        (ReadPtr[1:0] == 2) ? ReqInstPort2 :
-                        (ReadPtr[1:0] == 3) ? ReqInstPort1 : `EnableValue ;
+    wire  Read4Able   = (ReadPtr[1:0] == 0) ? (ReqInstNum == 4) :
+                        (ReadPtr[1:0] == 1) ? (ReqInstNum == 3) :
+                        (ReadPtr[1:0] == 2) ? (ReqInstNum == 2) :
+                        (ReadPtr[1:0] == 3) ? (ReqInstNum == 1) : `EnableValue ;
 
     wire [INSTQUEUEWIDE-1:0] Read1Date ; 
     wire [INSTQUEUEWIDE-1:0] Read2Date ; 
@@ -142,7 +158,12 @@ module InstIssueQue # (
     assign  { OutInstAddr4, OutInstDate4, OutInstPart4, OutInstNAdr4} = (TempReadPtr == 0) ? Read4Date : 
                                                                         (TempReadPtr == 1) ? Read1Date : 
                                                                         (TempReadPtr == 2) ? Read2Date : 
-                                                                        (TempReadPtr == 3) ? Read3Date :  {INSTQUEUEWIDE{1'b0}} ;          
+                                                                        (TempReadPtr == 3) ? Read3Date :  {INSTQUEUEWIDE{1'b0}} ;     
+
+    assign OutInstPort1 =  (TempNumber >= 1) && ~InstQStop;
+    assign OutInstPort2 =  (TempNumber >= 2) && ~InstQStop;
+    assign OutInstPort3 =  (TempNumber >= 3) && ~InstQStop;
+    assign OutInstPort4 =  (TempNumber >= 4) && ~InstQStop;
 
     wire  WriteU1Able = (WritePtr[1:0] == 0) ? FromPre1Able :
                         (WritePtr[1:0] == 1) ? FromPre4Able : 
@@ -184,28 +205,14 @@ module InstIssueQue # (
                                           (WritePtr[1:0] == 2) ?{FromPre2Addr, FromPre2Date, FromPre2Part, FromPre2NAdr} : 
                                           (WritePtr[1:0] == 3) ?{FromPre1Addr, FromPre1Date, FromPre1Part, FromPre1NAdr} : {32'd0,32'd0,1'b0,32'd0};
 
-    wire U1Clean = InstQFlash ;
-    wire U1Full  ;
-    wire U1Empty ;
-    wire U2Clean = InstQFlash ;
-    wire U2Full  ;
-    wire U2Empty ;
-    wire U3Clean = InstQFlash ;
-    wire U3Full  ;
-    wire U3Empty ;
-    wire U4Clean = InstQFlash ;
-    wire U4Full  ;
-    wire U4Empty ;
-
     assign InstQReqStop = U1Full | U2Full | U3Full | U4Full ;
-    assign InstQEmpty   = U1Empty & U2Empty & U3Empty & U4Empty ;
 
     FIFO#(
         .FIFOWIDE   ( INSTQUEUEWIDE )
     )u1_FIFO(
         .Clk        ( Clk           ),
         .Rest       ( Rest          ),
-        .Rable      ( Read1Able     ),
+        .Rable      ( Read1Able && ~InstQStop),
         .Dout       ( Read1Date     ),
         .Wable      ( WriteU1Able   ),
         .Din        ( Write1Date    ),
@@ -219,7 +226,7 @@ module InstIssueQue # (
     )u2_FIFO(
         .Clk        ( Clk           ),
         .Rest       ( Rest          ),
-        .Rable      ( Read2Able     ),
+        .Rable      ( Read2Able  && ~InstQStop),
         .Dout       ( Read2Date     ),
         .Wable      ( WriteU2Able   ),
         .Din        ( Write2Date    ),
@@ -233,7 +240,7 @@ module InstIssueQue # (
     )u3_FIFO(
         .Clk        ( Clk           ),
         .Rest       ( Rest          ),
-        .Rable      ( Read3Able     ),
+        .Rable      ( Read3Able  && ~InstQStop),
         .Dout       ( Read3Date     ),
         .Wable      ( WriteU3Able   ),
         .Din        ( Write3Date    ),
@@ -247,7 +254,7 @@ module InstIssueQue # (
     )u4_FIFO(
         .Clk        ( Clk           ),
         .Rest       ( Rest          ),
-        .Rable      ( Read4Able     ),
+        .Rable      ( Read4Able  && ~InstQStop),
         .Dout       ( Read4Date     ),
         .Wable      ( WriteU4Able   ),
         .Din        ( Write4Date    ),

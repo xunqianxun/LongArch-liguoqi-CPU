@@ -7,7 +7,7 @@ module Decode (
     //for ctrl
     input     wire                             DecodeStop    ,
     input     wire                             DecodeFlash   ,
-    output    wire                             DecodeReq     ,
+    //output    wire                             DecodeReq     ,
     //from InsrQueue
     input     wire                             InInstPort1  ,
     input     wire                             InInstPort2  ,
@@ -31,6 +31,7 @@ module Decode (
     input     wire      [`InstAddrBus]         InInstNAdr4   ,
     input     wire                             QueueEmpty    ,
     //to  distpatch 
+    output    wire      [`InstAddrBus]         Inst1Addr     ,
     output    wire      [`MicOperateCode]      Inst1Opcode   ,
     output    wire                             Inst1SinumA   ,
     output    wire      [25:0]                 Inst1SiDate   ,
@@ -87,13 +88,13 @@ module Decode (
     wire Inst1rj = InInstDate1[9:5]   ;
     wire Inst1rk = InInstDate1[14:10] ;
 
-    wire Inst1Imm5   =  InInstDate1[14:10] ;
-    wire Inst1Imm12  =  InInstDate1[21:10] ;
-    wire Inst1Imm14  =  InInstDate1[23:10] ;
-    wire Inst1Imm16  =  InInstDate1[25:10] ;
-    wire Inst1Imm20  =  InInstDate1[24:5]  ;
-    wire Inst1Imm26  =  {InInstDate1[9:0], InInstDate1[25:10]} ;
-    wire Inst1CsrNum =  InInstDate1[23:10] ;
+    //wire Inst1Imm5   =  InInstDate1[14:10] ;
+    wire Inst1Imm12D  =  InInstDate1[21:10] ;
+    wire Inst1Imm14D  =  InInstDate1[23:10] ;
+    wire Inst1Imm16D  =  InInstDate1[25:10] ;
+    wire Inst1Imm20D  =  InInstDate1[24:5]  ;
+    wire Inst1Imm26D  =  {InInstDate1[9:0], InInstDate1[25:10]} ;
+    //wire Inst1CsrNum =  InInstDate1[23:10] ;
 
     wire Inst1Rdcntidw = (Inst1Op31to26 == 6'd0) & (Inst1Op25to22 == 4'd0) & (Inst1Op21to20 == 2'd0) & (Inst1Op19to15 == 5'd0) & (InInstDate1[14:10] == 5'd24) & (InInstDate1[4:0] == 5'd0) ; //alu  1
     wire Inst1Rdcntvlw = (Inst1Op31to26 == 6'd0) & (Inst1Op25to22 == 4'd0) & (Inst1Op21to20 == 2'd0) & (Inst1Op19to15 == 5'd0) & (InInstDate1[14:10] == 5'd24) & (InInstDate1[9:5] == 5'd0) ; //alu  2
@@ -150,9 +151,9 @@ module Decode (
     wire Inst1Stw      = (Inst1Op31to26 == 6'd10) & (Inst1Op25to22 == 4'd6) ;//lsu store 4
     wire Inst1Ldbu     = (Inst1Op31to26 == 6'd10) & (Inst1Op25to22 == 4'd8) ;//lsu load 5
     wire Inst1Ldhu     = (Inst1Op31to26 == 6'd10) & (Inst1Op25to22 == 4'd9) ;//lsu load 6
-    wire Inst1Preld    = (Inst1Op31to26 == 6'd10) & (Inst1Op25to22 == 4'd11) ;
-    wire Inst1Dbar     = (Inst1Op31to26 == 6'd14) & (Inst1Op25to22 == 4'd1) & (Inst1Op21to20 == 2'd3) & (Inst1Op19to15 == 5'd4) ;
-    wire Inst1Ibar     = (Inst1Op31to26 == 6'd14) & (Inst1Op25to22 == 4'd1) & (Inst1Op21to20 == 2'd3) & (Inst1Op19to15 == 5'd5) ;
+    wire Inst1Preld    = (Inst1Op31to26 == 6'd10) & (Inst1Op25to22 == 4'd11) ; //special 1
+    wire Inst1Dbar     = (Inst1Op31to26 == 6'd14) & (Inst1Op25to22 == 4'd1) & (Inst1Op21to20 == 2'd3) & (Inst1Op19to15 == 5'd4) ;//special 2
+    wire Inst1Ibar     = (Inst1Op31to26 == 6'd14) & (Inst1Op25to22 == 4'd1) & (Inst1Op21to20 == 2'd3) & (Inst1Op19to15 == 5'd5) ;//special 3
     wire Inst1Jirl     = (Inst1Op31to26 == 6'd19) ;//bru 1
     wire Inst1B        = (Inst1Op31to26 == 6'd20) ;//bru 2
     wire Inst1Bl       = (Inst1Op31to26 == 6'd21) ;//bru 3
@@ -162,16 +163,275 @@ module Decode (
     wire Inst1Bge      = (Inst1Op31to26 == 6'd25) ;//bru 7
     wire Inst1Bltu     = (Inst1Op31to26 == 6'd26) ;//bru 8
     wire Inst1Bgeu     = (Inst1Op31to26 == 6'd27) ;//bru 9
-
+    // alu 1 div 2 mul 3 csr 4 lsu 5 qiyi 6 bru 7 special 0
     wire [`MicOperateCode] Inst1OperateCode ;
  
-    assign Inst1OperateCode[7] = ~Inst1Rdcntidw | ~Inst1Rdcntvlw | ~Inst1Rdcntvhw | ~Inst1Addw | ~Inst1Subw | ~Inst1Slt | ~Inst1Slt | ~Inst1Nor | ~Inst1And | ~Inst1Or | ~Inst1Xor | ~Inst1Sllw | ~Inst1Srlw | ~Inst1Sraw | ~Inst1Mulw | ~Inst1Mulhw | ~Inst1Mulhwu | ~Inst1Divw | ~Inst1Modw | ~Inst1Divwu | ~Inst1Modwu |  Inst1Break |  Inst1Syscall | ~Inst1Slliw | ~Inst1Srliw | ~Inst1Sraiw | ~Inst1Slti | ~Inst1Sltui | ~Inst1Addiw | ~Inst1Andi | ~Inst1Ori | ~Inst1Xori |  Inst1Csrrd |  Inst1Csrwr |  Inst1Csrxchg |  Inst1Cacop |  Inst1Tlbsrch |  Inst1Tlbrd |  Inst1Tlbwr |  Inst1Tlbfill |  Inst1Ertn |  Inst1Idle |  Inst1Invtlb | ~Inst1Lu12iw | ~Inst1Pcaddu12i |  Inst1Llw |  Inst1Scw |  Inst1Ldb |  Inst1Ldh |  Inst1Ldw |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu  ;
-    assign Inst1OperateCode[6] = ~Inst1Rdcntidw | ~Inst1Rdcntvlw | ~Inst1Rdcntvhw | ~Inst1Addw | ~Inst1Subw | ~Inst1Slt | ~Inst1Slt | ~Inst1Nor | ~Inst1And | ~Inst1Or | ~Inst1Xor | ~Inst1Sllw | ~Inst1Srlw | ~Inst1Sraw |  Inst1Mulw |  Inst1Mulhw |  Inst1Mulhwu |  Inst1Divw |  Inst1Modw |  Inst1Divwu |  Inst1Modwu | ~Inst1Break | ~Inst1Syscall | ~Inst1Slliw | ~Inst1Srliw | ~Inst1Sraiw | ~Inst1Slti | ~Inst1Sltui | ~Inst1Addiw | ~Inst1Andi | ~Inst1Ori | ~Inst1Xori | ~Inst1Csrrd | ~Inst1Csrwr | ~Inst1Csrxchg |  Inst1Cacop | ~Inst1Tlbsrch | ~Inst1Tlbrd | ~Inst1Tlbwr | ~Inst1Tlbfill | ~Inst1Ertn | ~Inst1Idle | ~Inst1Invtlb | ~Inst1Lu12iw | ~Inst1Pcaddu12i | ~Inst1Llw | ~Inst1Scw | ~Inst1Ldb | ~Inst1Ldh | ~Inst1Ldw | ~Inst1Stb | ~Inst1Sth | ~Inst1Stw | ~Inst1Ldbu | ~Inst1Ldhu |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu  ;
-    assign Inst1OperateCode[5] =  Inst1Rdcntidw |  Inst1Rdcntvlw |  Inst1Rdcntvhw |  Inst1Addw |  Inst1Subw |  Inst1Slt |  Inst1Slt |  Inst1Nor |  Inst1And |  Inst1Or |  Inst1Xor |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw |  Inst1Mulw |  Inst1Mulhw |  Inst1Mulhwu | ~Inst1Divw | ~Inst1Modw | ~Inst1Divwu | ~Inst1Modwu | ~Inst1Break | ~Inst1Syscall |  Inst1Slliw |  Inst1Srliw |  Inst1Sraiw |  Inst1Slti |  Inst1Sltui |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | ~Inst1Csrrd | ~Inst1Csrwr | ~Inst1Csrxchg | ~Inst1Cacop | ~Inst1Tlbsrch | ~Inst1Tlbrd | ~Inst1Tlbwr | ~Inst1Tlbfill | ~Inst1Ertn | ~Inst1Idle | ~Inst1Invtlb |  Inst1Lu12iw |  Inst1Pcaddu12i |  Inst1Llw |  Inst1Scw |  Inst1Ldb |  Inst1Ldh |  Inst1Ldw |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu  ;
-    assign Inst1OperateCode[4] = ~Inst1Rdcntidw | ~Inst1Rdcntvlw | ~Inst1Rdcntvhw | ~Inst1Addw | ~Inst1Subw | ~Inst1Slt | ~Inst1Slt | ~Inst1Nor | ~Inst1And | ~Inst1Or | ~Inst1Xor | ~Inst1Sllw | ~Inst1Srlw | ~Inst1Sraw | ~Inst1Mulw | ~Inst1Mulhw | ~Inst1Mulhwu | ~Inst1Divw | ~Inst1Modw | ~Inst1Divwu | ~Inst1Modwu | ~Inst1Break | ~Inst1Syscall | ~Inst1Slliw |  Inst1Srliw |  Inst1Sraiw |  Inst1Slti |  Inst1Sltui |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | ~Inst1Csrrd | ~Inst1Csrwr | ~Inst1Csrxchg | ~Inst1Cacop | ~Inst1Tlbsrch | ~Inst1Tlbrd | ~Inst1Tlbwr | ~Inst1Tlbfill | ~Inst1Ertn | ~Inst1Idle | ~Inst1Invtlb |  Inst1Lu12iw |  Inst1Pcaddu12i | ~Inst1Llw |  Inst1Scw | ~Inst1Ldb | ~Inst1Ldh | ~Inst1Ldw |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu | ~Inst1Jirl | ~Inst1B | ~Inst1Bl | ~Inst1Beq | ~Inst1Bne | ~Inst1Blt | ~Inst1Bge | ~Inst1Bltu | ~Inst1Bgeu  ;
-    assign Inst1OperateCode[3] = ~Inst1Rdcntidw | ~Inst1Rdcntvlw | ~Inst1Rdcntvhw | ~Inst1Addw | ~Inst1Subw | ~Inst1Slt | ~Inst1Slt |  Inst1Nor |  Inst1And |  Inst1Or |  Inst1Xor |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw | ~Inst1Mulw | ~Inst1Mulhw | ~Inst1Mulhwu | ~Inst1Divw | ~Inst1Modw | ~Inst1Divwu | ~Inst1Modwu | ~Inst1Break | ~Inst1Syscall |  Inst1Slliw | ~Inst1Srliw | ~Inst1Sraiw | ~Inst1Slti | ~Inst1Sltui | ~Inst1Addiw | ~Inst1Andi | ~Inst1Ori | ~Inst1Xori | ~Inst1Csrrd | ~Inst1Csrwr | ~Inst1Csrxchg | ~Inst1Cacop | ~Inst1Tlbsrch | ~Inst1Tlbrd |  Inst1Tlbwr |  Inst1Tlbfill |  Inst1Ertn |  Inst1Idle |  Inst1Invtlb |  Inst1Lu12iw |  Inst1Pcaddu12i | ~Inst1Llw | ~Inst1Scw | ~Inst1Ldb | ~Inst1Ldh | ~Inst1Ldw | ~Inst1Stb | ~Inst1Sth | ~Inst1Stw | ~Inst1Ldbu | ~Inst1Ldhu | ~Inst1Jirl | ~Inst1B | ~Inst1Bl | ~Inst1Beq | ~Inst1Bne | ~Inst1Blt | ~Inst1Bge |  Inst1Bltu |  Inst1Bgeu  ;
-    assign Inst1OperateCode[2] = ~Inst1Rdcntidw | ~Inst1Rdcntvlw | ~Inst1Rdcntvhw |  Inst1Addw |  Inst1Subw |  Inst1Slt |  Inst1Slt | ~Inst1Nor | ~Inst1And | ~Inst1Or | ~Inst1Xor |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw | ~Inst1Mulw | ~Inst1Mulhw | ~Inst1Mulhwu | ~Inst1Divw | ~Inst1Modw | ~Inst1Divwu |  Inst1Modwu | ~Inst1Break | ~Inst1Syscall |  Inst1Slliw | ~Inst1Srliw | ~Inst1Sraiw | ~Inst1Slti | ~Inst1Sltui |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | ~Inst1Csrrd |  Inst1Csrwr |  Inst1Csrxchg | ~Inst1Cacop |  Inst1Tlbsrch |  Inst1Tlbrd | ~Inst1Tlbwr | ~Inst1Tlbfill | ~Inst1Ertn | ~Inst1Idle |  Inst1Invtlb | ~Inst1Lu12iw | ~Inst1Pcaddu12i | ~Inst1Llw | ~Inst1Scw | ~Inst1Ldb | ~Inst1Ldh |  Inst1Ldw | ~Inst1Stb | ~Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu | ~Inst1Jirl | ~Inst1B | ~Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge | ~Inst1Bltu | ~Inst1Bgeu  ;
-    assign Inst1OperateCode[1] = ~Inst1Rdcntidw |  Inst1Rdcntvlw |  Inst1Rdcntvhw | ~Inst1Addw | ~Inst1Subw |  Inst1Slt |  Inst1Slt | ~Inst1Nor | ~Inst1And |  Inst1Or |  Inst1Xor | ~Inst1Sllw | ~Inst1Srlw |  Inst1Sraw | ~Inst1Mulw |  Inst1Mulhw |  Inst1Mulhwu | ~Inst1Divw |  Inst1Modw |  Inst1Divwu | ~Inst1Modwu | ~Inst1Break |  Inst1Syscall |  Inst1Slliw | ~Inst1Srliw | ~Inst1Sraiw |  Inst1Slti |  Inst1Sltui | ~Inst1Addiw | ~Inst1Andi |  Inst1Ori |  Inst1Xori |  Inst1Csrrd | ~Inst1Csrwr | ~Inst1Csrxchg | ~Inst1Cacop |  Inst1Tlbsrch |  Inst1Tlbrd | ~Inst1Tlbwr | ~Inst1Tlbfill |  Inst1Ertn |  Inst1Idle | ~Inst1Invtlb | ~Inst1Lu12iw | ~Inst1Pcaddu12i | ~Inst1Llw | ~Inst1Scw |  Inst1Ldb |  Inst1Ldh | ~Inst1Ldw |  Inst1Stb |  Inst1Sth | ~Inst1Stw | ~Inst1Ldbu |  Inst1Ldhu | ~Inst1Jirl |  Inst1B |  Inst1Bl | ~Inst1Beq | ~Inst1Bne |  Inst1Blt |  Inst1Bge | ~Inst1Bltu | ~Inst1Bgeu  ;
-    assign Inst1OperateCode[0] =  Inst1Rdcntidw | ~Inst1Rdcntvlw |  Inst1Rdcntvhw | ~Inst1Addw |  Inst1Subw | ~Inst1Slt |  Inst1Slt | ~Inst1Nor |  Inst1And | ~Inst1Or |  Inst1Xor | ~Inst1Sllw |  Inst1Srlw | ~Inst1Sraw |  Inst1Mulw | ~Inst1Mulhw |  Inst1Mulhwu |  Inst1Divw | ~Inst1Modw |  Inst1Divwu | ~Inst1Modwu |  Inst1Break | ~Inst1Syscall |  Inst1Slliw | ~Inst1Srliw |  Inst1Sraiw | ~Inst1Slti |  Inst1Sltui | ~Inst1Addiw |  Inst1Andi | ~Inst1Ori |  Inst1Xori |  Inst1Csrrd | ~Inst1Csrwr |  Inst1Csrxchg |  Inst1Cacop | ~Inst1Tlbsrch |  Inst1Tlbrd | ~Inst1Tlbwr |  Inst1Tlbfill | ~Inst1Ertn |  Inst1Idle | ~Inst1Invtlb | ~Inst1Lu12iw |  Inst1Pcaddu12i |  Inst1Llw |  Inst1Scw | ~Inst1Ldb |  Inst1Ldh | ~Inst1Ldw | ~Inst1Stb |  Inst1Sth | ~Inst1Stw |  Inst1Ldbu | ~Inst1Ldhu |  Inst1Jirl | ~Inst1B |  Inst1Bl | ~Inst1Beq |  Inst1Bne | ~Inst1Blt |  Inst1Bge | ~Inst1Bltu |  Inst1Bgeu  ;
+    assign Inst1OperateCode[7] = 0              |  0             | 0              | 0          | 0          | 0         | 0          | 0         | 0         | 0        | 0         | 0          | 0          | 0          | 0          | 0           | 0            | 0          | 0          | 0           | 0           |  Inst1Break |  Inst1Syscall | 0           | 0           | 0           | 0          | 0           | 0           | 0          | 0         | 0          |  Inst1Csrrd |  Inst1Csrwr |  Inst1Csrxchg |  Inst1Cacop |  Inst1Tlbsrch |  Inst1Tlbrd |  Inst1Tlbwr |  Inst1Tlbfill |  Inst1Ertn |  Inst1Idle |  Inst1Invtlb | 0            | 0               |  Inst1Llw |  Inst1Scw |  Inst1Ldb |  Inst1Ldh |  Inst1Ldw |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu | 0           | 0          | 0          ;
+    assign Inst1OperateCode[6] = 0              |  0             | 0              | 0          | 0          | 0         | 0          | 0         | 0         | 0        | 0         | 0          | 0          | 0          |  Inst1Mulw |  Inst1Mulhw |  Inst1Mulhwu |  Inst1Divw |  Inst1Modw |  Inst1Divwu |  Inst1Modwu | 0           | 0             | 0           | 0           | 0           | 0          | 0           | 0           | 0          | 0         | 0          | 0           | 0           | 0             |  Inst1Cacop | 0             | 0           | 0           | 0             | 0          | 0          | 0            | 0            | 0               | 0         | 0         | 0         | 0         | 0         |  0        | 0         | 0         | 0          | 0          |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu | 0           | 0          | 0          ;
+    assign Inst1OperateCode[5] =  Inst1Rdcntidw |  Inst1Rdcntvlw |  Inst1Rdcntvhw |  Inst1Addw |  Inst1Subw |  Inst1Slt |  Inst1Sltu |  Inst1Nor |  Inst1And |  Inst1Or |  Inst1Xor |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw |  Inst1Mulw |  Inst1Mulhw |  Inst1Mulhwu | 0          | 0          | 0           | 0           | 0           | 0             |  Inst1Slliw |  Inst1Srliw |  Inst1Sraiw |  Inst1Slti |  Inst1Sltui |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | 0           | 0           | 0             | 0           | 0             | 0           | 0           | 0             | 0          | 0          | 0            |  Inst1Lu12iw |  Inst1Pcaddu12i |  Inst1Llw |  Inst1Scw |  Inst1Ldb |  Inst1Ldh |  Inst1Ldw |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu |  Inst1Jirl |  Inst1B |  Inst1Bl |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge |  Inst1Bltu |  Inst1Bgeu | 0           | 0          | 0          ;
+    assign Inst1OperateCode[4] = 0              |  0             | 0              | 0          | 0          | 0         | 0          | 0         | 0         | 0        | 0         | 0          | 0          | 0          | 0          | 0           | 0            | 0          | 0          | 0           | 0           | 0           | 0             | 0           |  Inst1Srliw |  Inst1Sraiw |  Inst1Slti |  Inst1Sltui |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | 0           | 0           | 0             | 0           | 0             | 0           | 0           | 0             | 0          | 0          | 0            |  Inst1Lu12iw |  Inst1Pcaddu12i | 0         |  Inst1Scw | 0         | 0         | 0         |  Inst1Stb |  Inst1Sth |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu | 0          | 0       | 0        | 0         | 0         | 0         | 0         | 0          | 0          | 0           | 0          | 0          ;
+    assign Inst1OperateCode[3] = 0              |  0             | 0              | 0          | 0          | 0         | 0          |  Inst1Nor |  Inst1And |  Inst1Or |  Inst1Xor |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw | 0          | 0           | 0            | 0          | 0          | 0           | 0           | 0           | 0             |  Inst1Slliw | 0           | 0           | 0          | 0           | 0           | 0          | 0         | 0          | 0           | 0           | 0             | 0           | 0             | 0           |  Inst1Tlbwr |  Inst1Tlbfill |  Inst1Ertn |  Inst1Idle |  Inst1Invtlb |  Inst1Lu12iw |  Inst1Pcaddu12i | 0         | 0         | 0         | 0         | 0         | 0         | 0         | 0         | 0          | 0          | 0          | 0       | 0        | 0         | 0         | 0         | 0         |  Inst1Bltu |  Inst1Bgeu | 0           | 0          | 0          ;
+    assign Inst1OperateCode[2] = 0              |  0             | 0              |  Inst1Addw |  Inst1Subw |  Inst1Slt |  Inst1Sltu | 0         | 0         | 0        | 0         |  Inst1Sllw |  Inst1Srlw |  Inst1Sraw | 0          | 0           | 0            | 0          | 0          | 0           |  Inst1Modwu | 0           | 0             |  Inst1Slliw | 0           | 0           | 0          | 0           |  Inst1Addiw |  Inst1Andi |  Inst1Ori |  Inst1Xori | 0           |  Inst1Csrwr |  Inst1Csrxchg | 0           |  Inst1Tlbsrch |  Inst1Tlbrd | 0           | 0             | 0          | 0          |  Inst1Invtlb | 0            | 0               | 0         | 0         | 0         | 0         |  Inst1Ldw | 0         | 0         |  Inst1Stw |  Inst1Ldbu |  Inst1Ldhu | 0          | 0       | 0        |  Inst1Beq |  Inst1Bne |  Inst1Blt |  Inst1Bge | 0          | 0          | 0           | 0          | 0          ;
+    assign Inst1OperateCode[1] = 0              |  Inst1Rdcntvlw |  Inst1Rdcntvhw | 0          | 0          |  Inst1Slt |  Inst1Sltu | 0         |           |  Inst1Or |  Inst1Xor | 0          | 0          |  Inst1Sraw | 0          |  Inst1Mulhw |  Inst1Mulhwu | 0          |  Inst1Modw |  Inst1Divwu | 0           | 0           |  Inst1Syscall |  Inst1Slliw | 0           | 0           |  Inst1Slti |  Inst1Sltui | 0           | 0          |  Inst1Ori |  Inst1Xori |  Inst1Csrrd | 0           | 0             | 0           |  Inst1Tlbsrch |  Inst1Tlbrd | 0           | 0             |  Inst1Ertn |  Inst1Idle | 0            | 0            | 0               | 0         | 0         |  Inst1Ldb |  Inst1Ldh | 0         |  Inst1Stb |  Inst1Sth | 0         | 0          |  Inst1Ldhu | 0          |  Inst1B |  Inst1Bl | 0         | 0         |  Inst1Blt |  Inst1Bge | 0          | 0          | 0           |  Inst1Dbar |  Inst1Ibar ;
+    assign Inst1OperateCode[0] =  Inst1Rdcntidw |  0             |  Inst1Rdcntvhw | 0          |  Inst1Subw | 0         |  Inst1Sltu | 0         |  Inst1And | 0        |  Inst1Xor | 0          |  Inst1Srlw | 0          |  Inst1Mulw | 0           |  Inst1Mulhwu |  Inst1Divw | 0          |  Inst1Divwu | 0           |  Inst1Break | 0             |  Inst1Slliw | 0           |  Inst1Sraiw | 0          |  Inst1Sltui | 0           |  Inst1Andi | 0         |  Inst1Xori |  Inst1Csrrd | 0           |  Inst1Csrxchg |  Inst1Cacop | 0             |  Inst1Tlbrd | 0           |  Inst1Tlbfill | 0          |  Inst1Idle | 0            | 0            |  Inst1Pcaddu12i |  Inst1Llw |  Inst1Scw | 0         |  Inst1Ldh | 0         | 0         |  Inst1Sth | 0         |  Inst1Ldbu | 0          |  Inst1Jirl | 0       |  Inst1Bl | 0         |  Inst1Bne | 0         |  Inst1Bge | 0          |  Inst1Bgeu |  Inst1Preld | 0          |  Inst1Ibar ;
+
+    wire Inst1rdAble =  Inst1Rdcntvlw |
+                        Inst1Rdcntvhw |
+                        Inst1Addw     |
+                        Inst1Subw     |
+                        Inst1Slt      |
+                        Inst1Sltu     |
+                        Inst1Nor      |
+                        Inst1And      |
+                        Inst1Or       | 
+                        Inst1Xor      | 
+                        Inst1Sllw     |
+                        Inst1Srlw     |
+                        Inst1Sraw     |
+                        Inst1Mulw     |
+                        Inst1Mulhw    |
+                        Inst1Mulhwu   |
+                        Inst1Divw     |
+                        Inst1Modw     |
+                        Inst1Divwu    |
+                        Inst1Modwu    |
+                        Inst1Slliw    |
+                        Inst1Srliw    |
+                        Inst1Sraiw    |
+                        Inst1Slti     |
+                        Inst1Sltui    |
+                        Inst1Addiw    |
+                        Inst1Andi     |
+                        Inst1Ori      |
+                        Inst1Xori     |
+                        Inst1Csrrd    |
+                        Inst1Csrwr    |
+                        Inst1Csrxchg  |
+                        Inst1Cacop    |
+                        Inst1Lu12iw   |
+                        Inst1Pcaddu12i|
+                        Inst1Llw      |
+                        Inst1Scw      |
+                        Inst1Ldb      |
+                        Inst1Ldh      |
+                        Inst1Ldw      |
+                        Inst1Stb      |
+                        Inst1Sth      |
+                        Inst1Stw      |
+                        Inst1Ldbu     |
+                        Inst1Ldhu     |
+                        Inst1Preld    |
+                        Inst1Jirl     |
+                        Inst1Bl       ;
+                        // Inst1Beq      |
+                        // Inst1Bne      |
+                        // Inst1Blt      |
+                        // Inst1Bge      |
+                        // Inst1Bltu     |
+                        // Inst1Bgeu     ;
+    wire Inst1rjAble =  Inst1Rdcntidw |
+                        Inst1Addw     |
+                        Inst1Subw     |
+                        Inst1Slt      |
+                        Inst1Sltu     |
+                        Inst1Nor      |
+                        Inst1And      |
+                        Inst1Or       |
+                        Inst1Xor      |
+                        Inst1Sllw     |
+                        Inst1Srlw     |  
+                        Inst1Sraw     |
+                        Inst1Mulw     |
+                        Inst1Mulhw    | 
+                        Inst1Mulhwu   |
+                        Inst1Divw     |
+                        Inst1Modw     |
+                        Inst1Divwu    |
+                        Inst1Modwu    |
+                        Inst1Slliw    |
+                        Inst1Srliw    |
+                        Inst1Sraiw    |
+                        Inst1Slti     |
+                        Inst1Sltui    |
+                        Inst1Addiw    |
+                        Inst1Andi     |
+                        Inst1Ori      |
+                        Inst1Xori     |
+                        Inst1Cacop    |
+                        Inst1Invtlb   |
+                        Inst1Llw      |
+                        Inst1Scw      |
+                        Inst1Ldb      |
+                        Inst1Ldh      |
+                        Inst1Ldw      |
+                        Inst1Stb      |
+                        Inst1Sth      |
+                        Inst1Stw      |
+                        Inst1Ldbu     |
+                        Inst1Ldhu     |
+                        Inst1Preld    |
+                        Inst1Jirl     |
+                        Inst1Beq      |
+                        Inst1Bne      |
+                        Inst1Blt      |
+                        Inst1Bge      |
+                        Inst1Bltu     |
+                        Inst1Bgeu     ;
+    wire Inst1rkAble =  Inst1Addw     |
+                        Inst1Subw     |
+                        Inst1Slt      |
+                        Inst1Sltu     |
+                        Inst1Nor      |
+                        Inst1And      |
+                        Inst1Or       |
+                        Inst1Xor      |
+                        Inst1Sllw     |
+                        Inst1Srlw     |
+                        Inst1Sraw     |
+                        Inst1Mulw     |
+                        Inst1Mulhw    |
+                        Inst1Mulhwu   |
+                        Inst1Divw     |
+                        Inst1Modw     |
+                        Inst1Divwu    |
+                        Inst1Modwu    |
+                        Inst1Beq      |
+                        Inst1Bne      |
+                        Inst1Blt      |
+                        Inst1Bge      |
+                        Inst1Bltu     |
+                        Inst1Bgeu     |
+                        Inst1Invtlb   ;
+
+    wire Inst1Imm12  =  Inst1Slti     |
+                        Inst1Sltui    |
+                        Inst1Addiw    |
+                        Inst1Andi     |
+                        Inst1Ori      |
+                        Inst1Xori     |
+                        Inst1Cacop    |
+                        Inst1Ldb      |
+                        Inst1Ldh      |
+                        Inst1Ldw      |
+                        Inst1Stb      |
+                        Inst1Sth      |
+                        Inst1Stw      |
+                        Inst1Ldbu     |
+                        Inst1Ldhu     |
+                        Inst1Preld    ;
+    wire Inst1Imm14  =  Inst1Csrrd    |
+                        Inst1Csrwr    |
+                        Inst1Csrxchg  |
+                        Inst1Llw      |
+                        Inst1Scw      ;
+    wire Inst1Imm16  =  Inst1Jirl     |
+                        Inst1Beq      |
+                        Inst1Bne      |
+                        Inst1Blt      |
+                        Inst1Bge      |
+                        Inst1Bltu     |
+                        Inst1Bgeu     ;
+    wire Inst1Imm26  =  Inst1B        |
+                        Inst1Bl       ;
+    wire Inst1Imm20   = Inst1Lu12iw   |
+                        Inst1Pcaddu12i;
+    wire InstCode     = Inst1Syscall  |
+                        Inst1Idle     |
+                        Inst1Dbar     |
+                        Inst1Ibar     | 
+                        Inst1Break    ;
+    wire Inst1Imm5    = Inst1Slliw    | 
+                        Inst1Srliw    | 
+                        Inst1Sraiw    ;
+
+    wire Inst1ImmAble = Inst1Imm14 | Inst1Imm12 | Inst1Imm16 | Inst1Imm26 | Inst1Imm20 | InstCode | Inst1Imm5 ;
+    wire Inst1ImmDate = Inst1Imm5 ? Inst1rk :
+                        InstCode  ? {Inst1rk, Inst1rj, Inst1Rd} :
+                        Inst1Imm12 ? Inst1Imm12D :
+                        Inst1Imm14 ? Inst1Imm14D :
+                        Inst1Imm16 ? Inst1Imm16D :
+                        Inst1Imm20 ? Inst1Imm20D :
+                        Inst1Imm26 ? Inst1Imm26D ;
+    wire Inst1RdAddr   = Inst1Bl ? 5'd1 : Inst1Rd  ;
+    wire Inst1Src1Addr = Inst1rj ;
+    wire Inst1Src2addr = (Inst1Beq | Inst1Bne | Inst1Blt | Inst1Bge | Inst1Bltu | Inst1Bgeu ) ? Inst1Rd : Inst1rk ; 
+
+    reg [`MicOperateCode] Inst1OpcodeReg ;
+    reg                   Inst1SinumAReg ;
+    reg [25:0]            Inst1SiDateReg ;
+    reg                   Inst1Sr1AblReg ;
+    reg [`ArchRegBUs]     Inst1Sr1NumReg ;
+    reg                   Inst1Sr2AblReg ;
+    reg [`ArchRegBUs]     Inst1Sr2NumReg ;
+    reg                   Insr1WriteAReg ;
+    reg [`ArchRegBUs]     Inst1WriteNReg ;
+    reg                   Inst1PartReg   ;
+    reg [`InstAddrBus]    Inst1NadrReg   ;
+    reg [`InstAddrBus]    Inst1AddrReg   ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            Inst1OpcodeReg <= 8'd0 ;
+            Inst1SinumAReg <= `EnableValue ;
+            Inst1SiDateReg <= 26'd0 ;
+            Inst1Sr1AblReg <= `EnableValue ;
+            Inst1Sr1NumReg <= 5'd0 ;
+            Inst1Sr2AblReg <= `EnableValue ;
+            Inst1Sr2NumReg <= 5'd0 ;
+            Insr1WriteAReg <= `EnableValue ;
+            Inst1WriteNReg <= 5'd0 ;
+            Inst1PartReg   <= `EnableValue ;
+            Inst1NadrReg   <= `ZeorDate ;
+            Inst1AddrReg   <= `ZeorDate ;
+        end
+        else begin
+            if(DecodeStop) begin
+                Inst1OpcodeReg <= Inst1OpcodeReg ;
+                Inst1SinumAReg <= Inst1SinumAReg ;
+                Inst1SiDateReg <= Inst1SiDateReg ;
+                Inst1Sr1AblReg <= Inst1Sr1AblReg ;
+                Inst1Sr1NumReg <= Inst1Sr1NumReg ;
+                Inst1Sr2AblReg <= Inst1Sr2AblReg ;
+                Inst1Sr2NumReg <= Inst1Sr2NumReg ;
+                Insr1WriteAReg <= Insr1WriteAReg ;
+                Inst1WriteNReg <= Inst1WriteNReg ;
+                Inst1PartReg   <= Inst1PartReg   ;
+                Inst1NadrReg   <= Inst1NadrReg   ;
+                Inst1AddrReg   <= Inst1AddrReg   ;
+            end
+            if(DecodeFlash) begin
+                Inst1OpcodeReg <= 8'd0 ;
+                Inst1SinumAReg <= `EnableValue ;
+                Inst1SiDateReg <= 26'd0 ;
+                Inst1Sr1AblReg <= `EnableValue ;
+                Inst1Sr1NumReg <= 5'd0 ;
+                Inst1Sr2AblReg <= `EnableValue ;
+                Inst1Sr2NumReg <= 5'd0 ;
+                Insr1WriteAReg <= `EnableValue ;
+                Inst1WriteNReg <= 5'd0 ;
+                Inst1PartReg   <= `EnableValue ;
+                Inst1NadrReg   <= `ZeorDate ;
+                Inst1AddrReg   <= `ZeorDate ;
+            end
+            if(InInstPort1)begin
+                Inst1OpcodeReg <= Inst1OperateCode ;
+                Inst1SinumAReg <= Inst1ImmAble     ;
+                Inst1SiDateReg <= Inst1ImmDate     ;
+                Inst1Sr1AblReg <= Inst1rjAble      ;
+                Inst1Sr1NumReg <= Inst1Src1Addr    ;
+                Inst1Sr2AblReg <= Inst1rkAble      ;
+                Inst1Sr2NumReg <= Inst1Src2addr    ;
+                Insr1WriteAReg <= Inst1rdAble      ;
+                Inst1WriteNReg <= Inst1RdAddr      ;
+                Inst1PartReg   <= InInstPart1      ;
+                Inst1NadrReg   <= InInstNAdr1      ;
+                Inst1AddrReg   <= InInstAddr1      ;
+            end
+        end
+    end
+
+    assign 
+    
 
 endmodule
+ 

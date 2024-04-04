@@ -35,7 +35,7 @@ module FIFOlsu #(
         end
         else begin
             if(Wable) begin
-              Fifofront <= Fifofront + 1 ;
+              Fifofront <=(Fifofront == 16) ? 0 : Fifofront + 1 ;
               FIFOREG[Fifofront] <= Din ;
             end 
             if(FifoClean)

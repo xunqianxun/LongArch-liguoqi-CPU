@@ -39,7 +39,7 @@ module CRIQ #(
         end
         else begin
             if(Wable) begin
-              Criqfront <= Criqfront + 1 ;
+              Criqfront <= (Criqfront == CRIQDEEP) ? 0 : Criqfront + 1 ;
               CRIQREG[Criqfront] <= Din ;
             end 
             if(CriqClean)

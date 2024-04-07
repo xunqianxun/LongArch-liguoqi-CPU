@@ -2,7 +2,7 @@
 
 ## On Building
 ## Basic architecture diagram:
-![架构图](doc/picture/Arch.pngArch.png "Basic architecture diagram")
+![架构图](doc/picture/Arch.png "Basic architecture diagram")
 
 
 supplement some infromation:

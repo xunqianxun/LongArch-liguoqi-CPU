@@ -36,6 +36,7 @@ module FreeList (
     output      wire      [`ReNameRegBUs]          OutWay4RegNum,
     //from ROB
     input       wire                               ReloadAble   ,
+    //from RefTable
     input       wire                               FreeAble1    ,
     input       wire      [`ReNameRegBUs]          FreeAddr1    ,
     input       wire                               FreeAble2    ,

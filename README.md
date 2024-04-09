@@ -12,3 +12,5 @@ supplement some infromation:
 |ROB | when inst retir reg map update in aRAT|
 |MUL | 3 cycle|
 |DIv | 16 cycle|
+|FreeList| Decode Rd infro will send Freelist Rename |
+|(Weakup)Issue|this module weak up instraction use delay weak up.<br> but load need relay on realy load date back.|

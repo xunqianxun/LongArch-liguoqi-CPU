@@ -38,49 +38,42 @@ module RenameArchTable (
     input        wire        [`ArchRegBUs]                 Way4Src1Addr     ,
     input        wire                                      Way4Src2Able     ,
     input        wire        [`ArchRegBUs]                 Way4Src2Addr     ,
-    //to Issue Queue
+    //to busytable
     //******************************************************************************//
     // rename stage need 1 cycle ,instraction other information should delay 1 cycle//
     //******************************************************************************// 
-    output       wire                                      Out1Src1Able     ,
+    output       wire                                      Out1Src1Able     , 
+    output       wire                                      Out1Src1NoDate   , //虽然对于指令一来说这个信号没有用，但是我有强迫症。要保持平均。读者可删
     output       wire        [`ReNameRegBUs]               Out1Src1Addr     ,
     output       wire                                      Out1Src2Able     ,
+    output       wire                                      Out1Src2NoDate   ,// and
     output       wire        [`ReNameRegBUs]               Out1Src2Addr     ,
     output       wire                                      Out1RdAble       ,
     output       wire        [`ReNameRegBUs]               Out1RdAddr       ,
     output       wire                                      Out2Src1Able     ,
+    output       wire                                      Out2Src1NoDate   ,
     output       wire        [`ReNameRegBUs]               Out2Src1Addr     ,
     output       wire                                      Out2Src2Able     ,
+    output       wire                                      Out2Src2NoDate   ,
     output       wire        [`ReNameRegBUs]               Out2Src2Addr     ,
     output       wire                                      Out2RdAble       ,
     output       wire        [`ReNameRegBUs]               Out2RdAddr       ,
     output       wire                                      Out3Src1Able     ,
+    output       wire                                      Out3Src1NoDate   ,
     output       wire        [`ReNameRegBUs]               Out3Src1Addr     ,
     output       wire                                      Out3Src2Able     ,
+    output       wire                                      Out3Src2NoDate   ,
     output       wire        [`ReNameRegBUs]               Out3Src2Addr     ,
     output       wire                                      Out3RdAble       ,
     output       wire        [`ReNameRegBUs]               Out3RdAddr       ,
     output       wire                                      Out4Src1Able     ,
+    output       wire                                      Out4Src1NoDate   ,
     output       wire        [`ReNameRegBUs]               Out4Src1Addr     ,
     output       wire                                      Out4Src2Able     ,
+    output       wire                                      Out4Src2NoDate   ,
     output       wire        [`ReNameRegBUs]               Out4Src2Addr     ,
     output       wire                                      Out4RdAble       ,
     output       wire        [`ReNameRegBUs]               Out4RdAddr       ,
-    //from EU
-    input        wire                                      Alu1Able         ,
-    input        wire        [`ReNameRegBUs]               Alu1Addr         ,
-    input        wire                                      Alu2Able         ,
-    input        wire        [`ReNameRegBUs]               Alu2Addr         ,
-    input        wire                                      MulAble          ,
-    input        wire        [`ReNameRegBUs]               MulAddr          ,
-    input        wire                                      DivAble          ,
-    input        wire        [`ReNameRegBUs]               DivAddr          ,
-    input        wire                                      CsruAble         ,
-    input        wire        [`ReNameRegBUs]               CsruAddr         ,
-    input        wire                                      BruAble          ,
-    input        wire        [`ReNameRegBUs]               BruAddr          ,
-    input        wire                                      LsuAble          ,
-    input        wire        [`ReNameRegBUs]               LsuAddr          ,
     //to Reftable
     output       wire                                      Lock1Able        ,
     output       wire        [`ReNameRegBUs]               Lock1Addr        ,
@@ -246,143 +239,175 @@ module RenameArchTable (
     assign Lock4Able = RegLock4Able ; 
     assign Lock4Addr = RegLock4Addr ;
 
-    reg                   RegOut1Src1Able ;
-    reg  [`ReNameRegBUs]  RegOut1Src1Addr ;  
-    reg                   RegOut1Src2Able ;
-    reg  [`ReNameRegBUs]  RegOut1Src2Addr ; 
-    reg                   RegOut1RdAble   ;
-    reg  [`ReNameRegBUs]  RegOut1RdAddr   ;
-    reg                   RegOut2Src1Able ;
-    reg  [`ReNameRegBUs]  RegOut2Src1Addr ;  
-    reg                   RegOut2Src2Able ;
-    reg  [`ReNameRegBUs]  RegOut2Src2Addr ; 
-    reg                   RegOut2RdAble   ;
-    reg  [`ReNameRegBUs]  RegOut2RdAddr   ;
-    reg                   RegOut3Src1Able ;
-    reg  [`ReNameRegBUs]  RegOut3Src1Addr ;  
-    reg                   RegOut3Src2Able ;
-    reg  [`ReNameRegBUs]  RegOut3Src2Addr ; 
-    reg                   RegOut3RdAble   ;
-    reg  [`ReNameRegBUs]  RegOut3RdAddr   ;
-    reg                   RegOut4Src1Able ;
-    reg  [`ReNameRegBUs]  RegOut4Src1Addr ;  
-    reg                   RegOut4Src2Able ;
-    reg  [`ReNameRegBUs]  RegOut4Src2Addr ; 
-    reg                   RegOut4RdAble   ;
-    reg  [`ReNameRegBUs]  RegOut4RdAddr   ;
+    reg                   RegOut1Src1Able   ;
+    reg                   RegOut1Src1NoDate ;
+    reg  [`ReNameRegBUs]  RegOut1Src1Addr   ;  
+    reg                   RegOut1Src2Able   ;
+    reg                   RegOut1Src2NoDate ;
+    reg  [`ReNameRegBUs]  RegOut1Src2Addr   ; 
+    reg                   RegOut1RdAble     ;
+    reg  [`ReNameRegBUs]  RegOut1RdAddr     ;
+    reg                   RegOut2Src1Able   ;
+    reg                   RegOut2Src1NoDate ;
+    reg  [`ReNameRegBUs]  RegOut2Src1Addr   ;  
+    reg                   RegOut2Src2Able   ;
+    reg                   RegOut2Src2NoDate ;
+    reg  [`ReNameRegBUs]  RegOut2Src2Addr   ; 
+    reg                   RegOut2RdAble     ;
+    reg  [`ReNameRegBUs]  RegOut2RdAddr     ;
+    reg                   RegOut3Src1Able   ;
+    reg                   RegOut3Src1NoDate ;
+    reg  [`ReNameRegBUs]  RegOut3Src1Addr   ;  
+    reg                   RegOut3Src2Able   ;
+    reg                   RegOut3Src2NoDate ;
+    reg  [`ReNameRegBUs]  RegOut3Src2Addr   ; 
+    reg                   RegOut3RdAble     ;
+    reg  [`ReNameRegBUs]  RegOut3RdAddr     ;
+    reg                   RegOut4Src1Able   ;
+    reg                   RegOut4Src1NoDate ;
+    reg  [`ReNameRegBUs]  RegOut4Src1Addr   ;  
+    reg                   RegOut4Src2Able   ; 
+    reg                   RegOut4Src2NoDate ;
+    reg  [`ReNameRegBUs]  RegOut4Src2Addr   ; 
+    reg                   RegOut4RdAble     ;
+    reg  [`ReNameRegBUs]  RegOut4RdAddr     ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            RegOut1Src1Able <= `EnableValue ;
-            RegOut1Src1Addr <= 7'd0         ;
-            RegOut1Src2Able <= `EnableValue ;
-            RegOut1Src2Addr <= 7'd0         ;
-            RegOut1RdAble   <= `EnableValue ;
-            RegOut1RdAddr   <= 7'd0         ;
-            RegOut2Src1Able <= `EnableValue ;
-            RegOut2Src1Addr <= 7'd0         ;
-            RegOut2Src2Able <= `EnableValue ;
-            RegOut2Src2Addr <= 7'd0         ;
-            RegOut2RdAble   <= `EnableValue ;
-            RegOut2RdAddr   <= 7'd0         ;
-            RegOut3Src1Able <= `EnableValue ;
-            RegOut3Src1Addr <= 7'd0         ;
-            RegOut3Src2Able <= `EnableValue ;
-            RegOut3Src2Addr <= 7'd0         ;
-            RegOut3RdAble   <= `EnableValue ;
-            RegOut3RdAddr   <= 7'd0         ;
-            RegOut4Src1Able <= `EnableValue ;
-            RegOut4Src1Addr <= 7'd0         ;
-            RegOut4Src2Able <= `EnableValue ;
-            RegOut4Src2Addr <= 7'd0         ;
-            RegOut4RdAble   <= `EnableValue ;
-            RegOut4RdAddr   <= 7'd0         ;
+            RegOut1Src1Able   <= `EnableValue ;
+            RegOut1Src1NoDate <= `EnableValue ;
+            RegOut1Src1Addr   <= 7'd0         ;
+            RegOut1Src2Able   <= `EnableValue ;
+            RegOut1Src2NoDate <= `EnableValue ;
+            RegOut1Src2Addr   <= 7'd0         ;
+            RegOut1RdAble     <= `EnableValue ;
+            RegOut1RdAddr     <= 7'd0         ;
+            RegOut2Src1Able   <= `EnableValue ;
+            RegOut2Src1NoDate <= `EnableValue ;
+            RegOut2Src1Addr   <= 7'd0         ;
+            RegOut2Src2Able   <= `EnableValue ;
+            RegOut2Src2NoDate <= `EnableValue ;
+            RegOut2Src2Addr   <= 7'd0         ;
+            RegOut2RdAble     <= `EnableValue ;
+            RegOut2RdAddr     <= 7'd0         ;
+            RegOut3Src1Able   <= `EnableValue ;
+            RegOut3Src1NoDate <= `EnableValue ;
+            RegOut3Src1Addr   <= 7'd0         ;
+            RegOut3Src2Able   <= `EnableValue ;
+            RegOut3Src2NoDate <= `EnableValue ;
+            RegOut3Src2Addr   <= 7'd0         ;
+            RegOut3RdAble     <= `EnableValue ;
+            RegOut3RdAddr     <= 7'd0         ;
+            RegOut4Src1Able   <= `EnableValue ;
+            RegOut4Src1NoDate <= `EnableValue ;
+            RegOut4Src1Addr   <= 7'd0         ;
+            RegOut4Src2Able   <= `EnableValue ;
+            RegOut4Src2NoDate <= `EnableValue ;
+            RegOut4Src2Addr   <= 7'd0         ;
+            RegOut4RdAble     <= `EnableValue ;
+            RegOut4RdAddr     <= 7'd0         ;
         end  
         else if(RATFlash) begin
-            RegOut1Src1Able <= `EnableValue ;
-            RegOut1Src1Addr <= 7'd0         ;
-            RegOut1Src2Able <= `EnableValue ;
-            RegOut1Src2Addr <= 7'd0         ;
-            RegOut1RdAble   <= `EnableValue ;
-            RegOut1RdAddr   <= 7'd0         ;
-            RegOut2Src1Able <= `EnableValue ;
-            RegOut2Src1Addr <= 7'd0         ;
-            RegOut2Src2Able <= `EnableValue ;
-            RegOut2Src2Addr <= 7'd0         ;
-            RegOut2RdAble   <= `EnableValue ;
-            RegOut2RdAddr   <= 7'd0         ;
-            RegOut3Src1Able <= `EnableValue ;
-            RegOut3Src1Addr <= 7'd0         ;
-            RegOut3Src2Able <= `EnableValue ;
-            RegOut3Src2Addr <= 7'd0         ;
-            RegOut3RdAble   <= `EnableValue ;
-            RegOut3RdAddr   <= 7'd0         ;
-            RegOut4Src1Able <= `EnableValue ;
-            RegOut4Src1Addr <= 7'd0         ;
-            RegOut4Src2Able <= `EnableValue ;
-            RegOut4Src2Addr <= 7'd0         ;
-            RegOut4RdAble   <= `EnableValue ;
-            RegOut4RdAddr   <= 7'd0         ;
+            RegOut1Src1Able   <= `EnableValue ;
+            RegOut1Src1NoDate <= `EnableValue ;
+            RegOut1Src1Addr   <= 7'd0         ;
+            RegOut1Src2Able   <= `EnableValue ;
+            RegOut1Src2NoDate <= `EnableValue ;
+            RegOut1Src2Addr   <= 7'd0         ;
+            RegOut1RdAble     <= `EnableValue ;
+            RegOut1RdAddr     <= 7'd0         ;
+            RegOut2Src1Able   <= `EnableValue ;
+            RegOut2Src1NoDate <= `EnableValue ;
+            RegOut2Src1Addr   <= 7'd0         ;
+            RegOut2Src2Able   <= `EnableValue ;
+            RegOut2Src2NoDate <= `EnableValue ;
+            RegOut2Src2Addr   <= 7'd0         ;
+            RegOut2RdAble     <= `EnableValue ;
+            RegOut2RdAddr     <= 7'd0         ;
+            RegOut3Src1Able   <= `EnableValue ;
+            RegOut3Src1NoDate <= `EnableValue ;
+            RegOut3Src1Addr   <= 7'd0         ;
+            RegOut3Src2Able   <= `EnableValue ;
+            RegOut3Src2NoDate <= `EnableValue ;
+            RegOut3Src2Addr   <= 7'd0         ;
+            RegOut3RdAble     <= `EnableValue ;
+            RegOut3RdAddr     <= 7'd0         ;
+            RegOut4Src1Able   <= `EnableValue ;
+            RegOut4Src1NoDate <= `EnableValue ;
+            RegOut4Src1Addr   <= 7'd0         ;
+            RegOut4Src2Able   <= `EnableValue ;
+            RegOut4Src2NoDate <= `EnableValue ;
+            RegOut4Src2Addr   <= 7'd0         ;
+            RegOut4RdAble     <= `EnableValue ;
+            RegOut4RdAddr     <= 7'd0         ;
         end
         else begin
-            RegOut1Src1Able <= (Way1Src1Able & ~RATStop) ;
-            RegOut1Src1Addr <= (Way1Src1Able & ~RATStop) ? RENAMETABLE[Way1Src1Addr] : 7'd0 ;
-            RegOut1Src2Able <= (Way1Src2Able & ~RATStop) ;
-            RegOut1Src2Addr <= (Way1Src2Able & ~RATStop) ? RENAMETABLE[Way1Src2Addr] : 7'd0 ;
-            RegOut1RdAble   <= (Way1RdAble   & ~RATStop) ; 
-            RegOut1RdAddr   <= (Way1RdAble   & ~RATStop) ? Way1RdAddr : 7'd0                ;
-            RegOut2Src1Able <= (Way2Src1Able & ~RATStop) ;
-            RegOut2Src1Addr <= (Way2Src1Able & ~RATStop) ? (((Way2Src1Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way2Src1Addr]) : 7'd0 ;
-            RegOut2Src2Able <= (Way2Src2Able & ~RATStop) ;
-            RegOut2Src2Addr <= (Way2Src2Able & ~RATStop) ? (((Way2Src2Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way2Src2Addr]) : 7'd0 ;
-            RegOut2RdAble   <= (Way2RdAble   & ~RATStop) ; 
-            RegOut2RdAddr   <= (Way2RdAble   & ~RATStop) ? Way2RdAddr : 7'd0                ;
-            RegOut3Src1Able <= (Way3Src1Able & ~RATStop) ;
-            RegOut3Src1Addr <= (Way3Src1Able & ~RATStop) ? (((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? Way2RdAddr :
-                                                            ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way3Src1Addr]) : 7'd0 ;
-            RegOut3Src2Able <= (Way3Src2Able & ~RATStop) ;
-            RegOut3Src2Addr <= (Way3Src2Able & ~RATStop) ? (((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? Way2RdAddr :
-                                                            ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way3Src2Addr]) : 7'd0 ;
-            RegOut3RdAble   <= (Way3RdAble   & ~RATStop) ; 
-            RegOut3RdAddr   <= (Way3RdAble   & ~RATStop) ? Way3RdAddr : 7'd0                ;
-            RegOut4Src1Able <= (Way4Src1Able & ~RATStop) ;
-            RegOut4Src1Addr <= (Way4Src1Able & ~RATStop) ? (((Way3Src1Addr == Way3ArchAddr) & Way3RdAble) ? Way3RdAddr :
-                                                            ((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? Way2RdAddr :
-                                                            ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way4Src1Addr]) : 7'd0 ;
-            RegOut4Src2Able <= (Way4Src2Able & ~RATStop) ;
-            RegOut4Src2Addr <= (Way4Src2Able & ~RATStop) ? (((Way3Src2Addr == Way3ArchAddr) & Way3RdAble) ? Way3RdAddr :
-                                                            ((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? Way2RdAddr :
-                                                            ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? Way1RdAddr : RENAMETABLE[Way4Src2Addr]) : 7'd0 ;
-            RegOut4RdAble   <= (Way4RdAble   & ~RATStop) ; 
-            RegOut4RdAddr   <= (Way4RdAble   & ~RATStop) ? Way4RdAddr : 7'd0                ;
+            RegOut1Src1Able                     <= (Way1Src1Able & ~RATStop) ;
+            {RegOut1Src1NoDate,RegOut1Src1Addr} <= (Way1Src1Able & ~RATStop) ? {`EnableValue,RENAMETABLE[Way1Src1Addr]} : {`EnableValue,7'd0} ;
+            RegOut1Src2Able                     <= (Way1Src2Able & ~RATStop) ;
+            {RegOut1Src2NoDate,RegOut1Src2Addr} <= (Way1Src2Able & ~RATStop) ? {`EnableValue,RENAMETABLE[Way1Src2Addr]} : {`EnableValue,7'd0} ;
+            RegOut1RdAble                       <= (Way1RdAble   & ~RATStop) ; 
+            RegOut1RdAddr                       <= (Way1RdAble   & ~RATStop) ? Way1RdAddr : 7'd0                ;
+            RegOut2Src1Able                     <= (Way2Src1Able & ~RATStop) ;
+            {RegOut2Src1NoDate,RegOut2Src1Addr} <= (Way2Src1Able & ~RATStop) ? (((Way2Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut2Src2Able                     <= (Way2Src2Able & ~RATStop) ;
+            {RegOut2Src2NoDate,RegOut2Src2Addr} <= (Way2Src2Able & ~RATStop) ? (((Way2Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut2RdAble                       <= (Way2RdAble   & ~RATStop) ; 
+            RegOut2RdAddr                       <= (Way2RdAble   & ~RATStop) ? Way2RdAddr : 7'd0                ;
+            RegOut3Src1Able                     <= (Way3Src1Able & ~RATStop) ;
+            {RegOut3Src1NoDate,RegOut3Src1Addr} <= (Way3Src1Able & ~RATStop) ? (((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                                ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut3Src2Able                     <= (Way3Src2Able & ~RATStop) ;
+            {RegOut3Src2NoDate,RegOut3Src2Addr} <= (Way3Src2Able & ~RATStop) ? (((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                                ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut3RdAble                       <= (Way3RdAble   & ~RATStop) ; 
+            RegOut3RdAddr                       <= (Way3RdAble   & ~RATStop) ? Way3RdAddr : 7'd0                ;
+            RegOut4Src1Able                     <= (Way4Src1Able & ~RATStop) ;
+            {RegOut4Src1NoDate,RegOut4Src1Addr} <= (Way4Src1Able & ~RATStop) ? (((Way3Src1Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
+                                                                                ((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                                ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut4Src2Able                     <= (Way4Src2Able & ~RATStop) ;
+            {RegOut4Src2NoDate,RegOut4Src2Addr} <= (Way4Src2Able & ~RATStop) ? (((Way3Src2Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
+                                                                                ((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                                ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut4RdAble                       <= (Way4RdAble   & ~RATStop) ; 
+            RegOut4RdAddr                       <= (Way4RdAble   & ~RATStop) ? Way4RdAddr : 7'd0                ;
         end
     end
 
 
-    assign  Out1Src1Able = RegOut1Src1Able ;
-    assign  Out1Src1Addr = RegOut1Src1Addr ;
-    assign  Out1Src2Able = RegOut1Src2Able ;
-    assign  Out1Src2Addr = RegOut1Src2Addr ; 
-    assign  Out1RdAble   = RegOut1RdAble   ;
-    assign  Out1RdAddr   = RegOut1RdAddr   ;
-    assign  Out2Src1Able = RegOut2Src1Able ;
-    assign  Out2Src1Addr = RegOut2Src1Addr ;  
-    assign  Out2Src2Able = RegOut2Src2Able ;
-    assign  Out2Src2Addr = RegOut2Src2Addr ; 
-    assign  Out2RdAble   = RegOut2RdAble   ;
-    assign  Out2RdAddr   = RegOut2RdAddr   ;
-    assign  Out3Src1Able = RegOut3Src1Able ;
-    assign  Out3Src1Addr = RegOut3Src1Addr ;  
-    assign  Out3Src2Able = RegOut3Src2Able ;
-    assign  Out3Src2Addr = RegOut3Src2Addr ; 
-    assign  Out3RdAble   = RegOut3RdAble   ;
-    assign  Out3RdAddr   = RegOut3RdAddr   ;
-    assign  Out4Src1Able = RegOut4Src1Able ;
-    assign  Out4Src1Addr = RegOut4Src1Addr ;  
-    assign  Out4Src2Able = RegOut4Src2Able ;
-    assign  Out4Src2Addr = RegOut4Src2Addr ; 
-    assign  Out4RdAble   = RegOut4RdAble   ;
-    assign  Out4RdAddr   = RegOut4RdAddr   ;
+    assign  Out1Src1Able   = RegOut1Src1Able ;
+    assign  Out1Src1NoDate = RegOut1Src1NoDate ;
+    assign  Out1Src1Addr   = RegOut1Src1Addr ;
+    assign  Out1Src2Able   = RegOut1Src2Able ;
+    assign  Out1Src2NoDate = RegOut1Src2NoDate ;
+    assign  Out1Src2Addr   = RegOut1Src2Addr ; 
+    assign  Out1RdAble     = RegOut1RdAble   ;
+    assign  Out1RdAddr     = RegOut1RdAddr   ;
+    assign  Out2Src1Able   = RegOut2Src1Able ;
+    assign  Out2Src1NoDate = RegOut2Src1NoDate ;
+    assign  Out2Src1Addr   = RegOut2Src1Addr ;  
+    assign  Out2Src2Able   = RegOut2Src2Able ;
+    assign  Out2Src2NoDate = RegOut2Src2NoDate ;
+    assign  Out2Src2Addr   = RegOut2Src2Addr ; 
+    assign  Out2RdAble     = RegOut2RdAble   ;
+    assign  Out2RdAddr     = RegOut2RdAddr   ;
+    assign  Out3Src1Able   = RegOut3Src1Able ;
+    assign  Out3Src1NoDate = RegOut3Src1NoDate ;
+    assign  Out3Src1Addr   = RegOut3Src1Addr ;  
+    assign  Out3Src2Able   = RegOut3Src2Able ;
+    assign  Out3Src2NoDate = RegOut3Src2NoDate ;
+    assign  Out3Src2Addr   = RegOut3Src2Addr ; 
+    assign  Out3RdAble     = RegOut3RdAble   ;
+    assign  Out3RdAddr     = RegOut3RdAddr   ;
+    assign  Out4Src1Able   = RegOut4Src1Able ;
+    assign  Out4Src1NoDate = RegOut4Src1NoDate ;
+    assign  Out4Src1Addr   = RegOut4Src1Addr ;  
+    assign  Out4Src2Able   = RegOut4Src2Able ;
+    assign  Out4Src2NoDate = RegOut4Src2NoDate ;
+    assign  Out4Src2Addr   = RegOut4Src2Addr ; 
+    assign  Out4RdAble     = RegOut4RdAble   ;
+    assign  Out4RdAddr     = RegOut4RdAddr   ;
 
 
     assign Use1Able  = RegOut1Src1Able ;

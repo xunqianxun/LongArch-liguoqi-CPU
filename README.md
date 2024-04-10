@@ -1,6 +1,7 @@
 # LongArch-liguoqi-CPU
 
-## On Building
+## This is my graduation project
+### <font color="Read">On Building</font>
 ## Basic architecture diagram:
 ![架构图](doc/picture/Arch.png "Basic architecture diagram")
 

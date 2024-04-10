@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "define.v"
+`include "../define.v"
 
 module Div #(
     parameter WIDTH_DIV = 32 

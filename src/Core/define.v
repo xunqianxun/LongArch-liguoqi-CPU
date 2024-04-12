@@ -192,4 +192,4 @@
 
 `define CLR 0
 
-
+`define ALUCODE 3'b001 

@@ -193,3 +193,6 @@
 `define CLR 0
 
 `define ALUCODE 3'b001 
+`define MULCODE 3'b011
+`define DIVCODE 3'b010 
+

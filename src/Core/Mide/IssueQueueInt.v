@@ -75,7 +75,7 @@ module IssueQueueInt (
     input       wire        [`ReNameRegBUs]               ByPassLoadAddr   ,//bypass
     //in Req
     input       wire                                      Alu1Req          ,
-    input       wire                                      ALu2Req          ,
+    input       wire                                      Alu2Req          ,
     input       wire                                      MulReq           ,
     input       wire                                      DivReq           ,
     //to delay bus
@@ -86,7 +86,7 @@ module IssueQueueInt (
     output      wire                                      MulInst          ,
     output      wire        [`ReNameRegBUs]               MulInstAddr      ,
     //select inst to Physical
-    output      wire        [`MicOperateCode]             Inst1MicOperate  ,
+    output      wire        [`MicOperateCode]             Inst1MicOperate  , //alu1
     output      wire                                      Inst1Src1RAble   ,
     output      wire        [`ReNameRegBUs]               Inst1Src1RAddr   , 
     output      wire                                      Inst1Src2RAble   ,
@@ -96,7 +96,7 @@ module IssueQueueInt (
     output      wire                                      Inst1RdAble      ,
     output      wire        [`ReNameRegBUs]               Inst1RdAddr      , 
     output      wire        [5:0]                         Inst1RoBptr      ,
-    output      wire        [`MicOperateCode]             Inst2MicOperate  ,
+    output      wire        [`MicOperateCode]             Inst2MicOperate  , //alu2
     output      wire                                      Inst2Src1RAble   ,
     output      wire        [`ReNameRegBUs]               Inst2Src1RAddr   , 
     output      wire                                      Inst2Src2RAble   ,
@@ -106,7 +106,7 @@ module IssueQueueInt (
     output      wire                                      Inst2RdAble      ,
     output      wire        [`ReNameRegBUs]               Inst2RdAddr      , 
     output      wire        [5:0]                         Inst2RoBptr      ,
-    output      wire        [`MicOperateCode]             Inst3MicOperate  ,
+    output      wire        [`MicOperateCode]             Inst3MicOperate  , //div
     output      wire                                      Inst3Src1RAble   ,
     output      wire        [`ReNameRegBUs]               Inst3Src1RAddr   , 
     output      wire                                      Inst3Src2RAble   ,
@@ -116,7 +116,7 @@ module IssueQueueInt (
     output      wire                                      Inst3RdAble      ,
     output      wire        [`ReNameRegBUs]               Inst3RdAddr      , 
     output      wire        [5:0]                         Inst3RoBptr      ,
-    output      wire        [`MicOperateCode]             Inst4MicOperate  ,
+    output      wire        [`MicOperateCode]             Inst4MicOperate  , //mul
     output      wire                                      Inst4Src1RAble   ,
     output      wire        [`ReNameRegBUs]               Inst4Src1RAddr   , 
     output      wire                                      Inst4Src2RAble   ,
@@ -137,82 +137,84 @@ module IssueQueueInt (
     reg [5:0]  ReadPtr  ;
     reg [5:0]  WritePtr ;
 
-    reg [5:0]  ALLOCATE [0:32] ;
+    assign IsQuIntReq = ReadPtr    //   这个队列得改 还是得用分离式的
+
+    reg [4:0]  ALLOCATE [0:32] ;
 
     wire       Inst1SelectAble ; //需要考虑stop时
     wire       Inst2SelectAble ;
     wire       Inst3SelectAble ;  
     wire       Inst4SelectAble ;
-    wire [5:0] Inst1SelectPtr  ;
-    wire [5:0] Inst2SelectPtr  ;
-    wire [5:0] Inst3SelectPtr  ;
-    wire [5:0] Inst4SelectPtr  ;
+    wire [4:0] Inst1SelectPtr  ;
+    wire [4:0] Inst2SelectPtr  ;
+    wire [4:0] Inst3SelectPtr  ;
+    wire [4:0] Inst4SelectPtr  ;
 
     wire [3:0]  WriteCriqNum   ; 
-    wire [23:0] WriteBufferPtr ;
+    wire [19:0] WriteBufferPtr ;
 
-    assign  {WriteBufferPtr,WriteCriqNum}    =  (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'b0) & {6'd0,6'd0,6'd0,6'd0,4'd0})                                        |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'b1) & {6'd0,6'd0,6'd0,Inst1SelectPtr,4'd1})                              |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd2) & {6'd0,6'd0,6'd0,Inst2SelectPtr,4'd1})                              |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd3) & {6'd0,6'd0,Inst2SelectPtr,Inst1SelectPtr,4'd2})                    |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd4) & {6'd0,6'd0,6'd0,Inst3SelectPtr,4'd1})                              |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd5) & {6'd0,6'd0,Inst3SelectPtr,Inst1SelectPtr,4'd2})                    |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd6) & {6'd0,6'd0,Inst3SelectPtr,Inst2SelectPtr,4'd2})                    |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd7) & {6'd0,Inst3SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd3})          |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd8) & {6'd0,6'd0,6'd0,Inst4SelectPtr,4'd1})                              |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd9) & {6'd0,6'd0,Inst4SelectPtr,Inst1SelectPtr,4'd2})                    |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd10) & {6'd0,6'd0,Inst4SelectPtr,Inst2SelectPtr,4'd2})                   |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd11) & {6'd0,Inst4SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd3})         |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd12) & {6'd0,6'd0,Inst4SelectPtr,Inst3SelectPtr,4'd2})                   |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd13) & {6'd0,Inst4SelectPtr,Inst3SelectPtr,Inst1SelectPtr,4'd3})         |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd14) & {6'd0,Inst4SelectPtr,Inst3SelectPtr,Inst2SelectPtr,4'd3})         |
-                                                (({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd15) & {Inst4SelectPtr,Inst3SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd4}); 
+    assign  {WriteBufferPtr,WriteCriqNum}    =  ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'b0)}} & {5'd0,5'd0,5'd0,5'd0,4'd0})                                        |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'b1)}} & {5'd0,5'd0,5'd0,Inst1SelectPtr,4'd1})                              |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd2)}} & {5'd0,5'd0,5'd0,Inst2SelectPtr,4'd1})                              |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd3)}} & {5'd0,5'd0,Inst2SelectPtr,Inst1SelectPtr,4'd2})                    |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd4)}} & {5'd0,5'd0,5'd0,Inst3SelectPtr,4'd1})                              |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd5)}} & {5'd0,5'd0,Inst3SelectPtr,Inst1SelectPtr,4'd2})                    |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd6)}} & {5'd0,5'd0,Inst3SelectPtr,Inst2SelectPtr,4'd2})                    |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd7)}} & {5'd0,Inst3SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd3})          |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd8)}} & {5'd0,5'd0,5'd0,Inst4SelectPtr,4'd1})                              |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd9)}} & {5'd0,5'd0,Inst4SelectPtr,Inst1SelectPtr,4'd2})                    |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd10)}} & {5'd0,5'd0,Inst4SelectPtr,Inst2SelectPtr,4'd2})                   |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd11)}} & {5'd0,Inst4SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd3})         |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd12)}} & {5'd0,5'd0,Inst4SelectPtr,Inst3SelectPtr,4'd2})                   |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd13)}} & {5'd0,Inst4SelectPtr,Inst3SelectPtr,Inst1SelectPtr,4'd3})         |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd14)}} & {5'd0,Inst4SelectPtr,Inst3SelectPtr,Inst2SelectPtr,4'd3})         |
+                                                ({24{({Inst4SelectAble,Inst3SelectAble,Inst2SelectAble,Inst1SelectAble} == 4'd15)}} & {Inst4SelectPtr,Inst3SelectPtr,Inst2SelectPtr,Inst1SelectPtr,4'd4}); 
 
     integer i ;
     always @(posedge Clk) begin
         if(!Rest) begin
             for (i = 0;i<32 ;i=i+1 ) begin
-                ALLOCATE[i] <= i ;
+                ALLOCATE[i] <= i[4:0] ;
             end
-            ALLOCATE[32] <= 6'd0 ; 
+            ALLOCATE[32] <= 5'd0 ; 
             WritePtr <= 6'd32 ;
         end
         else if(IsQuIntFlash) begin
             for (i = 0;i<32 ;i=i+1 ) begin
-                ALLOCATE[i] <= i ;
+                ALLOCATE[i] <= i[4:0] ;
             end
-            ALLOCATE[32] <= 6'd0 ;
+            ALLOCATE[32] <= 5'd0 ;
             WritePtr <= 6'd32 ;
         end
         else begin
             if(WriteCriqNum == 4'd1) begin
-                ALLOCATE[WritePtr] <= WriteBufferPtr[5:0] ;
+                ALLOCATE[WritePtr] <= WriteBufferPtr[4:0] ;
                 WritePtr <= (WritePtr == 32) ? 0 : WritePtr + 1 ;
             end
             if(WriteCriqNum == 4'd2) begin
-                ALLOCATE[WritePtr] <= WriteBufferPtr[5:0] ;
+                ALLOCATE[WritePtr] <= WriteBufferPtr[4:0] ;
                 if(WritePtr == 32)
-                    ALLOCATE[0] <= WriteBufferPtr[11:6]       ;
+                    ALLOCATE[0] <= WriteBufferPtr[9:5]       ;
                 else 
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6] ;
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5] ;
                 WritePtr <= (WritePtr == 31) ? 0 :
                             (WritePtr == 32) ? 1 :
                              WritePtr + 2 ;
             end
             if(WriteCriqNum == 4'd3) begin
-                ALLOCATE[WritePtr] <= WriteBufferPtr[5:0] ;
+                ALLOCATE[WritePtr] <= WriteBufferPtr[4:0] ;
                 if(WritePtr == 32) begin
-                    ALLOCATE[0] <= WriteBufferPtr[11:6]       ;
-                    ALLOCATE[1] <= WriteBufferPtr[17:12]      ;
+                    ALLOCATE[0] <= WriteBufferPtr[9:5]       ;
+                    ALLOCATE[1] <= WriteBufferPtr[14:10]      ;
                 end
 
                 else if(WritePtr == 31) begin
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6] ;
-                    ALLOCATE[0] <= WriteBufferPtr[17:12]         ;
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5] ;
+                    ALLOCATE[0] <= WriteBufferPtr[14:10]         ;
                 end
                 else begin
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6]  ;
-                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[17:12] ;
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5]  ;
+                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[14:10] ;
                 end  
                 WritePtr <= (WritePtr == 30) ? 0 :
                             (WritePtr == 31) ? 1 :
@@ -220,27 +222,27 @@ module IssueQueueInt (
                              WritePtr + 3 ;
             end 
             if(WriteCriqNum == 4'd4) begin
-                ALLOCATE[WritePtr] <= WriteBufferPtr[5:0] ;
+                ALLOCATE[WritePtr] <= WriteBufferPtr[4:0] ;
                 if(WritePtr == 32) begin
-                    ALLOCATE[0] <= WriteBufferPtr[11:6]       ;
-                    ALLOCATE[1] <= WriteBufferPtr[17:12]      ;
-                    ALLOCATE[2] <= WriteBufferPtr[23:18]      ;
+                    ALLOCATE[0] <= WriteBufferPtr[9:5]       ;
+                    ALLOCATE[1] <= WriteBufferPtr[14:10]      ;
+                    ALLOCATE[2] <= WriteBufferPtr[19:15]      ;
                 end
 
                 else if(WritePtr == 31) begin
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6] ;
-                    ALLOCATE[0] <= WriteBufferPtr[17:12]         ;
-                    ALLOCATE[1] <= WriteBufferPtr[23:18]         ;
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5] ;
+                    ALLOCATE[0] <= WriteBufferPtr[14:10]         ;
+                    ALLOCATE[1] <= WriteBufferPtr[19:15]         ;
                 end
                 else if(WritePtr == 30) begin
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6]  ;
-                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[17:12] ;
-                    ALLOCATE[0] <= WriteBufferPtr[23:18]          ;
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5]  ;
+                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[14:10] ;
+                    ALLOCATE[0] <= WriteBufferPtr[19:15]          ;
                 end
                 else begin
-                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[11:6]  ;
-                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[17:12] ;
-                    ALLOCATE[WritePtr+3] <= WriteBufferPtr[23:18] ; 
+                    ALLOCATE[WritePtr+1] <= WriteBufferPtr[9:5]  ;
+                    ALLOCATE[WritePtr+2] <= WriteBufferPtr[14:10] ;
+                    ALLOCATE[WritePtr+3] <= WriteBufferPtr[19:15] ; 
                 end  
                 WritePtr <= (WritePtr == 29) ? 0 :
                             (WritePtr == 30) ? 1 :
@@ -256,129 +258,157 @@ module IssueQueueInt (
                                  In1aAble & In2aAble & ~In3aAble & ~In4aAble ? 3'd2 :
                                  In1aAble & ~In2aAble & ~In3aAble & ~In4aAble ? 3'd1 : 3'd0 ;
 
-    wire [5:0] Read1Ptr = ReadPtr ;
-    wire [5:0] Read2Ptr = (ReadPtr==32) ? 0 : ReadPtr + 1;
-    wire [5:0] Read3Ptr = (ReadPtr==31) ? 0 : 
-                          (ReadPtr==32) ? 1 : ReadPtr + 2;
-    wire [5:0] Read4Ptr = (ReadPtr==30) ? 0 : 
-                          (ReadPtr==31) ? 1 :
-                          (ReadPtr==32) ? 2 : ReadPtr + 3;
+    wire [4:0] Read1Ptr = ALLOCATE[ReadPtr] ;
+    wire [4:0] Read2Ptr = (ReadPtr==32) ? 5'd0 : ALLOCATE[ReadPtr + 1];
+    wire [4:0] Read3Ptr = (ReadPtr==31) ? 5'd0 : 
+                          (ReadPtr==32) ? 5'd1 : ALLOCATE[ReadPtr + 2];
+    wire [4:0] Read4Ptr = (ReadPtr==30) ? 5'd0 : 
+                          (ReadPtr==31) ? 5'd1 :
+                          (ReadPtr==32) ? 5'd2 : ALLOCATE[ReadPtr + 3];
 
     always @(posedge Clk) begin
         if(!Rest) 
             ReadPtr <= 6'd0 ;
         else begin
-            if(NeedAllocateNum == 3'd4)
-                ReadPtr <= Read4Ptr + 1 ;
-            if(NeedAllocateNum == 3'd3)
-                ReadPtr <= Read3Ptr + 1 ;
-            if(NeedAllocateNum == 3'd2)
-                ReadPtr <= Read2Ptr + 1 ;
-            if(NeedAllocateNum == 3'd1)
-                ReadPtr <= Read1Ptr + 1 ; 
+            if(NeedAllocateNum == 3'd4) begin
+                if(ReadPtr == 6'd29 )
+                    ReadPtr <= 0 ;
+                else if(ReadPtr == 6'd30 )
+                    ReadPtr <= 1 ;
+                else if(ReadPtr == 6'd31 )
+                    ReadPtr <= 2 ;
+                else if(ReadPtr == 6'd32 )
+                    ReadPtr <= 3 ;
+                else 
+                   ReadPtr <= ReadPtr + 1 ; 
+            end 
+            if(NeedAllocateNum == 3'd3) begin
+                if(ReadPtr == 6'd30 )
+                    ReadPtr <= 0 ;
+                else if(ReadPtr == 6'd31 )
+                    ReadPtr <= 1 ;
+                else if(ReadPtr == 6'd32 )
+                    ReadPtr <= 2 ;
+                else 
+                    ReadPtr <= ReadPtr + 1 ;
+            end 
+            if(NeedAllocateNum == 3'd2) begin
+                if(ReadPtr == 6'd31)
+                    ReadPtr <= 0 ;
+                else if(ReadPtr == 6'd32 )
+                    ReadPtr <= 1 ;
+                else 
+                    ReadPtr <= ReadPtr + 1 ;
+            end
+            if(NeedAllocateNum == 3'd1) begin
+                if(ReadPtr == 6'd32 )
+                    ReadPtr <= 0 ; 
+                else   
+                    ReadPtr <= ReadPtr + 1 ; 
+            end
+                
         end
     end
 
     wire Alu1BroadcastAble ;
-    wire Alu1BroadcastAddr ;
+    wire [`ReNameRegBUs] Alu1BroadcastAddr ;
     wire Alu2BroadcastAble ;
-    wire Alu2BroadcastAddr ;
+    wire [`ReNameRegBUs] Alu2BroadcastAddr ;
     wire MulBroadcastAble ;
-    wire MulBroadcastAddr ;
+    wire [`ReNameRegBUs] MulBroadcastAddr ;
 
-    wire InIssue1Src2Ready =((In1Src2Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In1Src2Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In1Src2Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In1Src2Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In1Src2Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In1Src2Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In1Src2Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In1Src2Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
+    wire InIssue1Src2Ready =((In1Src2Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                            ((In1Src2Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In1Src2Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In1Src2Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In1Src2Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In1Src2Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In1Src2Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In1Src2Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
                         
-    wire InIssue2Src2Ready =((In2Src2Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In2Src2Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In2Src2Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In2Src2Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In2Src2Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In2Src2Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In2Src2Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In2Src2Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
+    wire InIssue2Src2Ready =((In2Src2Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) || 
+                            ((In2Src2Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In2Src2Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In2Src2Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In2Src2Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In2Src2Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In2Src2Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In2Src2Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
 
-    wire InIssue3Src2Ready =((In3Src2Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In3Src2Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In3Src2Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In3Src2Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In3Src2Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In3Src2Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In3Src2Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In3Src2Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
-
-    wire InIssue4Src2Ready =((In4Src2Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In4Src2Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In4Src2Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In4Src2Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In4Src2Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In4Src2Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In4Src2Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In4Src2Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
-
-    wire InIssue1Src1Ready =((In1Src1Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In1Src1Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In1Src1Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In1Src1Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In1Src1Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In1Src1Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In1Src1Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In1Src1Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
+    wire InIssue3Src2Ready =((In3Src2Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                            ((In3Src2Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In3Src2Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In3Src2Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In3Src2Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In3Src2Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In3Src2Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In3Src2Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
                         
-    wire InIssue2Src1Ready =((In2Src1Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In2Src1Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In2Src1Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In2Src1Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In2Src1Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In2Src1Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In2Src1Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In2Src1Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
+    wire InIssue4Src2Ready =((In4Src2Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) || 
+                            ((In4Src2Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In4Src2Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In4Src2Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In4Src2Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In4Src2Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In4Src2Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In4Src2Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
 
-    wire InIssue3Src1Ready =((In3Src1Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In3Src1Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In3Src1Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In3Src1Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In3Src1Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In3Src1Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In3Src1Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In3Src1Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
+    wire InIssue1Src1Ready =((In1Src1Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                            ((In1Src1Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In1Src1Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In1Src1Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In1Src1Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In1Src1Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In1Src1Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In1Src1Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
+                        
+    wire InIssue2Src1Ready =((In2Src1Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) || 
+                            ((In2Src1Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In2Src1Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In2Src1Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In2Src1Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In2Src1Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In2Src1Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In2Src1Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
 
-    wire InIssue4Src1Ready =((In4Src1Addr == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                            ((In4Src1Addr == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                            ((In4Src1Addr == MulBroadcastAddr) &MulBroadcastAble)  | 
-                            ((In4Src1Addr == FromBrAddr      ) &FromIsQBr       )  | 
-                            ((In4Src1Addr == FromCsrAddr     ) &FromIsQCsr      )  | 
-                            ((In4Src1Addr == ByPassDiv       ) &ByPassDiv       )  | 
-                            ((In4Src1Addr == BypassSC        ) &BypassSCAddr    )  | 
-                            ((In4Src1Addr == ByPassLoad      ) &ByPassLoadAddr  )  ;
-
+    wire InIssue3Src1Ready =((In3Src1Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                            ((In3Src1Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In3Src1Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In3Src1Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In3Src1Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In3Src1Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In3Src1Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In3Src1Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
+                        
+    wire InIssue4Src1Ready =((In4Src1Addr == Alu1BroadcastAddr)&& Alu1BroadcastAble) || 
+                            ((In4Src1Addr == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                            ((In4Src1Addr == MulBroadcastAddr) && MulBroadcastAble)  || 
+                            ((In4Src1Addr == FromBrAddr      ) && FromIsQBr       )  || 
+                            ((In4Src1Addr == FromCsrAddr     ) && FromIsQCsr      )  || 
+                            ((In4Src1Addr == ByPassDivAddr   ) && ByPassDiv       )  || 
+                            ((In4Src1Addr == BypassSCAddr    ) && BypassSC        )  || 
+                            ((In4Src1Addr == ByPassLoadAddr  ) && ByPassLoad      )  ;
     wire InstSrc2Ready[0:31] ;
     wire InstSrc1Ready[0:31] ;               
     genvar a ;
     generate
         for ( a=0 ;a<32 ;a=a+1 ) begin
-            assign InstSrc2Ready[a]=((INTISSUE[a][59:53] == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                                    ((INTISSUE[a][59:53] == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                                    ((INTISSUE[a][59:53] == MulBroadcastAddr) &MulBroadcastAble)  | 
-                                    ((INTISSUE[a][59:53] == FromBrAddr      ) &FromIsQBr       )  | 
-                                    ((INTISSUE[a][59:53] == FromCsrAddr     ) &FromIsQCsr      )  | 
-                                    ((INTISSUE[a][59:53] == ByPassDiv       ) &ByPassDiv       )  | 
-                                    ((INTISSUE[a][59:53] == BypassSC        ) &BypassSCAddr    )  | 
-                                    ((INTISSUE[a][59:53] == ByPassLoad      ) &ByPassLoadAddr  )  ;
-            assign InstSrc1Ready[a]=((INTISSUE[a][50:44] == Alu1BroadcastAddr)&Alu1BroadcastAble) | 
-                                    ((INTISSUE[a][50:44] == Alu2BroadcastAddr)&Alu2BroadcastAble) | 
-                                    ((INTISSUE[a][50:44] == MulBroadcastAddr) &MulBroadcastAble)  | 
-                                    ((INTISSUE[a][50:44] == FromBrAddr      ) &FromIsQBr       )  | 
-                                    ((INTISSUE[a][50:44] == FromCsrAddr     ) &FromIsQCsr      )  | 
-                                    ((INTISSUE[a][50:44] == ByPassDiv       ) &ByPassDiv       )  | 
-                                    ((INTISSUE[a][50:44] == BypassSC        ) &BypassSCAddr    )  | 
-                                    ((INTISSUE[a][50:44] == ByPassLoad      ) &ByPassLoadAddr  )  ;
+            assign InstSrc2Ready[a]=((INTISSUE[a][59:53] == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                                    ((INTISSUE[a][59:53] == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                                    ((INTISSUE[a][59:53] == MulBroadcastAddr) && MulBroadcastAble)  || 
+                                    ((INTISSUE[a][59:53] == FromBrAddr      ) && FromIsQBr       )  || 
+                                    ((INTISSUE[a][59:53] == FromCsrAddr     ) && FromIsQCsr      )  || 
+                                    ((INTISSUE[a][59:53] == ByPassDivAddr   ) && ByPassDiv       )  || 
+                                    ((INTISSUE[a][59:53] == BypassSCAddr    ) && BypassSC        )  || 
+                                    ((INTISSUE[a][59:53] == ByPassLoadAddr  ) && ByPassLoad      )  ;
+            assign InstSrc1Ready[a]=((INTISSUE[a][50:44] == Alu1BroadcastAddr)&& Alu1BroadcastAble) ||
+                                    ((INTISSUE[a][50:44] == Alu2BroadcastAddr)&& Alu2BroadcastAble) || 
+                                    ((INTISSUE[a][50:44] == MulBroadcastAddr) && MulBroadcastAble)  ||
+                                    ((INTISSUE[a][50:44] == FromBrAddr      ) && FromIsQBr       )  ||
+                                    ((INTISSUE[a][50:44] == FromCsrAddr     ) && FromIsQCsr      )  || 
+                                    ((INTISSUE[a][50:44] == ByPassDivAddr   ) && ByPassDiv       )  || 
+                                    ((INTISSUE[a][50:44] == BypassSCAddr    ) && BypassSC        )  || 
+                                    ((INTISSUE[a][50:44] == ByPassLoadAddr  ) && ByPassLoad      )  ;
         end
     endgenerate
     
@@ -478,60 +508,449 @@ module IssueQueueInt (
             INTISSUE[30][51] <= (~INTISSUE[30][52] | INTISSUE[30][51] | IsQuIntStop) ? INTISSUE[30][51] : InstSrc1Ready[30] ;
             INTISSUE[31][60] <= (~INTISSUE[31][61] | INTISSUE[31][60] | IsQuIntStop) ? INTISSUE[31][60] : InstSrc2Ready[31] ;
             INTISSUE[31][51] <= (~INTISSUE[31][52] | INTISSUE[31][51] | IsQuIntStop) ? INTISSUE[31][51] : InstSrc1Ready[31] ;
-            INTISSUE[Read1Ptr] <= (In1aAble & ~ IsQuIntStop )? {In1RobPtr,In1Src2Able,((~In1Src2Able | In1Src2Ready | IsQuIntStop) ? In1Src2Ready : InIssue1Src2Ready),
+            INTISSUE[Read1Ptr[4:0]] <= (In1aAble & ~ IsQuIntStop )? {In1RobPtr,In1Src2Able,((~In1Src2Able | In1Src2Ready | IsQuIntStop) ? In1Src2Ready : InIssue1Src2Ready),
                                                                In1Src2Addr,In1Src1Able,((~In1Src1Able | In1Src1Ready | IsQuIntStop) ? In1Src1Ready : InIssue1Src1Ready),
-                                                               In1Src1Addr,In1RdAble,In1RdAddr,In1ImmAble,In1ImmDate,In1MicOpcode,AluAllocate} : INTISSUE[Read1Ptr] ;
-            INTISSUE[Read2Ptr] <= (In2aAble & ~ IsQuIntStop )? {In2RobPtr,In2Src2Able,((~In2Src2Able | In2Src2Ready | IsQuIntStop) ? In2Src2Ready : InIssue2Src2Ready),
+                                                               In1Src1Addr,In1RdAble,In1RdAddr,In1ImmAble,In1ImmDate,In1MicOpcode,AluAllocate} : INTISSUE[Read1Ptr[4:0]] ;
+            INTISSUE[Read2Ptr[4:0]] <= (In2aAble & ~ IsQuIntStop )? {In2RobPtr,In2Src2Able,((~In2Src2Able | In2Src2Ready | IsQuIntStop) ? In2Src2Ready : InIssue2Src2Ready),
                                                                In2Src2Addr,In2Src1Able,((~In2Src1Able | In2Src1Ready | IsQuIntStop) ? In2Src1Ready : InIssue2Src1Ready),
-                                                               In2Src1Addr,In2RdAble,In2RdAddr,In2ImmAble,In2ImmDate,In2MicOpcode,AluAllocate} : INTISSUE[Read2Ptr] ;
-            INTISSUE[Read3Ptr] <= (In3aAble & ~ IsQuIntStop )? {In3RobPtr,In3Src2Able,((~In3Src2Able | In3Src2Ready | IsQuIntStop) ? In3Src2Ready : InIssue3Src2Ready),
+                                                               In2Src1Addr,In2RdAble,In2RdAddr,In2ImmAble,In2ImmDate,In2MicOpcode,AluAllocate} : INTISSUE[Read2Ptr[4:0]] ;
+            INTISSUE[Read3Ptr[4:0]] <= (In3aAble & ~ IsQuIntStop )? {In3RobPtr,In3Src2Able,((~In3Src2Able | In3Src2Ready | IsQuIntStop) ? In3Src2Ready : InIssue3Src2Ready),
                                                                In3Src2Addr,In3Src1Able,((~In3Src1Able | In3Src1Ready | IsQuIntStop) ? In3Src1Ready : InIssue3Src1Ready),
-                                                               In3Src1Addr,In3RdAble,In3RdAddr,In3ImmAble,In3ImmDate,In3MicOpcode,AluAllocate} : INTISSUE[Read3Ptr] ;
-            INTISSUE[Read4Ptr] <= (In4aAble & ~ IsQuIntStop )? {In4RobPtr,In4Src2Able,((~In4Src2Able | In4Src2Ready | IsQuIntStop) ? In4Src2Ready : InIssue4Src2Ready),
+                                                               In3Src1Addr,In3RdAble,In3RdAddr,In3ImmAble,In3ImmDate,In3MicOpcode,AluAllocate} : INTISSUE[Read3Ptr[4:0]] ;
+            INTISSUE[Read4Ptr[4:0]] <= (In4aAble & ~ IsQuIntStop )? {In4RobPtr,In4Src2Able,((~In4Src2Able | In4Src2Ready | IsQuIntStop) ? In4Src2Ready : InIssue4Src2Ready),
                                                                In4Src2Addr,In4Src1Able,((~In4Src1Able | In4Src1Ready | IsQuIntStop) ? In4Src1Ready : InIssue4Src1Ready),
-                                                               In4Src1Addr,In4RdAble,In4RdAddr,In4ImmAble,In4ImmDate,In4MicOpcode,AluAllocate} : INTISSUE[Read4Ptr] ;
-                                                               
+                                                               In4Src1Addr,In4RdAble,In4RdAddr,In4ImmAble,In4ImmDate,In4MicOpcode,AluAllocate} : INTISSUE[Read4Ptr[4:0]] ;
+            INTISSUE[Alu1SelectPtrS5P] <=  Alu1SelectAblS5P  ? 69'd0 : INTISSUE[Alu1SelectPtrS5P] ;
+            INTISSUE[Alu2SelectPtrS5P] <=  Alu2SelectAblS5P  ? 69'd0 : INTISSUE[Alu2SelectPtrS5P] ;
+            INTISSUE[MulSelectPtrS5P]  <=  MulSelectAblS5P   ? 69'd0 : INTISSUE[MulSelectPtrS5P]  ;                                      
+            INTISSUE[DivSelectPtrS5P]  <=  DivSelectAblS5P   ? 69'd0 : INTISSUE[DivSelectPtrS5P]  ;
 
         end
     end
 
    
+    //for Alu1
+    wire       Alu1SelectAblS1P [0:15] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu1SelectPtrS1P [0:15] ;
+    wire       ALu1SelectOld    [0:15] ;
+    //for Alu2
+    wire       Alu2SelectAblS1P [0:15] ;//for Alu1 INTISSUE[i][0] == `EnableValue 
+    wire [4:0] Alu2SelectPtrS1P [0:15] ;
+    wire       ALu2SelectOld    [0:15] ;
+    //for mul
+    wire       MulSelectAblS1P [0:15] ;
+    wire [4:0] MulSelectPtrS1P [0:15] ;
+    wire       MulSelectOld    [0:15] ;
+    //for Div
+    wire       DivSelectAblS1P [0:15] ;
+    wire [4:0] DivSelectPtrS1P [0:15] ;
+    wire       DivSelectOld    [0:15] ;
 
-    wire       Alu1SelectAblS1P [0:16] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
-    wire [4:0] Alu1SelectPtrS1P [0:16] ;
-    wire       ALu1SelectOld    [0:16] ;
-
-    integer b ;
+    genvar b ;
     generate
         for ( b=0 ;b<32 ;b=b+2 ) begin
-            assign ALu1SelectOld[b/2]  =  (INTISSUE[b][68] == INTISSUE[b+1][68] & (INTISSUE[b][67:62] < INTISSUE[b+1][67:62])) | 
-                                          (INTISSUE[b][68] != INTISSUE[b+1][68] & (INTISSUE[b][67:62] > INTISSUE[b+1][67:62])) ;
-            assign {Alu1SelectAblS1P[b/2],Alu1SelectPtrS1P[b/2]}  = {6{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
-                                                                    ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
-                                                                    (ALu1SelectOld[b/2]))}} & {`AbleValue,b[4:0]}  | 
-                                                                    {6{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
-                                                                    ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
-                                                                    (~ALu1SelectOld[b/2]))}} & {`AbleValue,b[4:0]+1} | 
-                                                                    {6{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
-                                                                    ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & {`AbleValue,b[4:0]} |
-                                                                    {6{(~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
-                                                                    ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & {`AbleValue,b[4:0]+1} ;
+            assign ALu1SelectOld[b/2]  =  ((INTISSUE[b][68] == INTISSUE[b+1][68] & (INTISSUE[b][67:62] < INTISSUE[b+1][67:62]))) | 
+                                          ((INTISSUE[b][68] != INTISSUE[b+1][68] & (INTISSUE[b][67:62] > INTISSUE[b+1][67:62]))) ;
+            assign Alu1SelectPtrS1P[b/2]  = {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (ALu1SelectOld[b/2]))}} & b  | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (~ALu1SelectOld[b/2]))}} & b+1 | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & b |
+                                            {5{(~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & b+1 ;
+            assign Alu1SelectAblS1P[b/2]  = (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (ALu1SelectOld[b/2])) & `AbleValue  | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (~ALu1SelectOld[b/2])) & `AbleValue | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE))) & `AbleValue |
+                                            (~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE))) & `AbleValue ;
+
+            assign ALu2SelectOld[b/2]  =  ((INTISSUE[b][68] == INTISSUE[b+1][68] & (INTISSUE[b][67:62] < INTISSUE[b+1][67:62]))) | 
+                                          ((INTISSUE[b][68] != INTISSUE[b+1][68] & (INTISSUE[b][67:62] > INTISSUE[b+1][67:62]))) ;
+            assign Alu2SelectPtrS1P[b/2]  = {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (ALu2SelectOld[b/2]))}} & b  | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (~ALu2SelectOld[b/2]))}} & b+1 | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & b |
+                                            {5{(~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)))}} & b+1 ;
+            assign Alu2SelectAblS1P[b/2]  = (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (ALu2SelectOld[b/2])) & `AbleValue  | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE)) & 
+                                            (~ALu2SelectOld[b/2])) & `AbleValue | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE))) & `AbleValue |
+                                            (~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & ~INTISSUE[b][0] & (INTISSUE[b][35:33] == `ALUCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & ~INTISSUE[b+1][0] & (INTISSUE[b+1][35:33] == `ALUCODE))) & `AbleValue ;
+            
+            assign MulSelectOld[b/2]  =   ((INTISSUE[b][68] == INTISSUE[b+1][68] & (INTISSUE[b][67:62] < INTISSUE[b+1][67:62]))) | 
+                                          ((INTISSUE[b][68] != INTISSUE[b+1][68] & (INTISSUE[b][67:62] > INTISSUE[b+1][67:62]))) ;
+            assign MulSelectPtrS1P[b/2]  = {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) &(INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)) & 
+                                            (MulSelectOld[b/2]))}} & b  | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)) & 
+                                            (~MulSelectOld[b/2]))}} & b+1 | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)))}} & b |
+                                            {5{(~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)))}} & b+1 ;
+            assign MulSelectAblS1P[b/2]  =  (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)) & 
+                                            (MulSelectOld[b/2])) & `AbleValue  | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE)) & 
+                                            (~MulSelectOld[b/2])) & `AbleValue | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52])  & (INTISSUE[b+1][35:33] == `MULCODE))) & `AbleValue |
+                                            (~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52])  & (INTISSUE[b][35:33] == `MULCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `MULCODE))) & `AbleValue ;
+
+            assign DivSelectOld[b/2]  =   ((INTISSUE[b][68] == INTISSUE[b+1][68] & (INTISSUE[b][67:62] < INTISSUE[b+1][67:62]))) | 
+                                          ((INTISSUE[b][68] != INTISSUE[b+1][68] & (INTISSUE[b][67:62] > INTISSUE[b+1][67:62]))) ;
+            assign DivSelectPtrS1P[b/2]  = {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)) & 
+                                            (DivSelectOld[b/2]))}} & b  | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)) & 
+                                            (~DivSelectOld[b/2]))}} & b+1 | 
+                                            {5{(((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)))}} & b |
+                                            {5{(~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)))}} & b+1 ;
+            assign DivSelectAblS1P[b/2]  =  (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)) & 
+                                            (DivSelectOld[b/2])) & `AbleValue  | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE)) & 
+                                            (~DivSelectOld[b/2])) & `AbleValue | 
+                                            (((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ~((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE))) & `AbleValue |
+                                            (~((INTISSUE[b][60] | ~INTISSUE[b][61]) & (INTISSUE[b][51] | ~INTISSUE[b][52]) & (INTISSUE[b][35:33] == `DIVCODE)) &
+                                            ((INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][51] | ~INTISSUE[b+1][52]) & (INTISSUE[b+1][35:33] == `DIVCODE))) & `AbleValue ;
+
+
+
         end
     endgenerate
 
-    integer c ;
+
+    wire       Alu1SelectAblS2P [0:7] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu1SelectPtrS2P [0:7] ;
+    wire       ALu1SelectOldS2P [0:7] ;     
+
+    wire       Alu2SelectAblS2P [0:7] ; //for Alu2 INTISSUE[i][0] == `EnableValue
+    wire [4:0] Alu2SelectPtrS2P [0:7] ;
+    wire       Alu2SelectOldS2P [0:7] ;
+
+    wire       MulSelectAblS2P [0:7] ; //for Alu2 INTISSUE[i][0] == `EnableValue
+    wire [4:0] MulSelectPtrS2P [0:7] ;
+    wire       MulSelectOldS2P [0:7] ;
+
+    wire       DivSelectAblS2P [0:7] ; //for Alu2 INTISSUE[i][0] == `EnableValue
+    wire [4:0] DivSelectPtrS2P [0:7] ;
+    wire       DivSelectOldS2P [0:7] ;
+
+    genvar c ;
     generate
         for (c =0 ;c<16 ;c=c+2 ) begin
-            
+            assign  ALu1SelectOldS2P[c/2] = ((INTISSUE[Alu1SelectPtrS1P[c]][68] == INTISSUE[Alu1SelectPtrS1P[c+1]][68]) & (INTISSUE[Alu1SelectPtrS1P[c]][67:62] < INTISSUE[Alu1SelectPtrS1P[c+1]][67:62])) |
+                                            ((INTISSUE[Alu1SelectPtrS1P[c]][68] != INTISSUE[Alu1SelectPtrS1P[c+1]][68]) & (INTISSUE[Alu1SelectPtrS1P[c]][67:62] > INTISSUE[Alu1SelectPtrS1P[c+1]][67:62])) ;
+
+            assign {Alu1SelectAblS2P[c/2],Alu1SelectPtrS2P[c/2]} = {6{(Alu1SelectAblS1P[c] & Alu1SelectAblS1P[c+1] & ALu1SelectOldS2P[c/2])}} & {`AbleValue,Alu1SelectPtrS1P[c]}    |
+                                                                   {6{(Alu1SelectAblS1P[c] & Alu1SelectAblS1P[c+1] & ~ALu1SelectOldS2P[c/2])}} & {`AbleValue,Alu1SelectPtrS1P[c+1]} |
+                                                                   {6{(Alu1SelectAblS1P[c] & ~Alu1SelectAblS1P[c+1])}} & {`AbleValue,Alu1SelectPtrS1P[c]}                        |
+                                                                   {6{(~Alu1SelectAblS1P[c] & Alu1SelectAblS1P[c+1])}} & {`AbleValue,Alu1SelectPtrS1P[c+1]}                      ;
+
+            assign  Alu2SelectOldS2P[c/2] = ((INTISSUE[Alu2SelectPtrS1P[c]][68] == INTISSUE[Alu2SelectPtrS1P[c+1]][68]) & (INTISSUE[Alu2SelectPtrS1P[c]][67:62] < INTISSUE[Alu2SelectPtrS1P[c+1]][67:62])) |
+                                            ((INTISSUE[Alu2SelectPtrS1P[c]][68] != INTISSUE[Alu2SelectPtrS1P[c+1]][68]) & (INTISSUE[Alu2SelectPtrS1P[c]][67:62] > INTISSUE[Alu2SelectPtrS1P[c+1]][67:62])) ;
+
+            assign {Alu2SelectAblS2P[c/2],Alu2SelectPtrS2P[c/2]} = {6{(Alu2SelectAblS1P[c] & Alu2SelectAblS1P[c+1] & Alu2SelectOldS2P[c/2])}} & {`AbleValue,Alu2SelectPtrS1P[c]}    |
+                                                                   {6{(Alu2SelectAblS1P[c] & Alu2SelectAblS1P[c+1] & ~Alu2SelectOldS2P[c/2])}} & {`AbleValue,Alu2SelectPtrS1P[c+1]} |
+                                                                   {6{(Alu2SelectAblS1P[c] & ~Alu2SelectAblS1P[c+1])}} & {`AbleValue,Alu2SelectPtrS1P[c]}                        |
+                                                                   {6{(~Alu2SelectAblS1P[c] & Alu2SelectAblS1P[c+1])}} & {`AbleValue,Alu2SelectPtrS1P[c+1]}                      ;
+
+            assign  MulSelectOldS2P[c/2] =  ((INTISSUE[MulSelectPtrS1P[c]][68] == INTISSUE[MulSelectPtrS1P[c+1]][68]) & (INTISSUE[MulSelectPtrS1P[c]][67:62] < INTISSUE[MulSelectPtrS1P[c+1]][67:62])) |
+                                            ((INTISSUE[MulSelectPtrS1P[c]][68] != INTISSUE[MulSelectPtrS1P[c+1]][68]) & (INTISSUE[MulSelectPtrS1P[c]][67:62] > INTISSUE[MulSelectPtrS1P[c+1]][67:62])) ;
+
+            assign {MulSelectAblS2P[c/2],MulSelectPtrS2P[c/2]} =   {6{(MulSelectAblS1P[c] & MulSelectAblS1P[c+1] & MulSelectOldS2P[c/2])}} & {`AbleValue,MulSelectPtrS1P[c]}    |
+                                                                   {6{(MulSelectAblS1P[c] & MulSelectAblS1P[c+1] & ~MulSelectOldS2P[c/2])}} & {`AbleValue,MulSelectPtrS1P[c+1]} |
+                                                                   {6{(MulSelectAblS1P[c] & ~MulSelectAblS1P[c+1])}} & {`AbleValue,MulSelectPtrS1P[c]}                        |
+                                                                   {6{(~MulSelectAblS1P[c] & MulSelectAblS1P[c+1])}} & {`AbleValue,MulSelectPtrS1P[c+1]}                      ;
+
+            assign  DivSelectOldS2P[c/2] =  ((INTISSUE[DivSelectPtrS1P[c]][68] == INTISSUE[DivSelectPtrS1P[c+1]][68]) & (INTISSUE[DivSelectPtrS1P[c]][67:62] < INTISSUE[DivSelectPtrS1P[c+1]][67:62])) |
+                                            ((INTISSUE[DivSelectPtrS1P[c]][68] != INTISSUE[DivSelectPtrS1P[c+1]][68]) & (INTISSUE[DivSelectPtrS1P[c]][67:62] > INTISSUE[DivSelectPtrS1P[c+1]][67:62])) ;
+
+            assign {DivSelectAblS2P[c/2],DivSelectPtrS2P[c/2]} = {6{(DivSelectAblS1P[c] & DivSelectAblS1P[c+1] & DivSelectOldS2P[c/2])}} & {`AbleValue,DivSelectPtrS1P[c]}    |
+                                                                   {6{(DivSelectAblS1P[c] & DivSelectAblS1P[c+1] & ~DivSelectOldS2P[c/2])}} & {`AbleValue,DivSelectPtrS1P[c+1]} |
+                                                                   {6{(DivSelectAblS1P[c] & ~DivSelectAblS1P[c+1])}} & {`AbleValue,DivSelectPtrS1P[c]}                        |
+                                                                   {6{(~DivSelectAblS1P[c] & DivSelectAblS1P[c+1])}} & {`AbleValue,DivSelectPtrS1P[c+1]}                      ;
         end
     endgenerate
 
+    wire       Alu1SelectAblS3P [0:3] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu1SelectPtrS3P [0:3] ;
+    wire       ALu1SelectOldS3P [0:3] ;
+
+    wire       Alu2SelectAblS3P [0:3] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu2SelectPtrS3P [0:3] ;
+    wire       ALu2SelectOldS3P [0:3] ; 
+
+    wire       MulSelectAblS3P [0:3] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] MulSelectPtrS3P [0:3] ;
+    wire       MulSelectOldS3P [0:3] ; 
+
+    wire       DivSelectAblS3P [0:3] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] DivSelectPtrS3P [0:3] ;
+    wire       DivSelectOldS3P [0:3] ;      
+
+    genvar d ;
+    generate
+        for (d =0 ;d<8 ;d=d+2 ) begin
+            assign ALu1SelectOldS3P[d/2] = ((INTISSUE[Alu1SelectPtrS2P[d]][68] == INTISSUE[Alu1SelectPtrS2P[d+1]][68]) & (INTISSUE[Alu1SelectPtrS2P[d]][67:62] < INTISSUE[Alu1SelectPtrS2P[d+1]][67:62])) |
+                                           ((INTISSUE[Alu1SelectPtrS2P[d]][68] != INTISSUE[Alu1SelectPtrS2P[d+1]][68]) & (INTISSUE[Alu1SelectPtrS2P[d]][67:62] > INTISSUE[Alu1SelectPtrS2P[d+1]][67:62])) ;
+
+            assign {Alu1SelectAblS3P[d/2],Alu1SelectPtrS3P[d/2]} = {6{(Alu1SelectAblS2P[d] & Alu1SelectAblS2P[d+1] & ALu1SelectOldS3P[d/2])}} & {`AbleValue,Alu1SelectPtrS2P[d]} |
+                                                                   {6{(Alu1SelectAblS2P[d] & Alu1SelectAblS2P[d+1] & ALu1SelectOldS3P[d/2])}} & {`AbleValue,Alu1SelectPtrS2P[d]} |
+                                                                   {6{(Alu1SelectAblS2P[d] & ~Alu1SelectAblS2P[d+1])}} & {`AbleValue,Alu1SelectPtrS2P[d]} |
+                                                                   {6{(~Alu1SelectAblS2P[d] & Alu1SelectAblS2P[d+1])}} & {`AbleValue,Alu1SelectPtrS2P[d+1]} ;
+
+            assign ALu2SelectOldS3P[d/2] = ((INTISSUE[Alu2SelectPtrS2P[d]][68] == INTISSUE[Alu2SelectPtrS2P[d+1]][68]) & (INTISSUE[Alu2SelectPtrS2P[d]][67:62] < INTISSUE[Alu2SelectPtrS2P[d+1]][67:62])) |
+                                           ((INTISSUE[Alu2SelectPtrS2P[d]][68] != INTISSUE[Alu2SelectPtrS2P[d+1]][68]) & (INTISSUE[Alu2SelectPtrS2P[d]][67:62] > INTISSUE[Alu2SelectPtrS2P[d+1]][67:62])) ;
+
+            assign {Alu2SelectAblS3P[d/2],Alu2SelectPtrS3P[d/2]} = {6{(Alu2SelectAblS2P[d] & Alu2SelectAblS2P[d+1] & ALu2SelectOldS3P[d/2])}} & {`AbleValue,Alu2SelectPtrS2P[d]} |
+                                                                   {6{(Alu2SelectAblS2P[d] & Alu2SelectAblS2P[d+1] & ALu2SelectOldS3P[d/2])}} & {`AbleValue,Alu2SelectPtrS2P[d]} |
+                                                                   {6{(Alu2SelectAblS2P[d] & ~Alu2SelectAblS2P[d+1])}} & {`AbleValue,Alu2SelectPtrS2P[d]} |
+                                                                   {6{(~Alu2SelectAblS2P[d] & Alu2SelectAblS2P[d+1])}} & {`AbleValue,Alu2SelectPtrS2P[d+1]} ;
+
+            assign MulSelectOldS3P[d/2] =  ((INTISSUE[MulSelectPtrS2P[d]][68] == INTISSUE[MulSelectPtrS2P[d+1]][68]) & (INTISSUE[MulSelectPtrS2P[d]][67:62] < INTISSUE[MulSelectPtrS2P[d+1]][67:62])) |
+                                           ((INTISSUE[MulSelectPtrS2P[d]][68] != INTISSUE[MulSelectPtrS2P[d+1]][68]) & (INTISSUE[MulSelectPtrS2P[d]][67:62] > INTISSUE[MulSelectPtrS2P[d+1]][67:62])) ;
+
+            assign {MulSelectAblS3P[d/2],MulSelectPtrS3P[d/2]} =   {6{(MulSelectAblS2P[d] & MulSelectAblS2P[d+1] & MulSelectOldS3P[d/2])}} & {`AbleValue,MulSelectPtrS2P[d]} |
+                                                                   {6{(MulSelectAblS2P[d] & MulSelectAblS2P[d+1] & MulSelectOldS3P[d/2])}} & {`AbleValue,MulSelectPtrS2P[d]} |
+                                                                   {6{(MulSelectAblS2P[d] & ~MulSelectAblS2P[d+1])}} & {`AbleValue,MulSelectPtrS2P[d]} |
+                                                                   {6{(~MulSelectAblS2P[d] & MulSelectAblS2P[d+1])}} & {`AbleValue,MulSelectPtrS2P[d+1]} ;
+
+            assign DivSelectOldS3P[d/2] =  ((INTISSUE[DivSelectPtrS2P[d]][68] == INTISSUE[DivSelectPtrS2P[d+1]][68]) & (INTISSUE[DivSelectPtrS2P[d]][67:62] < INTISSUE[DivSelectPtrS2P[d+1]][67:62])) |
+                                           ((INTISSUE[DivSelectPtrS2P[d]][68] != INTISSUE[DivSelectPtrS2P[d+1]][68]) & (INTISSUE[DivSelectPtrS2P[d]][67:62] > INTISSUE[DivSelectPtrS2P[d+1]][67:62])) ;
+
+            assign {DivSelectAblS3P[d/2],DivSelectPtrS3P[d/2]} =   {6{(DivSelectAblS2P[d] & Alu1SelectAblS2P[d+1] & DivSelectOldS3P[d/2])}} & {`AbleValue,DivSelectPtrS2P[d]} |
+                                                                   {6{(DivSelectAblS2P[d] & Alu1SelectAblS2P[d+1] & DivSelectOldS3P[d/2])}} & {`AbleValue,DivSelectPtrS2P[d]} |
+                                                                   {6{(DivSelectAblS2P[d] & ~Alu1SelectAblS2P[d+1])}} & {`AbleValue,DivSelectPtrS2P[d]} |
+                                                                   {6{(~DivSelectAblS2P[d] & Alu1SelectAblS2P[d+1])}} & {`AbleValue,DivSelectPtrS2P[d+1]} ;
+        end
+    endgenerate
+
+    wire       Alu1SelectAblS4P [0:1] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu1SelectPtrS4P [0:1] ;
+    wire       ALu1SelectOldS4P [0:1] ;
+
+    wire       Alu2SelectAblS4P [0:1] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu2SelectPtrS4P [0:1] ;
+    wire       ALu2SelectOldS4P [0:1] ;
+
+    wire       MulSelectAblS4P [0:1] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] MulSelectPtrS4P [0:1] ;
+    wire       MulSelectOldS4P [0:1] ;
+
+    wire       DivSelectAblS4P [0:1] ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] DivSelectPtrS4P [0:1] ;
+    wire       DivSelectOldS4P [0:1] ;
+
+    genvar e ;
+    generate
+        for (e =0 ;e<4 ;e=e+2 ) begin
+            assign ALu1SelectOldS4P[e/2] = ((INTISSUE[Alu1SelectPtrS3P[e]][68] == INTISSUE[Alu1SelectPtrS3P[e+1]][68]) & (INTISSUE[Alu1SelectPtrS3P[e]][67:62] < INTISSUE[Alu1SelectPtrS3P[e+1]][67:62])) |
+                                           ((INTISSUE[Alu1SelectPtrS3P[e]][68] != INTISSUE[Alu1SelectPtrS3P[e+1]][68]) & (INTISSUE[Alu1SelectPtrS3P[e]][67:62] > INTISSUE[Alu1SelectPtrS3P[e+1]][67:62])) ;
+            assign {Alu1SelectAblS4P[e/2],Alu1SelectPtrS4P[e/2]} = {6{(Alu1SelectAblS3P[e] & Alu1SelectAblS3P[e+1] & ALu1SelectOldS4P[e/2])}} & {`AbleValue,Alu1SelectPtrS3P[e]} |
+                                                                   {6{(Alu1SelectAblS3P[e] & Alu1SelectAblS3P[e+1] & ~ALu1SelectOldS4P[e/2])}} & {`AbleValue,Alu1SelectPtrS3P[e+1]} |
+                                                                   {6{(Alu1SelectAblS3P[e] & ~Alu1SelectAblS3P[e+1])}} & {`AbleValue,Alu1SelectPtrS3P[e]} |
+                                                                   {6{(~Alu1SelectAblS3P[e] & Alu1SelectAblS3P[e+1])}} & {`AbleValue,Alu1SelectPtrS3P[e+1]} ;
+                                                            
+            assign ALu2SelectOldS4P[e/2] = ((INTISSUE[Alu2SelectPtrS3P[e]][68] == INTISSUE[Alu2SelectPtrS3P[e+1]][68]) & (INTISSUE[Alu2SelectPtrS3P[e]][67:62] < INTISSUE[Alu2SelectPtrS3P[e+1]][67:62])) |
+                                           ((INTISSUE[Alu2SelectPtrS3P[e]][68] != INTISSUE[Alu2SelectPtrS3P[e+1]][68]) & (INTISSUE[Alu2SelectPtrS3P[e]][67:62] > INTISSUE[Alu2SelectPtrS3P[e+1]][67:62])) ;
+            assign {Alu2SelectAblS4P[e/2],Alu2SelectPtrS4P[e/2]} = {6{(Alu2SelectAblS3P[e] & Alu2SelectAblS3P[e+1] & ALu2SelectOldS4P[e/2])}} & {`AbleValue,Alu2SelectPtrS3P[e]} |
+                                                                   {6{(Alu2SelectAblS3P[e] & Alu2SelectAblS3P[e+1] & ~ALu2SelectOldS4P[e/2])}} & {`AbleValue,Alu2SelectPtrS3P[e+1]} |
+                                                                   {6{(Alu2SelectAblS3P[e] & ~Alu2SelectAblS3P[e+1])}} & {`AbleValue,Alu2SelectPtrS3P[e]} |
+                                                                   {6{(~Alu2SelectAblS3P[e] & Alu2SelectAblS3P[e+1])}} & {`AbleValue,Alu2SelectPtrS3P[e+1]} ;
+
+            assign MulSelectOldS4P[e/2] =  ((INTISSUE[MulSelectPtrS3P[e]][68] == INTISSUE[MulSelectPtrS3P[e+1]][68]) & (INTISSUE[MulSelectPtrS3P[e]][67:62] < INTISSUE[MulSelectPtrS3P[e+1]][67:62])) |
+                                           ((INTISSUE[MulSelectPtrS3P[e]][68] != INTISSUE[MulSelectPtrS3P[e+1]][68]) & (INTISSUE[MulSelectPtrS3P[e]][67:62] > INTISSUE[MulSelectPtrS3P[e+1]][67:62])) ;
+            assign {MulSelectAblS4P[e/2],MulSelectPtrS4P[e/2]} =   {6{(MulSelectAblS3P[e] & MulSelectAblS3P[e+1] & MulSelectOldS4P[e/2])}} & {`AbleValue,MulSelectPtrS3P[e]} |
+                                                                   {6{(MulSelectAblS3P[e] & MulSelectAblS3P[e+1] & ~MulSelectOldS4P[e/2])}} & {`AbleValue,MulSelectPtrS3P[e+1]} |
+                                                                   {6{(MulSelectAblS3P[e] & ~MulSelectAblS3P[e+1])}} & {`AbleValue,MulSelectPtrS3P[e]} |
+                                                                   {6{(~MulSelectAblS3P[e] & MulSelectAblS3P[e+1])}} & {`AbleValue,MulSelectPtrS3P[e+1]} ;
+
+            assign DivSelectOldS4P[e/2] =  ((INTISSUE[DivSelectPtrS3P[e]][68] == INTISSUE[DivSelectPtrS3P[e+1]][68]) & (INTISSUE[DivSelectPtrS3P[e]][67:62] < INTISSUE[DivSelectPtrS3P[e+1]][67:62])) |
+                                           ((INTISSUE[DivSelectPtrS3P[e]][68] != INTISSUE[DivSelectPtrS3P[e+1]][68]) & (INTISSUE[DivSelectPtrS3P[e]][67:62] > INTISSUE[DivSelectPtrS3P[e+1]][67:62])) ;
+            assign {DivSelectAblS4P[e/2],DivSelectPtrS4P[e/2]} =   {6{(DivSelectAblS3P[e] & DivSelectAblS3P[e+1] & DivSelectOldS4P[e/2])}} & {`AbleValue,DivSelectPtrS3P[e]} |
+                                                                   {6{(DivSelectAblS3P[e] & DivSelectAblS3P[e+1] & ~DivSelectOldS4P[e/2])}} & {`AbleValue,DivSelectPtrS3P[e+1]} |
+                                                                   {6{(DivSelectAblS3P[e] & ~DivSelectAblS3P[e+1])}} & {`AbleValue,DivSelectPtrS3P[e]} |
+                                                                   {6{(~DivSelectAblS3P[e] & DivSelectAblS3P[e+1])}} & {`AbleValue,DivSelectPtrS3P[e+1]} ;
+        end 
+    endgenerate
+
+    wire       Alu1SelectAblS5P  ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu1SelectPtrS5P  ;
+    wire       ALu1SelectOldS5P  ;
+
+    wire       Alu2SelectAblS5P  ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] Alu2SelectPtrS5P  ;
+    wire       ALu2SelectOldS5P  ;
+
+    wire       MulSelectAblS5P  ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] MulSelectPtrS5P  ;
+    wire       MulSelectOldS5P  ;
+
+    wire       DivSelectAblS5P  ;//for Alu1 INTISSUE[i][0] == `AbleValue 
+    wire [4:0] DivSelectPtrS5P  ;
+    wire       DivSelectOldS5P  ;
+
+    assign ALu1SelectOldS5P = ((INTISSUE[Alu1SelectPtrS4P[0]][68] == INTISSUE[Alu1SelectPtrS4P[1]][68]) & (INTISSUE[Alu1SelectPtrS4P[0]][67:62] < INTISSUE[Alu1SelectPtrS4P[1]][67:62])) |
+                              ((INTISSUE[Alu1SelectPtrS4P[0]][68] != INTISSUE[Alu1SelectPtrS4P[1]][68]) & (INTISSUE[Alu1SelectPtrS4P[0]][67:62] > INTISSUE[Alu1SelectPtrS4P[1]][67:62])) ;
+
+    assign {Alu1SelectAblS5P,Alu1SelectPtrS5P} = {6{(Alu1SelectAblS4P[0] & Alu1SelectAblS4P[1] & ALu1SelectOldS5P)}} & {`AbleValue,Alu1SelectPtrS4P[0]} |
+                                                 {6{(Alu1SelectAblS4P[0] & Alu1SelectAblS4P[1] & ~ALu1SelectOldS5P)}} & {`AbleValue,Alu1SelectPtrS4P[1]} |
+                                                 {6{(Alu1SelectAblS4P[0] & ~Alu1SelectAblS4P[1])}} & {`AbleValue,Alu1SelectPtrS4P[0]} |
+                                                 {6{(~Alu1SelectAblS4P[0] & Alu1SelectAblS4P[1])}} & {`AbleValue,Alu1SelectPtrS4P[1]} ;
+
+    assign ALu2SelectOldS5P = ((INTISSUE[Alu2SelectPtrS4P[0]][68] == INTISSUE[Alu2SelectPtrS4P[1]][68]) & (INTISSUE[Alu2SelectPtrS4P[0]][67:62] < INTISSUE[Alu2SelectPtrS4P[1]][67:62])) |
+                              ((INTISSUE[Alu2SelectPtrS4P[0]][68] != INTISSUE[Alu2SelectPtrS4P[1]][68]) & (INTISSUE[Alu2SelectPtrS4P[0]][67:62] > INTISSUE[Alu2SelectPtrS4P[1]][67:62])) ;
+
+    assign {Alu2SelectAblS5P,Alu2SelectPtrS5P} = {6{(Alu2SelectAblS4P[0] & Alu2SelectAblS4P[1] & ALu2SelectOldS5P)}} & {`AbleValue,Alu2SelectPtrS4P[0]} |
+                                                 {6{(Alu2SelectAblS4P[0] & Alu2SelectAblS4P[1] & ~ALu2SelectOldS5P)}} & {`AbleValue,Alu2SelectPtrS4P[1]} |
+                                                 {6{(Alu2SelectAblS4P[0] & ~Alu2SelectAblS4P[1])}} & {`AbleValue,Alu2SelectPtrS4P[0]} |
+                                                 {6{(~Alu2SelectAblS4P[0] & Alu2SelectAblS4P[1])}} & {`AbleValue,Alu2SelectPtrS4P[1]} ;
+
+    assign MulSelectOldS5P =  ((INTISSUE[MulSelectPtrS4P[0]][68] == INTISSUE[MulSelectPtrS4P[1]][68]) & (INTISSUE[MulSelectPtrS4P[0]][67:62] < INTISSUE[MulSelectPtrS4P[1]][67:62])) |
+                              ((INTISSUE[MulSelectPtrS4P[0]][68] != INTISSUE[MulSelectPtrS4P[1]][68]) & (INTISSUE[MulSelectPtrS4P[0]][67:62] > INTISSUE[MulSelectPtrS4P[1]][67:62])) ;
+
+    assign {MulSelectAblS5P,MulSelectPtrS5P} =   {6{(MulSelectAblS4P[0] & MulSelectAblS4P[1] & MulSelectOldS5P)}} & {`AbleValue,MulSelectPtrS4P[0]} |
+                                                 {6{(MulSelectAblS4P[0] & MulSelectAblS4P[1] & ~MulSelectOldS5P)}} & {`AbleValue,MulSelectPtrS4P[1]} |
+                                                 {6{(MulSelectAblS4P[0] & ~MulSelectAblS4P[1])}} & {`AbleValue,MulSelectPtrS4P[0]} |
+                                                 {6{(~MulSelectAblS4P[0] & MulSelectAblS4P[1])}} & {`AbleValue,MulSelectPtrS4P[1]} ;
+
+    assign DivSelectOldS5P =  ((INTISSUE[DivSelectPtrS4P[0]][68] == INTISSUE[DivSelectPtrS4P[1]][68]) & (INTISSUE[DivSelectPtrS4P[0]][67:62] < INTISSUE[DivSelectPtrS4P[1]][67:62])) |
+                              ((INTISSUE[DivSelectPtrS4P[0]][68] != INTISSUE[DivSelectPtrS4P[1]][68]) & (INTISSUE[DivSelectPtrS4P[0]][67:62] > INTISSUE[DivSelectPtrS4P[1]][67:62])) ;
+
+    assign {DivSelectAblS5P,DivSelectPtrS5P} =   {6{(DivSelectAblS4P[0] & DivSelectAblS4P[1] & DivSelectOldS5P)}} & {`AbleValue,DivSelectPtrS4P[0]} |
+                                                 {6{(DivSelectAblS4P[0] & DivSelectAblS4P[1] & ~DivSelectOldS5P)}} & {`AbleValue,DivSelectPtrS4P[1]} |
+                                                 {6{(DivSelectAblS4P[0] & ~DivSelectAblS4P[1])}} & {`AbleValue,DivSelectPtrS4P[0]} |
+                                                 {6{(~DivSelectAblS4P[0] & DivSelectAblS4P[1])}} & {`AbleValue,DivSelectPtrS4P[1]} ;
+
+
+   
+
+    //boradcost
+
+    //for delay
+    reg [2:0]  MulShiftDelay ;
+    reg [4:0]  MulDelayAddr  ;
+    always @(posedge Clk) begin
+        if(!Rest)begin
+            MulShiftDelay <= 3'd0 ;
+            MulDelayAddr  <= 5'd0 ;
+        end
+        else if(IsQuIntFlash) begin
+            MulShiftDelay <= 3'd0 ;
+            MulDelayAddr  <= 5'd0 ;
+        end
+        else begin
+            if(MulSelectAblS5P) begin
+                MulShiftDelay <= 3'b100 ;
+                MulDelayAddr  <=  MulSelectPtrS5P ;
+            end 
+            if(~IsQuIntStop) begin
+                MulShiftDelay <= {1'b0,MulShiftDelay[1:0]} ;
+                MulDelayAddr  <= MulDelayAddr ;
+            end 
+        end
+    end
+
+    assign Alu1BroadcastAble = Alu1SelectAblS5P & INTISSUE[Alu1SelectPtrS5P][43] & ~IsQuIntStop            ;
+    assign Alu1BroadcastAddr = INTISSUE[Alu1SelectPtrS5P][42:36] & {7{~IsQuIntStop }}      ;
+    assign Alu2BroadcastAble = Alu2SelectAblS5P & INTISSUE[Alu2SelectPtrS5P][43] & ~IsQuIntStop            ;
+    assign Alu2BroadcastAddr = INTISSUE[Alu2SelectPtrS5P][42:36] & {7{~IsQuIntStop }}      ;
+    assign MulBroadcastAble  = (MulShiftDelay == 3'b001) & INTISSUE[MulDelayAddr][43] & ~IsQuIntStop       ;
+    assign MulBroadcastAddr  = INTISSUE[MulDelayAddr][42:36]     & {7{~IsQuIntStop }}      ;
+
+    assign Inst1SelectAble   = Alu1SelectAblS5P & ~IsQuIntStop ;
+    assign Inst1SelectPtr    = Alu1SelectPtrS5P & {5{~IsQuIntStop}};
+    assign Inst2SelectAble   = Alu2SelectAblS5P & ~IsQuIntStop ;
+    assign Inst2SelectPtr    = Alu2SelectPtrS5P & {5{~IsQuIntStop}};
+    assign Inst3SelectAble   = MulSelectAblS5P & ~IsQuIntStop ;
+    assign Inst3SelectPtr    = MulSelectPtrS5P & {5{~IsQuIntStop}};
+    assign Inst4SelectAble   = DivSelectAblS5P & ~IsQuIntStop ;
+    assign Inst4SelectPtr    = DivSelectPtrS5P & {5{~IsQuIntStop}};
+
+
+    assign Alu1Inst          = Alu1BroadcastAble ;
+    assign Alu1InstAddr      = Alu1BroadcastAddr ;
+    assign Alu2Inst          = Alu2BroadcastAble ;
+    assign ALu2InstAddr      = Alu2BroadcastAddr ;
+    assign MulInst           = MulBroadcastAble  ;
+    assign MulInstAddr       = MulBroadcastAddr  ;
+
+    //to read physical
+
+    assign Inst1MicOperate = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][35:28] : 8'b0 ;
+    assign Inst1Src1RAble  = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][52]    : 1'b0 ;
+    assign Inst1Src1RAddr  = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][50:44] : 7'b0 ; 
+    assign Inst1Src2RAble  = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][61]    : 1'b0 ;
+    assign Inst1Src2RAddr  = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][59:53] : 7'b0 ;
+    assign Inst1ImmAble    = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][27]    : 1'b0 ;
+    assign Inst1ImmDate    = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][26:1]  : 26'b0;
+    assign Inst1RdAble     = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][43]    : 1'b0 ;
+    assign Inst1RdAddr     = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][42:36] : 7'b0 ;
+    assign Inst1RoBptr     = Alu1Req ? INTISSUE[Alu1SelectPtrS5P][67:62] : 6'b0 ;
+
+    assign Inst2MicOperate = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][35:28] : 8'b0 ;
+    assign Inst2Src1RAble  = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][52]    : 1'b0 ;
+    assign Inst2Src1RAddr  = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][50:44] : 7'b0 ; 
+    assign Inst2Src2RAble  = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][61]    : 1'b0 ;
+    assign Inst2Src2RAddr  = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][59:53] : 7'b0 ;
+    assign Inst2ImmAble    = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][27]    : 1'b0 ;
+    assign Inst2ImmDate    = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][26:1]  : 26'b0;
+    assign Inst2RdAble     = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][43]    : 1'b0 ;
+    assign Inst2RdAddr     = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][42:36] : 7'b0 ;
+    assign Inst2RoBptr     = Alu2Req ? INTISSUE[Alu2SelectPtrS5P][67:62] : 6'b0 ;
+
+    assign Inst3MicOperate = MulReq ? INTISSUE[MulSelectPtrS5P][35:28] : 8'b0 ;
+    assign Inst3Src1RAble  = MulReq ? INTISSUE[MulSelectPtrS5P][52]    : 1'b0 ;
+    assign Inst3Src1RAddr  = MulReq ? INTISSUE[MulSelectPtrS5P][50:44] : 7'b0 ; 
+    assign Inst3Src2RAble  = MulReq ? INTISSUE[MulSelectPtrS5P][61]    : 1'b0 ;
+    assign Inst3Src2RAddr  = MulReq ? INTISSUE[MulSelectPtrS5P][59:53] : 7'b0 ;
+    assign Inst3ImmAble    = MulReq ? INTISSUE[MulSelectPtrS5P][27]    : 1'b0 ;
+    assign Inst3ImmDate    = MulReq ? INTISSUE[MulSelectPtrS5P][26:1]  : 26'b0;
+    assign Inst3RdAble     = MulReq ? INTISSUE[MulSelectPtrS5P][43]    : 1'b0 ;
+    assign Inst3RdAddr     = MulReq ? INTISSUE[MulSelectPtrS5P][42:36] : 7'b0 ;
+    assign Inst3RoBptr     = MulReq ? INTISSUE[MulSelectPtrS5P][67:62] : 6'b0 ;
+
+    assign Inst4MicOperate = DivReq ? INTISSUE[DivSelectPtrS5P][35:28] : 8'b0 ;
+    assign Inst4Src1RAble  = DivReq ? INTISSUE[DivSelectPtrS5P][52]    : 1'b0 ;
+    assign Inst4Src1RAddr  = DivReq ? INTISSUE[DivSelectPtrS5P][50:44] : 7'b0 ; 
+    assign Inst4Src2RAble  = DivReq ? INTISSUE[DivSelectPtrS5P][61]    : 1'b0 ;
+    assign Inst4Src2RAddr  = DivReq ? INTISSUE[DivSelectPtrS5P][59:53] : 7'b0 ;
+    assign Inst4ImmAble    = DivReq ? INTISSUE[DivSelectPtrS5P][27]    : 1'b0 ;
+    assign Inst4ImmDate    = DivReq ? INTISSUE[DivSelectPtrS5P][26:1]  : 26'b0;
+    assign Inst4RdAble     = DivReq ? INTISSUE[DivSelectPtrS5P][43]    : 1'b0 ;
+    assign Inst4RdAddr     = DivReq ? INTISSUE[DivSelectPtrS5P][42:36] : 7'b0 ;
+    assign Inst4RoBptr     = DivReq ? INTISSUE[DivSelectPtrS5P][67:62] : 6'b0 ;
 
 
 
-
-
-
-
-
+    
 endmodule 
+ 

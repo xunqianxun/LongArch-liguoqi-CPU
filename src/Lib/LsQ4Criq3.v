@@ -1,9 +1,9 @@
 `timescale 1ps/1ps
 `include "IPsetting.v"
 
-module CBQ2Criq8 #(
-    parameter CRIQWIDE = 5 ,
-    parameter CRIQDEEP = 8  
+module LsQ4Criq3 #(
+    parameter CRIQWIDE = 4 ,
+    parameter CRIQDEEP = 3  
 ) (
     input         wire                            Clk           ,
     input         wire                            Rest          ,
@@ -23,21 +23,16 @@ module CBQ2Criq8 #(
 );
 
     reg   [CRIQWIDE-1:0] CRIQREG [0:CRIQDEEP]  ;
-    reg   [3:0]     Criqfront                  ;
-    reg   [3:0]     Criqtril                   ;
+    reg   [1:0]     Criqfront                  ;
+    reg   [1:0]     Criqtril                   ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            Criqfront  <= 4'd8 ;
-            CRIQREG[0] <= 5'd1 ;
-            CRIQREG[1] <= 5'd5 ;
-            CRIQREG[2] <= 5'd9 ;
-            CRIQREG[3] <= 5'd13 ;
-            CRIQREG[4] <= 5'd17 ;
-            CRIQREG[5] <= 5'd21 ;
-            CRIQREG[6] <= 5'd25 ;
-            CRIQREG[7] <= 5'd29 ;
-            CRIQREG[8] <= 5'd0 ;
+            Criqfront  <= 2'd3 ;
+            CRIQREG[0] <= 4'd0 ;
+            CRIQREG[1] <= 4'd4 ;
+            CRIQREG[2] <= 4'd8 ;
+            CRIQREG[3] <= 4'd0 ;
         end
         else begin
             if(Wable) begin
@@ -45,16 +40,11 @@ module CBQ2Criq8 #(
               CRIQREG[Criqfront] <= Din ;
             end 
             if(CriqClean) begin
-                Criqfront  <= 4'd8 ;
-                CRIQREG[0] <= 5'd1 ;
-                CRIQREG[1] <= 5'd5 ;
-                CRIQREG[2] <= 5'd9 ;
-                CRIQREG[3] <= 5'd13 ;
-                CRIQREG[4] <= 5'd17 ;
-                CRIQREG[5] <= 5'd21 ;
-                CRIQREG[6] <= 5'd25 ;
-                CRIQREG[7] <= 5'd29 ;
-                CRIQREG[8] <= 5'd0 ;
+                Criqfront  <= 2'd3 ;
+                CRIQREG[0] <= 4'd0 ;
+                CRIQREG[1] <= 4'd4 ;
+                CRIQREG[2] <= 4'd8 ;
+                CRIQREG[3] <= 4'd0 ;
             end
         end
     end
@@ -62,16 +52,16 @@ module CBQ2Criq8 #(
     reg  [CRIQWIDE-1:0]  CriqOutReg  ;
     always @(posedge Clk) begin
         if(!Rest) begin
-            Criqtril   <= 4'd0 ;
+            Criqtril   <= 2'd0 ;
             CriqOutReg <= {CRIQWIDE{1'b0}};
         end 
         else begin
             if(Rable) begin
                 CriqOutReg <= CRIQREG[Criqtril] ;
-                Criqtril <= (Criqtril == CRIQDEEP) ? 4'd0 : Criqtril + 1 ;
+                Criqtril <= (Criqtril == CRIQDEEP) ? 2'd0 : Criqtril + 1 ;
             end
             if(CriqClean)
-                Criqtril <= 4'd0 ;
+                Criqtril <= 2'd0 ;
         end
     end
 

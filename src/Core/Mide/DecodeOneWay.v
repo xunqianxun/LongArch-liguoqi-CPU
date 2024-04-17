@@ -77,7 +77,7 @@ module DecodeOneWay (
     wire Inst1Csrrd    = (Inst1Op31to26 == 6'd1) & (InInstDate[25:24] == 2'd0) & (InInstDate[9:5] == 5'd0) ; //csr 3
     wire Inst1Csrwr    = (Inst1Op31to26 == 6'd1) & (InInstDate[25:24] == 2'd0) & (InInstDate[9:5] == 5'd1) ; //csr 4
     wire Inst1Csrxchg  = (Inst1Op31to26 == 6'd1) & (InInstDate[25:24] == 2'd0) & ((InInstDate[9:5] != 5'd0) & (InInstDate[9:5] != 5'd1)); //csr 5
-    wire Inst1Cacop    = (Inst1Op31to26 == 6'd1) & (Inst1Op25to22 == 4'd8) ; // no one eu(6) 1
+  /*yaoxuigai*/   wire Inst1Cacop    = (Inst1Op31to26 == 6'd1) & (Inst1Op25to22 == 4'd8) ; // no one eu(6) 1
     wire Inst1Tlbsrch  = (Inst1Op31to26 == 6'd1) & (Inst1Op25to22 == 4'd9) & (Inst1Op21to20 == 2'd0) & (Inst1Op19to15 == 5'd16) & (InInstDate[14:10] == 5'd10) & (InInstDate[9:5] == 5'd0) & (InInstDate[4:0] == 5'd0) ; //csr 6
     wire Inst1Tlbrd    = (Inst1Op31to26 == 6'd1) & (Inst1Op25to22 == 4'd9) & (Inst1Op21to20 == 2'd0) & (Inst1Op19to15 == 5'd16) & (InInstDate[14:10] == 5'd11) & (InInstDate[9:5] == 5'd0) & (InInstDate[4:0] == 5'd0) ; //csr 7
     wire Inst1Tlbwr    = (Inst1Op31to26 == 6'd1) & (Inst1Op25to22 == 4'd9) & (Inst1Op21to20 == 2'd0) & (Inst1Op19to15 == 5'd16) & (InInstDate[14:10] == 5'd12) & (InInstDate[9:5] == 5'd0) & (InInstDate[4:0] == 5'd0) ; //csr 8

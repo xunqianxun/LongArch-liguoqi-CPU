@@ -1,5 +1,9 @@
 `timescale 1ps/1ps
 `include "../define.v"
+`include "../../Lib/BrCsrIQ1Criq4.v"
+`include "../../Lib/BrCsrIQ2Criq4.v"
+`include "../../Lib/BrCsrIQ3Criq4.v"
+`include "../../Lib/BrCsrIQ4Criq4.v"
 
 module IssueQueueMem ( 
     input        wire                                     Clk               ,
@@ -114,7 +118,7 @@ module IssueQueueMem (
                                    ((MIn1Src1Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn1Src1Addr == FromMulAddr    ) && (FromIsQMul )) ||
                                    ((MIn1Src1Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
-                                   ((MIn1Src1Addr == BypassMSCAddr  ) && (BypassMSC  )) ||
+                                   ((MIn1Src1Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
                                    ((MIn1Src1Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn1Src1Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn1Src1Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
@@ -122,87 +126,87 @@ module IssueQueueMem (
     wire         MInst2Src1Ready = ((MIn2Src1Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn2Src1Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn2Src1Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn2Src1Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn2Src1Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn2Src1Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn2Src1Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn2Src1Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn2Src1Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn2Src1Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn2Src1Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst3Src1Ready = ((MIn3Src1Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn3Src1Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn3Src1Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn3Src1Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn3Src1Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn3Src1Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn3Src1Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn3Src1Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn3Src1Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn3Src1Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn3Src1Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst4Src1Ready = ((MIn4Src1Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn4Src1Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn4Src1Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn4Src1Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn4Src1Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn4Src1Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn4Src1Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn4Src1Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn4Src1Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn4Src1Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn4Src1Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst1Src2Ready = ((MIn1Src2Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn1Src2Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn1Src2Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn1Src2Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn1Src2Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn1Src2Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn1Src2Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn1Src2Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn1Src2Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn1Src2Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn1Src2Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst2Src2Ready = ((MIn2Src2Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn2Src2Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn2Src2Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn2Src2Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn2Src2Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn2Src2Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn2Src2Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn2Src2Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn2Src2Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn2Src2Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn2Src2Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst3Src2Ready = ((MIn3Src2Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn3Src2Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn3Src2Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn3Src2Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn3Src2Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn3Src2Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn3Src2Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn3Src2Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn3Src2Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn3Src2Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn3Src2Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
     wire         MInst4Src2Ready = ((MIn4Src2Addr == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MIn4Src2Addr == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MIn4Src2Addr == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MIn4Src2Addr == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MIn4Src2Addr == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MIn4Src2Addr == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MIn4Src2Addr == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MIn4Src2Addr == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MIn4Src2Addr == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MIn4Src2Addr == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MIn4Src2Addr == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
 
     wire        MInstSrc1Ready [0:15];
-    wire        MInstSrc1Ready [0:15];
+    wire        MInstSrc2Ready [0:15];
     genvar ii ;
     generate
         for (ii =0 ;ii<16 ;ii=ii+1 ) begin
             assign MInstSrc1Ready =((MEMISSUE[ii][50:44]  == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MEMISSUE[ii][50:44]  == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MEMISSUE[ii][50:44]  == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MEMISSUE[ii][50:44]  == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MEMISSUE[ii][50:44]  == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MEMISSUE[ii][50:44]  == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MEMISSUE[ii][50:44]  == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MEMISSUE[ii][50:44]  == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MEMISSUE[ii][50:44]  == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MEMISSUE[ii][50:44]  == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MEMISSUE[ii][50:44]  == FromCsrAddr    ) && (FromBCQCsr )) ; 
 
             assign MInstSrc2Ready =((MEMISSUE[ii][59:53]  == FromAlu1Addr   ) && (FromIsQAlu1)) ||
                                    ((MEMISSUE[ii][59:53]  == FromAlu2Addr   ) && (FromIsQAlu2)) ||
                                    ((MEMISSUE[ii][59:53]  == FromMulAddr    ) && (FromIsQMul )) ||
-                                   ((MEMISSUE[ii][59:53]  == ByPassBDivAddr ) && (ByPassBDiv )) ||
-                                   ((MEMISSUE[ii][59:53]  == BypassBSCAddr  ) && (BypassBSC  )) ||
-                                   ((MEMISSUE[ii][59:53]  == ByPassBLoadAddr) && (ByPassBLoad)) ||
+                                   ((MEMISSUE[ii][59:53]  == ByPassMDivAddr ) && (ByPassMDiv )) ||
+                                   ((MEMISSUE[ii][59:53]  == ByPassMSCAddr  ) && (ByPassMSC  )) ||
+                                   ((MEMISSUE[ii][59:53]  == ByPassMLoadAddr) && (ByPassMLoad)) ||
                                    ((MEMISSUE[ii][59:53]  == FromBruAddr    ) && (FromBCQBru )) ||
                                    ((MEMISSUE[ii][59:53]  == FromCsrAddr    ) && (FromBCQCsr )) ;
         end
@@ -210,19 +214,19 @@ module IssueQueueMem (
 
     wire  [68:0]  WriteMIQ1  = {MIn1RobPtr,MIn1Src2Able, ((MemQStop | ~MIn1Src2Able | MIn1Src2Ready) ? MIn1Src2Ready :MInst1Src2Ready), MIn1Src2Addr, 
                                            MIn1Src1Able, ((MemQStop | ~MIn1Src1Able | MIn1Src1Ready) ? MIn1Src1Ready :MInst1Src1Ready), MIn1Src1Addr,
-                                           MIn1RdAble, MIn1RdAddr, MIn1ImmAble, MIn1ImmDate, `EnableValue} ;
+                                           MIn1RdAble, MIn1RdAddr, MIn1ImmAble, MIn1ImmDate,MIn1MicOpcode, `EnableValue} ;
 
     wire  [68:0]  WriteMIQ2  = {MIn2RobPtr,MIn2Src2Able, ((MemQStop | ~MIn2Src2Able | MIn2Src2Ready) ? MIn2Src2Ready :MInst2Src2Ready), MIn2Src2Addr, 
                                            MIn2Src1Able, ((MemQStop | ~MIn2Src1Able | MIn2Src1Ready) ? MIn2Src1Ready :MInst2Src1Ready), MIn2Src1Addr,
-                                           MIn2RdAble, MIn2RdAddr, MIn2ImmAble, MIn2ImmDate, `EnableValue} ;
+                                           MIn2RdAble, MIn2RdAddr, MIn2ImmAble, MIn2ImmDate,MIn2MicOpcode, `EnableValue} ;
 
     wire  [68:0]  WriteMIQ3  = {MIn3RobPtr,MIn3Src2Able, ((MemQStop | ~MIn3Src2Able | MIn3Src2Ready) ? MIn3Src2Ready :MInst3Src2Ready), MIn3Src2Addr, 
                                            MIn3Src1Able, ((MemQStop | ~MIn3Src1Able | MIn3Src1Ready) ? MIn3Src1Ready :MInst3Src1Ready), MIn3Src1Addr,
-                                           MIn3RdAble, MIn3RdAddr, MIn3ImmAble, MIn3ImmDate, `EnableValue} ;
+                                           MIn3RdAble, MIn3RdAddr, MIn3ImmAble, MIn3ImmDate,MIn3MicOpcode, `EnableValue} ;
 
     wire  [68:0]  WriteMIQ4  = {MIn4RobPtr,MIn4Src2Able, ((MemQStop | ~MIn4Src2Able | MIn4Src2Ready) ? MIn4Src2Ready :MInst4Src2Ready), MIn4Src2Addr, 
                                            MIn4Src1Able, ((MemQStop | ~MIn4Src1Able | MIn4Src1Ready) ? MIn4Src1Ready :MInst4Src1Ready), MIn4Src1Addr,
-                                           MIn4RdAble, MIn4RdAddr, MIn4ImmAble, MIn4ImmDate, `EnableValue} ;   
+                                           MIn4RdAble, MIn4RdAddr, MIn4ImmAble, MIn4ImmDate,MIn4MicOpcode, `EnableValue} ;   
                                         
 
     wire [2:0]  MWriteNum  = (MIn1aAble & MIn2aAble & MIn3aAble & MIn4aAble) ? 3'd4 :
@@ -350,7 +354,7 @@ module IssueQueueMem (
                                                ~(((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & MEMISSUE[a+1][32])}} & a |
                                             {4{~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & MEMISSUE[a][32]) & 
                                                (((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & MEMISSUE[a+1][32])}} & a+1 ;
-            assign LodSelectOldS1[a/2]  =     ~(~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & MEMISSUE[a][32]) & 
+            assign LodSelectAblS1[a/2]  =     ~(~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & MEMISSUE[a][32]) & 
                                               ~(((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & MEMISSUE[a+1][32])) ;
         
             assign StoSelect1S1[a/2]    =   (MEMISSUE[a][68] == MEMISSUE[a+1][68]) & (MEMISSUE[a][67:62] < MEMISSUE[a+1][67:62]) | 
@@ -365,7 +369,7 @@ module IssueQueueMem (
                                                ~(((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & ~MEMISSUE[a+1][32])}} & a |
                                             {4{~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & ~MEMISSUE[a][32]) & 
                                                (((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & ~MEMISSUE[a+1][32])}} & a+1 ;
-            assign StoSelectOldS1[a/2]  =     ~(~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & ~MEMISSUE[a][32]) & 
+            assign StoSelectAblS1[a/2]  =     ~(~(((MEMISSUE[a][60] | ~MEMISSUE[a][61]) & (MEMISSUE[a][51] | ~MEMISSUE[a][52])) & (MEMISSUE[a][35:33] == `LSUCODE ) & ~MEMISSUE[a][32]) & 
                                               ~(((MEMISSUE[a+1][60] | ~MEMISSUE[a+1][61]) & (MEMISSUE[a+1][51] | ~MEMISSUE[a+1][52])) & (MEMISSUE[a+1][35:33] == `LSUCODE ) & ~MEMISSUE[a+1][32])) ;
             
         end

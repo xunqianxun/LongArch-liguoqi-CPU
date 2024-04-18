@@ -37,7 +37,7 @@
 `define InstMulHw      8'h00000010
 `define InstMulHuw     8'h00000011  
 `define InstAddw       8'b00000100
-`define InstSubw       8'b00000101
+`define InstSubw       8'b00000101 //关于此处指令全部都需要进行更改
 `define InstAddiw      8'b00000110
 `define InstLu12iw     8'b00000111
 `define InstSlt        8'b00001000
@@ -99,6 +99,12 @@
 `define InstScw        8'b00111010 
 `define InstDbar       8'b00111011 
 `define InstIbar       8'b00111100 
+
+//time read inst
+`define InstRdcntvlw   8'b00111101 
+`define InstRdcntvhw   8'b00111110 
+`define InstRdcntid    8'b00111111 
+
 
 
 

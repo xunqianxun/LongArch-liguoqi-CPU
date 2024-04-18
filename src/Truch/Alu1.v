@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "define.v"
+`include "../define.v"
 
 module Alu #(
     parameter WIDTH_ALU = 32

@@ -1,41 +1,56 @@
 `timescale 1ps/1ps
-`include "define.v"
+`include "../define.v"
 
 module CtrlBlock (
     input        wire                                      Clk              ,
     input        wire                                      Rest             ,
 
-    //from ROB
-    input        wire                                      ROBReload        ,
+    //from FTQ
+    input        wire                                     FtqReq            ,//  req all req stop 
+    //from Inst QUeue
+    input        wire                                      InstQUeueReq     , 
+    //from Rename 
+    input        wire                                      RenameReq        ,
+    //from Issue
+    input        wire                                      IntIqReq         ,
+    input        wire                                      BCIqReq          ,
+    input        wire                                      MemIqReq         ,
+    //from Rob
+    input        wire                                      RobReq           ,
+    input        wire                                      Flash            ,
+
+    //to Icache
+    output       wire                                      IcacheStop       ,
+    output       wire                                      IcacheFlash      ,
     //to FTQ
-    output       wire                                      FTQFlash         ,
-    //to BPCheck 
-    output       wire                                      BPCheckFlash     ,
-    //to InstQueue
-    output       wire                                      InstQueFlash     ,
-    //to Decode
+    output       wire                                      FtqStop          ,
+    output       wire                                      FtqFlash         ,
+    //to PreDecode
+    output       wire                                      PreDecodeStop    ,
+    output       wire                                      PreDecodeFlash   ,
+    //to InstQueue 
+    output       wire                                      InstQueueStop    ,
+    output       wire                                      InstQueueFlash   ,
+    //to Decode 
+    output       wire                                      DecodeStop       ,
     output       wire                                      DecodeFlash      ,
-    //to Dispath 
-    output       wire                                      DispathFlash     ,
-    //to AllRS    
-    output       wire                                      AllRSFlash       ,
-    //to EU
-    output       wire                                      EUFlash          ,
-    //to ROB(aRAT) anf RAT
-    output       wire                                      aRATRemapping    
+    //to rename 
+    output       wire                                      RenameStop       ,
+    output       wire                                      RenameFlash      ,
+    //to IssueQueue all
+    output       wire                                      IssueQUeueStop   ,
+    output       wire                                      IssueQUeueFlash  ,
+    //to read file
+    output       wire                                      ReadFileStop     ,
+    output       wire                                      ReadFileFlash    ,
+    //to eu all
+    output       wire                                      EuAllStop        ,
+    output       wire                                      EuAllFlash       ,
+    //to Dcache
+    output       wire                                      DcacheStop       ,
+    output       wire                                      DecacheFlash     ,
+
+
 );
 
-    reg ReMap ;
-    always @(posedge Clk ) begin
-        if(!Rest)
-            ReMap <= `EnableValue ;
-        else 
-            ReMap <= ROBReload ;
-    end
-
-    assign {FTQFlash, BPCheckFlash, InstQueFlash, InstQueFlash, DecodeFlash, DispathFlash, AllRSFlash, EUFlash} =
-            ROBReload ? {`AbleValue, `AbleValue, `AbleValue, `AbleValue, `AbleValue, `AbleValue, `AbleValue, `AbleValue} : 
-                        {`EnableValue, `EnableValue, `EnableValue, `EnableValue, `EnableValue, `EnableValue, `EnableValue, `EnableValue} ;
-    assign aRATRemapping = ReMap ? `AbleValue : `EnableValue ;
-    
 endmodule

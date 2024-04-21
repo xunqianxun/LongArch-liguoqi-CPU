@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "define.v"
+`include "../define.v"
 `include "Tagedefine.vh"
 `include "../IP/Bram_SIM.v"
 `include "../IP/Tage_base_128.xcix"

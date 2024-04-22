@@ -14,11 +14,11 @@ module BpuGroup (
     input          wire                                      Inst3Commit  ,
     input          wire                                      Inst4Commit  ,
     //for BTB
-    input          wire          [`InstAddrBus]              PredictPc    ,
+    input          wire          [`InstAddrBus]              PredictPc    , //btb predict will delay 1 cycle
     input          wire          [2:0]                       PredictType  ,
     //for RAS
     input          wire          [`InstAddrBus]              RasStackPc   ,
-    input          wire          [3:0]                       RasStackPtr  .
+    input          wire          [3:0]                       RasStackPtr  ,
     input          wire          [`InstAddrBus]              RasStack1    ,
     input          wire          [6:0]                       RsaSrackC1   ,
     input          wire          [`InstAddrBus]              RasStack2    ,
@@ -83,7 +83,7 @@ module BpuGroup (
             end 
         end 
         else begin
-            
+           BPUQUEUELINR[BGWritePtr] <= 
         end
     end
 

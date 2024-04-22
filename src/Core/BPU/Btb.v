@@ -25,6 +25,9 @@ module Btb (
 
     reg   [56:0]  BtbRamBank0 [0:255];
     reg   [56:0]  BtbRamBank1 [0:255];
+
+    reg   [3:0]   CountBan0   [0:255];
+    reg   [3:0]   CountBan1   [0:255];
     // for read 
     wire  [56:0]  ReadBtb0Enty = BtbRamBank0[InstPc[12:5]] ;
     wire  [56:0]  ReadBtb1Enty = BtbRamBank1[InstPc[12:5]] ;
@@ -51,7 +54,19 @@ module Btb (
         end
         else if(InstPcAble) begin
             RegNextAble <= `AbleValue ;
-            RegNextPc   <=  HitDate[38:35] >
+            RegNextPc   <= (HitDate[34:32] == `TypeBRANCH) ? (((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2) ? HitDate[31:0] : ({InstPc[31:5],5'd0} + 32'd32)) : HitDate[31:0] ;
+            RegNextType <= HitDate[34:32] ;
+        end
+        else begin
+            RegNextAble <= `EnableValue ;
+            RegNextPc   <= `ZeorDate    ;
+            RegNextType <= 3'd0         ;
+        end
+    end
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            
         end
     end
 

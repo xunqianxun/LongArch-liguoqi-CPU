@@ -1,4 +1,5 @@
 // All 
+`define _Entry         32'h80000000
 `define InstAddrBus        31:0
 `define TwoInstAddrBus     31:0*2
 `define InstDateBus        31:0

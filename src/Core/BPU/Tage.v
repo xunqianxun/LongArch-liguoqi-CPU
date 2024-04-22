@@ -1,9 +1,9 @@
 `timescale 1ps/1ps
 `include "../define.v"
 `include "Tagedefine.vh"
-`include "../IP/Bram_SIM.v"
-`include "../IP/Tage_base_128.xcix"
-`include "../IP/Tage_T1_128.xcix"
+`include "../../IP/Bram_SIM.v"
+`include "../../IP/Tage_base_128.xcix"
+`include "../../IP/Tage_T1_128.xcix"
 
 module Tage #(
     parameter BASEDEEP       = 128  ,

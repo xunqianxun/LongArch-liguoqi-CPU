@@ -39,6 +39,9 @@ module PreDecode (
     output         wire           [`InstAddrBus]               RasAddrDate        ,
     //to tage      
     output         wire                                        TageUpAble         ,
+    // //to ICache
+    // output         wire                                        IcacheStateRest    ,
+    // output         wire           [`InstAddrBus]               IcacheFlashEnty    ,
     //to InstBuffer 
     output         wire                                        ToIbInst1Able      ,
     output         wire                                        ToIbInst1Mode      ,
@@ -468,6 +471,6 @@ module PreDecode (
     assign ToIbInst8Mode   = ~PreDecodeStop ? RToIbInst8Mode     : `EnableValue  ;
     assign ToIbInst8Pc     = ~PreDecodeStop ? RToIbInst8Pc       : `ZeorDate     ;
     assign ToIbInst8Redir  = ~PreDecodeStop ? RToIbInst8Redir    : `ZeorDate     ;
-    assign ToIbInst8Date   = ~PreDecodeStop ? RToIbInst8Date     : `ZeorDate     ;
+    assign ToIbInst8Date   = ~PreDecodeStop ? RToIbInst8Date     : `ZeorDate     ; 
    
 endmodule

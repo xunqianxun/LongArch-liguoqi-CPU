@@ -4,13 +4,15 @@
 module Btb (
     input        wire                                   Clk             ,
     input        wire                                   Rest            ,
+    // stop
+    input        wire                                   BtbStop         ,
     //input from pc
     input        wire                                   InstPcAble      ,
-    input        wire     [`InstAddrBus]                InstPc          ,
+    input        wire     [`InstAddrBus]                InstPc          , //bit [4:0] un use
     //input from predecode 
-    input        wire                                   UpPcAble        ,
+    input        wire                                   UpAble          ,
     input        wire     [1:0]                         UpAbleBank      ,
-    input        wire     [`InstAddrBus]                UpPc            ,
+    input        wire     [`InstAddrBus]                UpPc            , //bit [4:0] un use
     input        wire                                   UpCntAble       ,
     input        wire     [3:0]                         UpCnt           ,
     input        wire                                   BtbUpTypeAble   ,
@@ -24,20 +26,20 @@ module Btb (
     output       wire     [2:0]                         InstNextType   
 );
 
-    reg   [56:0]  BtbRamBank0 [0:255];
-    reg   [56:0]  BtbRamBank1 [0:255];
+    reg   [58:0]  BtbRamBank0 [0:255];
+    reg   [58:0]  BtbRamBank1 [0:255];
 
     reg   [3:0]   CountBan0   [0:255];
     reg   [3:0]   CountBan1   [0:255];
     // for read 
-    wire  [56:0]  ReadBtb0Enty = BtbRamBank0[InstPc[12:5]] ;
-    wire  [56:0]  ReadBtb1Enty = BtbRamBank1[InstPc[12:5]] ;
+    wire  [58:0]  ReadBtb0Enty = BtbRamBank0[InstPc[12:5]] ;
+    wire  [58:0]  ReadBtb1Enty = BtbRamBank1[InstPc[12:5]] ;
 
-    wire  [17:0]  Ban0Tag = ReadBtb0Enty[56:39] ;
-    wire  [17:0]  Ban1Tag = ReadBtb1Enty[56:39] ;
-    wire          Ban0Valid = ReadBtb0Enty[57]  ;
-    wire          Ban1Valid = ReadBtb1Enty[57]  ;
-    wire  [17:0]  PcTag   = InstPc[31:13]       ;
+    wire  [18:0]  Ban0Tag = ReadBtb0Enty[57:39] ;
+    wire  [18:0]  Ban1Tag = ReadBtb1Enty[57:39] ;
+    wire          Ban0Valid = ReadBtb0Enty[58]  ;
+    wire          Ban1Valid = ReadBtb1Enty[58]  ;
+    wire  [18:0]  PcTag   = InstPc[31:13]       ;
 
     //wire          HitOrNo = ((Ban0Tag == PcTag) & Ban0Valid) | ((Ban1Tag == PcTag) & Ban1Valid) ;
 
@@ -81,12 +83,12 @@ module Btb (
             end
         end 
             else begin
-                CountBan0[InstPc[12:5]] <= HitBan0Able  ? 3'd0 :
+                CountBan0[InstPc[12:5]] <= HitBan0Able  ? 4'd0 :
                                            HitBan1Able  ? CountBan0[InstPc[12:5]] + 1 : CountBan0[InstPc[12:5]] ;
-                CountBan1[InstPc[12:5]] <= HitBan1Able  ? 3'd0 :
+                CountBan1[InstPc[12:5]] <= HitBan1Able  ? 4'd0 :
                                            HitBan0Able  ? CountBan1[InstPc[12:5]] + 1 : CountBan1[InstPc[12:5]] ;
-                CountBan0[UpPc[12:5]]   <= WriteBan0Able ? 3'd0 : CountBan0[UpPc[12:5]] ;
-                CountBan1[UpPc[12:5]]   <= WriteBan1Able ? 3'd0 : CountBan1[UpPc[12:5]] ;
+                CountBan0[UpPc[12:5]]   <= WriteBan0Able ? 4'd0 : CountBan0[UpPc[12:5]] ;
+                CountBan1[UpPc[12:5]]   <= WriteBan1Able ? 4'd0 : CountBan1[UpPc[12:5]] ;
             end
     end
     
@@ -100,6 +102,12 @@ module Btb (
             RegNextPc   <= `ZeorDate    ;
             RegNextType <= 3'd0         ;
             RegNextHitBn<= 2'd0         ;
+        end
+        else if(BtbStop) begin
+            RegNextAble <= RegNextAble ;
+            RegNextPc   <= RegNextPc   ;
+            RegNextType <= RegNextType ;
+            RegNextHitBn<= RegNextHitBn;
         end
         else if(InstPcAble) begin
             RegNextAble <= `AbleValue ;
@@ -132,29 +140,29 @@ module Btb (
     always @(posedge Clk) begin
         if(!Rest) begin
             for (ii =0 ;ii<32 ;ii=ii+1 ) begin
-                BtbRamBank0[ii] <= 4'd0 ;
-                BtbRamBank1[ii] <= 4'd0 ;
-                BtbRamBank0[ii+32] <= 4'd0 ;
-                BtbRamBank1[ii+32] <= 4'd0 ;
-                BtbRamBank0[ii+64] <= 4'd0 ;
-                BtbRamBank1[ii+64] <= 4'd0 ;
-                BtbRamBank0[ii+96] <= 4'd0 ;
-                BtbRamBank1[ii+96] <= 4'd0 ;
-                BtbRamBank0[ii+128] <= 4'd0 ;
-                BtbRamBank1[ii+128] <= 4'd0 ;
-                BtbRamBank0[ii+160] <= 4'd0 ;
-                BtbRamBank1[ii+160] <= 4'd0 ;
-                BtbRamBank0[ii+192] <= 4'd0 ;
-                BtbRamBank1[ii+192] <= 4'd0 ;
-                BtbRamBank0[ii+224] <= 4'd0 ;
-                BtbRamBank1[ii+224] <= 4'd0 ;
+                BtbRamBank0[ii] <= 59'd0 ;
+                BtbRamBank1[ii] <= 59'd0 ;
+                BtbRamBank0[ii+32] <= 59'd0 ;
+                BtbRamBank1[ii+32] <= 59'd0 ;
+                BtbRamBank0[ii+64] <= 59'd0 ;
+                BtbRamBank1[ii+64] <= 59'd0 ;
+                BtbRamBank0[ii+96] <= 59'd0 ;
+                BtbRamBank1[ii+96] <= 59'd0 ;
+                BtbRamBank0[ii+128] <= 59'd0 ;
+                BtbRamBank1[ii+128] <= 59'd0 ;
+                BtbRamBank0[ii+160] <= 59'd0 ;
+                BtbRamBank1[ii+160] <= 59'd0 ;
+                BtbRamBank0[ii+192] <= 59'd0 ;
+                BtbRamBank1[ii+192] <= 59'd0 ;
+                BtbRamBank0[ii+224] <= 59'd0 ;
+                BtbRamBank1[ii+224] <= 59'd0 ;
             end
         end
         else begin
-            BtbRamBank0[UpPc[12:5]] <= UpDateChiose0 ? (~{{19{1'b1}},{4{UpCntAble}},{4{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank0[UpPc[12:5]]) |
-                                                       ({{19{1'b1}},{4{UpCntAble}},{4{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank0[UpPc[12:5]] ;
-            BtbRamBank1[UpPc[12:5]] <= UpDateChiose1 ? (~{{19{1'b1}},{4{UpCntAble}},{4{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank1[UpPc[12:5]]) |
-                                                       ({{19{1'b1}},{4{UpCntAble}},{4{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank1[UpPc[12:5]] ;
+            BtbRamBank0[UpPc[12:5]] <= (UpDateChiose0 & UpAble) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank0[UpPc[12:5]]) |
+                                                       ({1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {`AbleValue,UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank0[UpPc[12:5]] ;
+            BtbRamBank1[UpPc[12:5]] <= (UpDateChiose1 & UpAble) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank1[UpPc[12:5]]) |
+                                                       ({1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {`AbleValue,UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank1[UpPc[12:5]] ;
             BtbRamBank0[InstPc[12:5]][38:35] <= HitBan0Able ?  {BtbRamBank0[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank0[InstPc[12:5]][38:35] ;
             BtbRamBank1[InstPc[12:5]][38:35] <= HitBan1Able ?  {BtbRamBank1[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank1[InstPc[12:5]][38:35] ;
         end

@@ -17,8 +17,8 @@ module STACK_reload #(
     input         wire                            WABLE         ,
     input         wire       [STACKWIDE-1:0]      DIN           ,
 
-    output        wire                            STACKFULL     ,
-    output        wire                            STACKEMPTY    ,
+    // output        wire                            STACKFULL     ,
+    // output        wire                            STACKEMPTY    ,
 
     input         wire                            RELOAD        ,
     input         wire [STACKPTRW-1:0]            RELOADPTR     ,
@@ -43,7 +43,7 @@ module STACK_reload #(
     integer i ;
 
     reg [STACKPTRW-1:0] StackPtr  ;
-    reg [STACKWIDE-1:0] RegDout   ;
+    //reg [STACKWIDE-1:0] RegDout   ;
     always @(posedge Clk) begin
         if(!Rest) begin  
             StackPtr <= {STACKPTRW{1'b0}} ;
@@ -65,12 +65,12 @@ module STACK_reload #(
             if(RABLE) begin
                 if(STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] > 1)begin
                     StackPtr <= StackPtr         ;
-                    RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
+                    //RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
                     STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] <= STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] - 1 ;
                 end
                 else begin 
                     StackPtr <= StackPtr - 1                        ;
-                    RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
+                    //RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
                     STACKREG[StackPtr-1] <= {STACKWIDE+RECURCOUNT{1'b0}}       ;  
                 end 
             end
@@ -96,7 +96,7 @@ module STACK_reload #(
         end
     end
 
-    assign STACKFULL   = (StackPtr == 15) ; //虽设计有第16项但设计的基本没有使用即可用15項
-    assign STACKEMPTY  = (StackPtr == 0)  ;
-    assign DOUT        = RegDout          ;
+    // assign STACKFULL   = (StackPtr == 15) ; //虽设计有第16项但设计的基本没有使用即可用15項
+    // assign STACKEMPTY  = (StackPtr == 0)  ;
+    assign DOUT        = RABLE ?  STACKREG[StackPtr-1][STACKWIDE-1:0] : 32'd0 ;
 endmodule

@@ -1,0 +1,2 @@
+#chiplab sims configure log
+#Configured with: ./configure.sh --disable-trace-comp --disable-simu-trace --run coremark

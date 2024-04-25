@@ -25,7 +25,7 @@ module PreDecode (
     input          wire           [32*8-1:0]                   FetchDate          ,
     //to pc 
     output         wire                                        PreReDirectAble    ,
-    output         wire            [`InstAddrBus]              PreReDirectPc      ,
+    output         wire           [`InstAddrBus]               PreReDirectPc      ,
     //to btb
     output         wire                                        BtbUpPcAble        ,
     output         wire           [`InstAddrBus]               BtbUpPc            ,
@@ -39,9 +39,6 @@ module PreDecode (
     output         wire           [`InstAddrBus]               RasAddrDate        ,
     //to tage      
     output         wire                                        TageUpAble         ,
-    // //to ICache
-    // output         wire                                        IcacheStateRest    ,
-    // output         wire           [`InstAddrBus]               IcacheFlashEnty    ,
     //to InstBuffer 
     output         wire                                        ToIbInst1Able      ,
     output         wire                                        ToIbInst1Mode      ,

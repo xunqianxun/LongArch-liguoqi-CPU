@@ -27,8 +27,8 @@ module Mmu (
     input       wire                                     InstFetch      ,
     input       wire      [31:0]                         InstVritualA   ,
     output      wire      [1:0]                          InstOperType   ,
-    output      wire                                     InstTlbTrap    ,
-    output      wire      [6:0]                          InstTlbTrapType,
+    output      wire                                     InstTlbTrap    , // //to ROB save ICache excaption when before inst exection finash
+    output      wire      [6:0]                          InstTlbTrapType, 
     output      wire      [`InstAddrBus]                 InstPhysicalAddr,
     //from access memory
     input       wire                                     MemAccess      ,

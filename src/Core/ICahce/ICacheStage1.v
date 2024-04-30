@@ -3,258 +3,235 @@
 `include "../../IP/data_bank_sram.xcix"
 `include "../../IP/tag_icache_sram.xcix"
 
-module ICacheStage1 #(
-    parameter SRAMEWIDE     = 32 ,
-    parameter ICACHEWIDE    = 256,
-    parameter ICACHEDEEP    = 32 ,
-    parameter TAGWIDE       = 19
-)(
+module ICacheStage1 (
     input        wire                                     Clk           ,
     input        wire                                     Rest          ,
-    //from FTQ
-    input        wire                                     InstFetch     , //in from FTQ the time must be unbusy
-    input        wire      [`InstAddrBus]                 VritualAddr   ,
-    //from TLB
-    input        wire                                     CocapAble     ,
-    input        wire      [1:0]                          CocapMode     ,
-    input        wire                                     TlbAddrTrans  ,
-    input        wire      [`InstAddrBus]                 PhysicalAddr  ,
-    //from CtrlBlock
-    input        wire                                     CacheStateFluah,
-    //from ICacheCtrl
-    input        wire                                     Stage1Stop    ,
-    //from ICacheStage2
-    input        wire                                     ReplaceWay    ,
-    //for AXIBridge
-    input        wire                                     MemoryAble    , //此处写直接就是写8×32个bit其中burst在AXI bridge中完成张样可以减少Cache 阶段一stop时间
-    input        wire      [`InstAddrBus]                 MemoryAddr    ,
-    input        wire      [ICACHEWIDE-1:0]               MemoryDate    
+    //from ictrl
+    input        wire                                     IcacheStop    ,
+    //input        wire                                     IcacheFlash   ,
+    //from Pc 
+    input        wire                                     FetchAble     ,
+    input        wire                                     FetchPc       ,
+    //to stage 2 
+    output       wire                                     ToStage2Able  ,
+    output       wire       [7:0]                         To2Offset     ,
+    output       wire       [255:0]                       To2Way1Date   ,
+    output       wire       [19:0]                        To2Way1Tag    ,
+    output       wire       [255:0]                       To2Way2Date   ,
+    output       wire       [19:0]                        To2Way2Tag    ,
+    output       wire       [255:0]                       To2Way3Date   ,
+    output       wire       [19:0]                        To2Way3Tag    ,
+    output       wire       [255:0]                       To2Way4Date   ,
+    output       wire       [19:0]                        To2Way4Tag    ,
+    // update when hit
+    input        wire                                     InHitAble     ,
+    input        wire       [3:0]                         InHitIndex    ,
+    input        wire                                     InHitWay1     ,
+    input        wire                                     InHitWay2     ,
+    input        wire                                     InHitWay3     ,
+    input        wire                                     InHitWay4     ,
+    //from MSHR up when miss
+    input        wire                                     InNewAble     ,
+    input        wire       [3:0]                         InNewIndex    ,
+    input        wire       [19:0]                        InNewTag      ,
+    input        wire       [255:0]                       InNewDate     
+
 );
 
-    reg                RegInstFetch ;
+    reg   [2:0]  CountWay1 [0:15] ;
+    reg   [2:0]  CountWay2 [0:15] ;
+    reg   [2:0]  CountWay3 [0:15] ;
+    reg   [2:0]  CountWay4 [0:15] ;
+
+    integer i ;
     always @(posedge Clk) begin
-        if(!Rest)
-            RegInstFetch <= `EnableValue ;
-        else 
-            RegInstFetch <= InstFetch    ;
+        if(!Rest) begin
+            for (i =0 ;i<16 ;i=i+1 ) begin
+                CountWay1[i] <= 3'd0 ;
+                CountWay2[i] <= 3'd0 ;
+                CountWay3[i] <= 3'd0 ;
+                CountWay4[i] <= 3'd0 ;
+            end
+        end
+        else begin
+            if(InHitAble) begin
+                if(InHitWay1) begin
+                    CountWay1[InHitIndex] <= 3'd0 ;
+                    CountWay2[InHitIndex] <= (CountWay2[InHitIndex] != 3'b111) ? CountWay2[InHitIndex] + 1 : CountWay2[InHitIndex] ;
+                    CountWay3[InHitIndex] <= (CountWay3[InHitIndex] != 3'b111) ? CountWay3[InHitIndex] + 1 : CountWay3[InHitIndex] ;
+                    CountWay4[InHitIndex] <= (CountWay4[InHitIndex] != 3'b111) ? CountWay4[InHitIndex] + 1 : CountWay4[InHitIndex] ;
+                end 
+                if(InHitWay2) begin
+                    CountWay1[InHitIndex] <= (CountWay1[InHitIndex] != 3'b111) ? CountWay1[InHitIndex] + 1 : CountWay1[InHitIndex] ;
+                    CountWay2[InHitIndex] <= 3'd0 ;
+                    CountWay3[InHitIndex] <= (CountWay3[InHitIndex] != 3'b111) ? CountWay3[InHitIndex] + 1 : CountWay3[InHitIndex] ;
+                    CountWay4[InHitIndex] <= (CountWay4[InHitIndex] != 3'b111) ? CountWay4[InHitIndex] + 1 : CountWay4[InHitIndex] ;
+                end 
+                if(InHitWay3) begin
+                    CountWay1[InHitIndex] <= (CountWay1[InHitIndex] != 3'b111) ? CountWay1[InHitIndex] + 1 : CountWay1[InHitIndex] ;
+                    CountWay2[InHitIndex] <= (CountWay2[InHitIndex] != 3'b111) ? CountWay2[InHitIndex] + 1 : CountWay2[InHitIndex] ;
+                    CountWay3[InHitIndex] <= 3'd0 ;
+                    CountWay4[InHitIndex] <= (CountWay4[InHitIndex] != 3'b111) ? CountWay4[InHitIndex] + 1 : CountWay4[InHitIndex] ;
+                end 
+                if(InHitWay4) begin
+                    CountWay1[InHitIndex] <= (CountWay1[InHitIndex] != 3'b111) ? CountWay1[InHitIndex] + 1 : CountWay1[InHitIndex] ;
+                    CountWay2[InHitIndex] <= (CountWay2[InHitIndex] != 3'b111) ? CountWay2[InHitIndex] + 1 : CountWay2[InHitIndex] ;
+                    CountWay3[InHitIndex] <= (CountWay3[InHitIndex] != 3'b111) ? CountWay3[InHitIndex] + 1 : CountWay3[InHitIndex] ;
+                    CountWay4[InHitIndex] <= 3'd0 ;
+                end 
+            end
+            else begin
+                CountWay1[InHitIndex] <= CountWay1[InHitIndex] ;
+                CountWay2[InHitIndex] <= CountWay2[InHitIndex] ;
+                CountWay3[InHitIndex] <= CountWay3[InHitIndex] ;
+                CountWay4[InHitIndex] <= CountWay4[InHitIndex] ;
+            end
+        end
     end
 
-    //State One Read 
-    wire [5:0] ReadAddr = Stage1Stop ? MemoryAddr : VritualAddr[11:6] ;
-    wire [`InstDateBus] Way0Part1 ;
-    wire [`InstDateBus] Way0Part2 ;
-    wire [`InstDateBus] Way0Part3 ; 
-    wire [`InstDateBus] Way0Part4 ;
-    wire [`InstDateBus] Way0Part5 ;
-    wire [`InstDateBus] Way0Part6 ;
-    wire [`InstDateBus] Way0Part7 ;
-    wire [`InstDateBus] Way0Part8 ;
-    wire [`InstDateBus] Way1Part1 ;
-    wire [`InstDateBus] Way1Part2 ;
-    wire [`InstDateBus] Way1Part3 ; 
-    wire [`InstDateBus] Way1Part4 ;
-    wire [`InstDateBus] Way1Part5 ;
-    wire [`InstDateBus] Way1Part6 ;
-    wire [`InstDateBus] Way1Part7 ;
-    wire [`InstDateBus] Way1Part8 ;
-    wire [TAGWIDE-1:0]  Way0Tag   ;
-    wire [TAGWIDE-1:0]  Way1Tag   ;
-    wire [1:0]          ReadCounter0;
-    wire [1:0]          ReadCounter1;
+    wire  [7:0]  VritualPcOffset = FetchPc[7:0]  ;
+    reg   [7:0]  RVritualOffset  ;
+    reg          RegFetchAble    ;
 
-    wire []
-    
-    data_bank_sram way0_31to0(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part1       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    always @(posedge Clk) begin
+        if(!Rest)
+            {RegFetchAble,RVritualOffset} <= 9'b0 ;  
+        else if(IcacheStop) 
+            {RegFetchAble,RVritualOffset} <= {RegFetchAble,RVritualOffset} ;
+        else if(IcacheFlash)
+            {RegFetchAble,RVritualOffset} <= 9'b0 ;
+        else 
+            {RegFetchAble,RVritualOffset} <= {FetchAble,VritualPcOffset} ;
+    end
 
-    data_bank_sram way0_63to32(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part2       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire  [3:0]  VritualPcIndex  = FetchPc[11:8] ;
 
-    data_bank_sram way0_95to64(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part3       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire         Way1Able = `AbleValue ;
+    wire  [3:0]  Way1Index= InNewAble ? InNewIndex         : 
+                            FetchAble ? VritualPcOffset    : 4'd0 ;
+    wire         Way1Wen  = InNewAble & (((CountWay1[InNewIndex] > CountWay2[InNewIndex]) & (CountWay1[InNewIndex] > CountWay3[InNewIndex]) & 
+                                          (CountWay1[InNewIndex] > CountWay4[InNewIndex])) | (CountWay1[InNewIndex] == 3'b111)) & ~IcacheStop;
+    wire  [19:0] Way1Tag  = InNewTag  ;
+    wire  [255:0]Way1Date = InNewDate ;
 
-    data_bank_sram way0_127to96(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part4       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire  [19:0] OutWay1Tag   ;
+    wire  [255:0]OutWay1Date  ;
 
-        data_bank_sram way0_159to128(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part5       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    data_16x256 way1_data_16x256(
+    .clka  ( Clk         ),
+    .ena   ( Way1Able    ),
+    .wea   ( Way1Wen     ),
+    .addra ( Way1Index   ),
+    .dina  ( Way1Date    ),
+    .douta ( OutWay1Date )
+    ); 
 
-    data_bank_sram way0_191to160(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part6       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    tag_16x20 way1_tag_16x20(
+    .clka  ( Clk         ),
+    .ena   ( Way1Able    ),
+    .wea   ( Way1Wen     ),
+    .addra ( Way1Index   ),
+    .dina  ( Way1Tag     ),
+    .douta ( OutWay1Tag  )
+    ); 
 
-    data_bank_sram way0_223to192(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part7       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire         Way2Able = `AbleValue ;
+    wire  [3:0]  Way2Index= InNewAble ? InNewIndex         : 
+                            FetchAble ? VritualPcOffset    : 4'd0 ;
+    wire         Way2Wen  = InNewAble & (((CountWay2[InNewIndex] > CountWay1[InNewIndex]) & (CountWay2[InNewIndex] > CountWay3[InNewIndex]) & 
+                                          (CountWay2[InNewIndex] > CountWay4[InNewIndex])) | (CountWay2[InNewIndex] == 3'b111))& ~IcacheStop;
+    wire  [19:0] Way2Tag  = InNewTag  ;
+    wire  [255:0]Way2Date = InNewDate ;
 
-    data_bank_sram way0_255to224(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part8       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire  [19:0] OutWay2Tag   ;
+    wire  [255:0]OutWay2Date  ;
 
-    data_bank_sram way1_31to0(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part1       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    data_16x256 way2_data_16x256(
+    .clka  ( Clk         ),
+    .ena   ( Way2Able    ),
+    .wea   ( Way2Wen     ),
+    .addra ( Way2Index   ),
+    .dina  ( Way2Date    ),
+    .douta ( OutWay2Date )
+    ); 
 
-    data_bank_sram way1_63to32(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part2       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    tag_16x20 way2_tag_16x20(
+    .clka  ( Clk         ),
+    .ena   ( Way2Able    ),
+    .wea   ( Way2Wen     ),
+    .addra ( Way2Index   ),
+    .dina  ( Way2Tag     ),
+    .douta ( OutWay2Tag  )
+    ); 
 
-    data_bank_sram way1_95to64(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part3       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire         Way3Able = `AbleValue ;
+    wire  [3:0]  Way3Index= InNewAble ? InNewIndex         : 
+                            FetchAble ? VritualPcOffset    : 4'd0 ;
+    wire         Way3Wen  = InNewAble & (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
+                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111))& ~IcacheStop;
+    wire  [19:0] Way3Tag  = InNewTag  ;
+    wire  [255:0]Way3Date = InNewDate ;
 
-    data_bank_sram way1_127to96(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part4       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire  [19:0] OutWay3Tag   ;
+    wire  [255:0]OutWay3Date  ;
 
-    data_bank_sram way1_159to128(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part5       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    data_16x256 way3_data_16x256(
+    .clka  ( Clk         ),
+    .ena   ( Way3Able    ),
+    .wea   ( Way3Wen     ),
+    .addra ( Way3Index   ),
+    .dina  ( Way3Date    ),
+    .douta ( OutWay3Date )
+    ); 
 
-    data_bank_sram way1_191to160(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part6       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    tag_16x20 way3_tag_16x20(
+    .clka  ( Clk         ),
+    .ena   ( Way3Able    ),
+    .wea   ( Way3Wen     ),
+    .addra ( Way3Index   ),
+    .dina  ( Way3Tag     ),
+    .douta ( OutWay3Tag  )
+    ); 
 
-    data_bank_sram way1_223to192(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part7       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire         Way4Able = `AbleValue ;
+    wire  [3:0]  Way4Index= InNewAble ? InNewIndex         : 
+                            FetchAble ? VritualPcOffset    : 4'd0 ;
+    wire         Way4Wen  = InNewAble & (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
+                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111))& ~IcacheStop;
+    wire  [19:0] Way4Tag  = InNewTag  ;
+    wire  [255:0]Way4Date = InNewDate ;
 
-    data_bank_sram way1_255to224(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part8       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    wire  [19:0] OutWay4Tag   ;
+    wire  [255:0]OutWay4Date  ;
 
-    tag_icache_sram way0tag (
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Tag         )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    data_16x256 way4_data_16x256(
+    .clka  ( Clk         ),
+    .ena   ( Way4Able    ),
+    .wea   ( Way4Wen     ),
+    .addra ( Way4Index   ),
+    .dina  ( Way4Date    ),
+    .douta ( OutWay4Date )
+    ); 
 
-    tag_icache_sram way1tag (
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Tag         )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
+    tag_16x20 way4_tag_16x20(
+    .clka  ( Clk         ),
+    .ena   ( Way4Able    ),
+    .wea   ( Way4Wen     ),
+    .addra ( Way4Index   ),
+    .dina  ( Way4Tag     ),
+    .douta ( OutWay4Tag  )
+    ); 
 
-    Cache_counter#(
-        .COUNTERWIDE ( 2 ),
-        .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP  )
-    )Way0_Cache_counter(
-        .Clk         ( Clk         ),
-        .Rest        ( Rest        ),
-        .RABLE       ( InstFetch   ),
-        .WABLE       ( WABLE       ),
-        .RADDR       ( ReadAddr    ),
-        .WADDR       ( WADDR       ),
-        .CLEAN       ( CLEAN       ),
-        .RDATE       ( ReadCounter0)
-    );
 
-    Cache_counter#(
-        .COUNTERWIDE ( 2 ),
-        .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP  )
-    )Way1_Cache_counter(
-        .Clk         ( Clk         ),
-        .Rest        ( Rest        ),
-        .RABLE       ( InstFetch   ),
-        .WABLE       ( WABLE       ),
-        .RADDR       ( ReadAddr    ),
-        .WADDR       ( WADDR       ),
-        .CLEAN       ( CLEAN       ),
-        .RDATE       ( ReadCounter1)
-    );
-
+    assign ToStage2Able = ~IcacheStop ?  RegFetchAble : 1'b0 ;
+    assign To2Offset    = ~IcacheStop ?  RVritualOffset : 8'b0 ;
+    assign To2Way1Date  = ~IcacheStop ?  OutWay1Date : 256'b0 ;
+    assign To2Way1Tag   = ~IcacheStop ?  OutWay1Tag  : 20'b0 ;
+    assign To2Way2Date  = ~IcacheStop ?  OutWay2Date : 256'b0 ;
+    assign To2Way2Tag   = ~IcacheStop ?  OutWay2Tag  : 20'b0 ;
+    assign To2Way3Date  = ~IcacheStop ?  OutWay3Date : 256'b0 ;
+    assign To2Way3Tag   = ~IcacheStop ?  OutWay3Tag  : 20'b0 ;
+    assign To2Way4Date  = ~IcacheStop ?  OutWay4Date : 256'b0 ;
+    assign To2Way4Tag   = ~IcacheStop ?  OutWay4Tag  : 20'b0 ;
 
 endmodule

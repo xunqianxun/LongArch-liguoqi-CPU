@@ -72,12 +72,12 @@ module AXIbus (
 
     // Icache Dcache ICache frist 
     // cahce and uncache won't come together 
-    localparam IDLE   = 3'b000 ;
-    localparam RADDRC = 3'b001 ;
-    localparam RDATEC = 3'b010 ;
-    localparam WADDRC = 3'b011 ;
-    localparam WDATEC = 3'b100 ;
-    localparam WRESPC = 3'b101 ;
+    // localparam IDLE   = 3'b000 ;
+    // localparam RADDRC = 3'b001 ;
+    // localparam RDATEC = 3'b010 ;
+    // localparam WADDRC = 3'b011 ;
+    // localparam WDATEC = 3'b100 ;
+    // localparam WRESPC = 3'b101 ;
 
     reg   [2:0]  ReadState     ;
     wire  [2:0]  NextReadState ;
@@ -163,22 +163,33 @@ module AXIbus (
                            ReadDateTemp[8],ReadDateTemp[7],ReadDateTemp[6],ReadDateTemp[5],
                            ReadDateTemp[4],ReadDateTemp[3],ReadDateTemp[2],ReadDateTemp[1]} ;
 
-    assign CacReadfree = (ReadState == IDLE ); //cache中发射数据需要打一个拍，避免组合逻辑环 ;
+    //assign CacReadfree = (ReadState == IDLE); //cache中发射数据需要打一个拍，避免组合逻辑环 ;
 
     assign NextReadState = Arvalid ? RADDRC : 
                            Rready  ? RDATEC : IDLE ;
-                           
+
+    reg RegReadFree ;
+    always @(posedge Clk) begin
+        if(!Rest) 
+           RegReadFree <= `EnableValue ; 
+        else if(IRshankhand | DRshankhand) 
+           RegReadFree <= `AbleValue ;
+        else if(Rlast & (Rresp == 2'b00) & (Rid == 4'd1))
+           RegReadFree <= `EnableValue ; 
+    end        
+
+    assign   CacReadfree = RegReadFree  ;  
 
     //for write 
     
-    reg   [2:0]  WriteState     ;
-    wire  [2:0]  NextWriteState ;
-    always @(posedge Clk) begin
-        if(!Rest)
-            WriteState <= IDLE ;
-        else 
-            WriteState <= NextWriteState ;
-    end
+    // reg   [2:0]  WriteState     ;
+    // wire  [2:0]  NextWriteState ;
+    // always @(posedge Clk) begin
+    //     if(!Rest)
+    //         WriteState <= IDLE ;
+    //     else 
+    //         WriteState <= NextWriteState ;
+    // end
 
     assign Awvalid = DcaWriteAble | DWriteUncache ;
     assign Awaddr  = DcaWriteAddr ;
@@ -279,12 +290,15 @@ module AXIbus (
         end
     end
 
-    assign NextWriteState = Awvalid    ? WADDRC :
-                            WvalidTemp ? WDATEC : 
-                            BReadyTemp ? WRESPC : IDLE ;
+    // assign NextWriteState = Awvalid    ? WADDRC :
+    //                         WvalidTemp ? WDATEC : 
+    //                         BReadyTemp ? WRESPC : IDLE ;
 
-    assign WritBAckAble = ((Bid ==4'd1) & (Bresp == 2'd0) & (Bvalid)) ;
-    assign CacWritefree = (WriteState == IDLE) ;
+     assign WritBAckAble = ((Bid ==4'd1) & (Bresp == 2'd0) & (Bvalid)) ;
+    // assign CacWritefree = (WriteState == IDLE) ;
+
+    assign CacWritefree = BReadyTemp ;
+
 
     assign Wid      = 4'd1 ;
     assign Wdata    = RegWdate ;

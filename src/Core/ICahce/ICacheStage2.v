@@ -4,18 +4,17 @@
 module ICacheStage2 (
     input       wire                                     Clk           ,
     input       wire                                     Rest          ,
-    //for cache ctrl 
-    //input       wire                                     IcacheStop    ,
+    //for cache ctrl
     input       wire                                     ICacheFlash   ,
     output      wire                                     ICacheReq     ,
     output      wire                                     BpuReq        ,
     //from MMU 
     input       wire       [1:0]                         InOperType    ,
     input       wire                                     InTlbTrap     ,
-    //input       wire       [6:0]                         InTlbTrapType ,
     input       wire       [`InstAddrBus]                InPhysicalAddr,         
     //from stage1 
     input       wire                                     InStage1Able  ,
+    input       wire       [1:0]                         InStage1Mat   ,                        
     input       wire       [`InstAddrBus]                InStage1Pc    ,
     input       wire       [5:0]                         In1Offset     ,
     input       wire       [511:0]                       In1Way1Date   ,
@@ -41,10 +40,10 @@ module ICacheStage2 (
     output      wire                                     IcaReadAble   ,
     input       wire                                     IRshankhand   ,
     output      wire                                     IUncacheRead  ,
-    output      wire     [`InstAddrBus]                  IcaReadAddr   ,
+    output      wire       [`InstAddrBus]                IcaReadAddr   ,
     input       wire                                     CacReadfree   ,
     input       wire                                     ReadBackAble  ,
-    input       wire     [511:0]                         ReadBackDate  ,
+    input       wire       [511:0]                       ReadBackDate  ,
     //to PreDecode 
     output      wire       [255:0]                       OutPcIvt      ,
     output      wire       [7:0]                         OutInstIvt    ,
@@ -60,11 +59,12 @@ module ICacheStage2 (
     wire  HitWay4 = (PhysicalTag == In1Way4Tag) ;
 
     wire         WayHitAble ;
+    wire [3:0]   WayHutNum  ;
     wire [255:0] WayHitDate ;
-    assign {WayHitAble,WayHitDate} = (~HitWay1 & ~HitWay2 & ~HitWay3 & HitWay4) ? {`AbleValue,In1Way1Date} : 
-                                     (~HitWay1 & ~HitWay2 & HitWay3 & ~HitWay4) ? {`AbleValue,In1Way2Date} : 
-                                     (~HitWay1 & HitWay2 & ~HitWay3 & ~HitWay4) ? {`AbleValue,In1Way3Date} : 
-                                     (HitWay1 & ~HitWay2 & ~HitWay3 & ~HitWay4) ? {`AbleValue,In1Way4Date} : {`EnableValue, 512'd0} ;
+    assign {WayHutNum,WayHitAble,WayHitDate}  = ((~HitWay1 & ~HitWay2 & ~HitWay3 & HitWay4) & InStage1Mat != 2'b00) ? {4'b1000,`AbleValue,In1Way1Date} : 
+                                                ((~HitWay1 & ~HitWay2 & HitWay3 & ~HitWay4) & InStage1Mat != 2'b00) ? {4'b0100,`AbleValue,In1Way2Date} : 
+                                                ((~HitWay1 & HitWay2 & ~HitWay3 & ~HitWay4) & InStage1Mat != 2'b00) ? {4'b0010,`AbleValue,In1Way3Date} : 
+                                                ((HitWay1 & ~HitWay2 & ~HitWay3 & ~HitWay4) & InStage1Mat != 2'b00) ? {4'b0001,`AbleValue,In1Way4Date} : {4'b0000,`EnableValue, 512'd0} ;
 
     wire [511:0] FInalOutDate ;
 
@@ -88,27 +88,58 @@ module ICacheStage2 (
                            
     wire [31:0]  FInalPc    ;
     wire [255:0] OutPcIvt = {FInalPc+28,FInalPc+24,FInalPc+20,FInalPc+16,
-                             FInalPc+12,FInalPc+8,FInalPc+4,FInalPc}
+                             FInalPc+12,FInalPc+8,FInalPc+4,FInalPc} ;
 
-    reg [37:0] MSHR[0:7] ;
+    assign   OutHitAble  =  WayHitAble             ;
+    assign   OutHitIndex =  InStage1Pc[11:6]       ;
+    assign   OutHitWay1  =  WayHutNum[0]           ;
+    assign   OutHitWay2  =  WayHutNum[1]           ;
+    assign   OutHitWay3  =  WayHutNum[2]           ;
+    assign   OutHitWay4  =  WayHutNum[3]           ;
 
-    integer i ;
-    always @(posedge Clk) begin
-        if(!Rest) begin
-            for (i =0 ;i<8 ;i=i+1 ) begin
-                MSHR[i] <= 38'd0 ;
-            end  
-        end
-        else begin
-            if(ICacheFlash) 
-                for (i =0 ;i<8 ;i=i+1 ) begin
-                    MSHR[i] <= 38'd0 ;
-                end
-            if()
-        end
-    end
 
-    
+
+    localparam WRITEARB  = 2'b01 ;
+    localparam SHANKHAND = 2'b10 ;
+ 
+
+    wire               WriteAble = ~WayHitAble & InStage1Able ;
+    wire   [37:0]      WriteDate = {`AbleValue,InPhysicalAddr,WRITEARB,InStage1Mat} ;
+    wire   [37:0]      PreDate  ;
+    wire   [2:0]       PrePtr   ;
+    wire               MSHRRead ;
+
+    assign MSHRRead = (ReadBackAble & (PreDate[4:2] == SHANKHAND)) ;
+
+
+IcacheFIFO#(
+    .FIFOWIDE    ( 38 )
+)u_IcacheFIFO(
+    .Clk         ( Clk         ),
+    .Rest        ( Rest        ),
+    .Rable       ( MSHRRead    ),
+    .FifoPreOut  ( PreDate     ),
+    .FifoPrePtr  ( PrePtr      ),
+    .Wable       ( WriteAble   ),
+    .Din         ( WriteDate   ),
+    .StateWAble  ( IRshankhand ),
+    .StatePtr    ( PrePtr      ),
+    .StateDate   ( SHANKHAND   ),
+    .FifoClean   ( ICacheFlash ),
+    .FifoFull    ( FifoFull    )
+);
+
+
+
+    assign  IcaReadAble   =  CacReadfree & (PreDate[1:0] == 2'b01) & (PreDate[4:2] == WRITEARB) ;
+    assign  IUncacheRead  =  CacReadfree & (PreDate[1:0] == 2'b00) & (PreDate[4:2] == WRITEARB) ;
+    assign  IcaReadAddr   =  (CacReadfree & (PreDate[4:2] == WRITEARB)) ? PreDate[36:5] : 32'd0 ;
+
+
+    assign  OutNewAble    =  ReadBackAble & (PreDate[1:0] == 2'b00) ;
+    assign  OutNewIndex   =  PreDate[16:11] ;
+    assign  OutNewTag     =  PreDate[36:17] ;
+    assign  OutNewDate    =  ReadBackDate   ;
 
 
 endmodule

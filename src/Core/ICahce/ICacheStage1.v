@@ -14,7 +14,7 @@ module ICacheStage1 (
     //to stage 2 
     output       wire                                     ToStage2Able  ,
     output       wire       [`InstAddrBus]                ToStage2Pc    ,
-    output       wire       [5:0]                         To2Offset     ,
+   // output       wire       [5:0]                         To2Offset     ,
     output       wire       [511:0]                       To2Way1Date   ,
     output       wire       [19:0]                        To2Way1Tag    ,
     output       wire       [511:0]                       To2Way2Date   ,
@@ -229,14 +229,14 @@ module ICacheStage1 (
 
     assign ToStage2Able = ~IcacheStop ?  RegFetchAble   : 1'b0 ;
     assign ToStage2Pc   = ~IcacheStop ?  RVritualPc     : 32'b0;
-    assign To2Offset    = ~IcacheStop ?  RVritualOffset : 8'b0 ;
-    assign To2Way1Date  = ~IcacheStop ?  OutWay1Date : 256'b0 ;
+    //assign To2Offset    = ~IcacheStop ?  RVritualOffset : 8'b0 ;
+    assign To2Way1Date  = ~IcacheStop ?  OutWay1Date : 512'b0 ;
     assign To2Way1Tag   = ~IcacheStop ?  OutWay1Tag  : 20'b0  ;
-    assign To2Way2Date  = ~IcacheStop ?  OutWay2Date : 256'b0 ;
+    assign To2Way2Date  = ~IcacheStop ?  OutWay2Date : 512'b0 ;
     assign To2Way2Tag   = ~IcacheStop ?  OutWay2Tag  : 20'b0  ;
-    assign To2Way3Date  = ~IcacheStop ?  OutWay3Date : 256'b0 ;
+    assign To2Way3Date  = ~IcacheStop ?  OutWay3Date : 512'b0 ;
     assign To2Way3Tag   = ~IcacheStop ?  OutWay3Tag  : 20'b0  ;
-    assign To2Way4Date  = ~IcacheStop ?  OutWay4Date : 256'b0 ;
+    assign To2Way4Date  = ~IcacheStop ?  OutWay4Date : 512'b0 ;
     assign To2Way4Tag   = ~IcacheStop ?  OutWay4Tag  : 20'b0  ;
 
 endmodule

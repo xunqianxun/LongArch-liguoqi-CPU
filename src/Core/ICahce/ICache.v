@@ -1,302 +1,129 @@
 `timescale 1ps/1ps
 `include "../define.v"
-`include "../../IP/data_bank_sram.xcix"
-`include "../../IP/tag_icache_sram.xcix"
+`include "../MMU/Mmu.v"
 
-module ICache #(
-    parameter SRAMEWIDE     = 32 ,
-    parameter ICACHEWIDE    = 256,
-    parameter ICACHEDEEP    = 32 ,
-    parameter TAGWIDE       = 19
-)(
-    input        wire                                     Clk           ,
-    input        wire                                     Rest          ,
-    //from FTQ
-    input        wire                                     InstFetch     , //in from FTQ the time must be unbusy
-    input        wire      [`InstAddrBus]                 VritualAddr   ,
-    //from TLB
-    input        wire                                     CocapAble     ,
-    input        wire      [1:0]                          CocapMode     ,
-    input        wire                                     TlbAddrTrans  ,
-    input        wire      [`InstAddrBus]                 PhysicalAddr  ,
-    //from CtrlBlock
-    input        wire                                     CacheStateFluah,
-    //to FTQ
-    input        wire                                     ICacheBusy    ,
-    //to PreCheck
-    output       wire                                     InstReady     ,
-    output       wire      [(SRAMEWIDE*4)-1:0]            InstDateIc    ,
-    //for AXIBridge
-    input        wire                                     MemoryAble    ,
-    input        wire                                     MemoryBrustAble,
-    input        wire      [`InstAddrBus]                 MemoryAddr    ,
-    input        wire      [`InstDateBus]                 MemoryDate    ,
-    //to AXIBridge
-    output       wire                                     ReadMAble     ,
-    output       wire                                     ReadMBrustAble,
-    output       wire      [`InstAddrBus]                 ReadMAddr     ,
-    output       wire      [7:0]                          ReadMlen      ,
-    output       wire      [2:0]                          ReadMsize     ,
-    output       wire      [1:0]                          ReadMBurstTy
-    //icache needn't  write back memory     
-    
+
+module ICache (
+    input      wire                             Clk            ,
+    input      wire                             Rest           ,  
+    //for ctrl 
+    input      wire                             IcFLash        ,
+    output     wire                             IcReq          ,
+    output     wire                             BpReq          ,
+    //for mmu 
+    output     wire                             ToMuFetch      ,
+    output     wire      [31:0]                 ToMuVritualA   ,
+    input      wire      [1:0]                  InCOperType    ,
+    input      wire                             InCTlbTrap     , 
+    input      wire      [`InstAddrBus]         InCPhysicalAddr,
+    //from BPU 
+    input      wire                             BpuReqAble     ,
+    input      wire      [`InstAddrBus]         BpuReqPc       ,
+    //to Predecoe 
+    output     wire                             ToPreAble      ,
+    output     wire      [255:0]                ToPcIvt        ,
+    output     wire      [7:0]                  ToInstIvt      ,
+    output     wire      [255:0]                ToDate         ,
+    //to Arb tran
+    output     wire                             OutReadAble    ,
+    input      wire                             Inshankhand    ,
+    output     wire                             OutUncacheRead ,
+    output     wire      [`InstAddrBus]         OutReadAddr    ,
+    input      wire                             InReadreq      ,
+    input      wire                             InReadBackAble ,
+    input      wire      [511:0]                InReadBackDate  
 );
+    wire               Stage1to2Able ;
+    wire [`InstAddrBus]Stage1to2Pc   ;
+    wire [511:0]       Way1S1ToS2Date;
+    wire [19:0]        Way1S1ToS2Tag ;
+    wire [511:0]       Way2S1ToS2Date;
+    wire [19:0]        Way2S1ToS2Tag ;
+    wire [511:0]       Way3S1ToS2Date;
+    wire [19:0]        Way3S1ToS2Tag ;
+    wire [511:0]       Way4S1ToS2Date;
+    wire [19:0]        Way4S1ToS2Tag ;
 
-    reg                RegInstFetch ;
-    always @(posedge Clk) begin
-        if(!Rest)
-            RegInstFetch <= `EnableValue ;
-        else 
-            RegInstFetch <= InstFetch    ;
+    wire               HitUp2to1Able ;
+    wire [5:0]         HitUp2to1Idx  ;
+    wire               HitUp2to1Way1 ;
+    wire               HitUp2to1Way2 ;
+    wire               HitUp2to1Way3 ;
+    wire               HitUp2to1Way4 ;
 
-    end
+    wire               NewUp2to1Able ;
+    wire  [5:0]        NewUp2to1Idx  ;
+    wire  [19:0]       NewUp2to1Tag  ;
+    wire  [511:0]      NewUp2to1Date ;
 
-    //State One Read 
-    wire [5:0] ReadAddr = VritualAddr[11:6] ;
-    wire [`InstDateBus] Way0Part1 ;
-    wire [`InstDateBus] Way0Part2 ;
-    wire [`InstDateBus] Way0Part3 ; 
-    wire [`InstDateBus] Way0Part4 ;
-    wire [`InstDateBus] Way0Part5 ;
-    wire [`InstDateBus] Way0Part6 ;
-    wire [`InstDateBus] Way0Part7 ;
-    wire [`InstDateBus] Way0Part8 ;
-    wire [`InstDateBus] Way1Part1 ;
-    wire [`InstDateBus] Way1Part2 ;
-    wire [`InstDateBus] Way1Part3 ; 
-    wire [`InstDateBus] Way1Part4 ;
-    wire [`InstDateBus] Way1Part5 ;
-    wire [`InstDateBus] Way1Part6 ;
-    wire [`InstDateBus] Way1Part7 ;
-    wire [`InstDateBus] Way1Part8 ;
-    wire [TAGWIDE-1:0]  Way0Tag   ;
-    wire [TAGWIDE-1:0]  Way1Tag   ;
-    wire [1:0]          ReadCounter0;
-    wire [1:0]          ReadCounter1;
-    
-    data_bank_sram way0_31to0(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part1       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
+    ICacheStage1 u_ICacheStage1(
+        .Clk           ( Clk            ),
+        .Rest          ( Rest           ),
+        .IcacheStop    ( BpReq          ),
+        .FetchAble     ( BpuReqAble     ),
+        .FetchPc       ( BpuReqPc       ),
+        .ToStage2Able  ( Stage1to2Able  ),
+        .ToStage2Pc    ( Stage1to2Pc    ),
+        .To2Way1Date   ( Way1S1ToS2Date ),
+        .To2Way1Tag    ( Way1S1ToS2Tag  ),
+        .To2Way2Date   ( Way2S1ToS2Date ),
+        .To2Way2Tag    ( Way2S1ToS2Tag  ),
+        .To2Way3Date   ( Way3S1ToS2Date ),
+        .To2Way3Tag    ( Way3S1ToS2Tag  ),
+        .To2Way4Date   ( Way4S1ToS2Date ),
+        .To2Way4Tag    ( Way4S1ToS2Tag  ),
+        .InHitAble     ( HitUp2to1Able  ),
+        .InHitIndex    ( HitUp2to1Idx   ),
+        .InHitWay1     ( HitUp2to1Way1  ),
+        .InHitWay2     ( HitUp2to1Way2  ),
+        .InHitWay3     ( HitUp2to1Way3  ),
+        .InHitWay4     ( HitUp2to1Way4  ),
+        .InNewAble     ( NewUp2to1Able  ),
+        .InNewIndex    ( NewUp2to1Idx   ),
+        .InNewTag      ( NewUp2to1Tag   ),
+        .InNewDate     ( NewUp2to1Date  )
     );
 
-    data_bank_sram way0_63to32(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part2       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
+    ICacheStage2 u_ICacheStage2(
+        .Clk            ( Clk             ),
+        .Rest           ( Rest            ),
+        .ICacheFlash    ( IcFLash         ),
+        .ICacheReq      ( BpReq           ),
+        .IcacheSFreq    ( IcReq           ),
+        .InOperType     ( InCOperType     ),
+        .InTlbTrap      ( InCTlbTrap      ),
+        .InPhysicalAddr ( InCPhysicalAddr ),
+        .InStage1Able   ( Stage1to2Able   ),
+        .InStage1Pc     ( Stage1to2Pc     ),
+        .In1Way1Date    ( Way1S1ToS2Date  ),
+        .In1Way1Tag     ( Way1S1ToS2Tag   ),
+        .In1Way2Date    ( Way2S1ToS2Date  ),
+        .In1Way2Tag     ( Way2S1ToS2Tag   ),
+        .In1Way3Date    ( Way3S1ToS2Date  ),
+        .In1Way3Tag     ( Way3S1ToS2Tag   ),
+        .In1Way4Date    ( Way4S1ToS2Date  ),
+        .In1Way4Tag     ( Way4S1ToS2Tag   ),
+        .OutHitAble     ( HitUp2to1Able   ),
+        .OutHitIndex    ( HitUp2to1Idx    ),
+        .OutHitWay1     ( HitUp2to1Way1   ),
+        .OutHitWay2     ( HitUp2to1Way2   ),
+        .OutHitWay3     ( HitUp2to1Way3   ),
+        .OutHitWay4     ( HitUp2to1Way4   ),
+        .OutNewAble     ( NewUp2to1Able   ),
+        .OutNewIndex    ( NewUp2to1Idx    ),
+        .OutNewTag      ( NewUp2to1Tag    ),
+        .OutNewDate     ( NewUp2to1Date   ),
+        .IcaReadAble    ( OutReadAble     ),
+        .IRshankhand    ( Inshankhand     ),
+        .IUncacheRead   ( OutUncacheRead  ),
+        .IcaReadAddr    ( OutReadAddr     ),
+        .CacReadreq     ( InReadreq       ),
+        .ReadBackAble   ( InReadBackAble  ),
+        .ReadBackDate   ( InReadBackDate  ),
+        .OutPreAble     ( ToPreAble       ),
+        .OutPcIvt       ( ToPcIvt         ),
+        .OutInstIvt     ( ToInstIvt       ),
+        .OutDate        ( ToDate          )
     );
-
-    data_bank_sram way0_95to64(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part3       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way0_127to96(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part4       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-        data_bank_sram way0_159to128(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part5       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way0_191to160(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part6       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way0_223to192(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part7       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way0_255to224(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Part8       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_31to0(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part1       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_63to32(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part2       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_95to64(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part3       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_127to96(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part4       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_159to128(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part5       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_191to160(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part6       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_223to192(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part7       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    data_bank_sram way1_255to224(
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Part8       )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    tag_icache_sram way0tag (
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way0Tag         )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    tag_icache_sram way1tag (
-        .addra      (ReadAddr        )  ,
-        .clka       (Clk             )  ,
-        .dina       (way0_bank0_dina )  ,
-        .douta      (Way1Tag         )  ,
-        .ena        (way0_bank0_ena  )  ,
-        .wea        (way0_bank0_wea  )  
-    );
-
-    Cache_counter#(
-        .COUNTERWIDE ( 2 ),
-        .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP  )
-    )Way0_Cache_counter(
-        .Clk         ( Clk         ),
-        .Rest        ( Rest        ),
-        .RABLE       ( InstFetch   ),
-        .WABLE       ( WABLE       ),
-        .RADDR       ( ReadAddr    ),
-        .WADDR       ( WADDR       ),
-        .CLEAN       ( CLEAN       ),
-        .RDATE       ( ReadCounter0)
-    );
-
-    Cache_counter#(
-        .COUNTERWIDE ( 2 ),
-        .COUNTERPW   ( 5 ),
-        .COUNTERDEEP ( ICACHEDEEP  )
-    )Way1_Cache_counter(
-        .Clk         ( Clk         ),
-        .Rest        ( Rest        ),
-        .RABLE       ( InstFetch   ),
-        .WABLE       ( WABLE       ),
-        .RADDR       ( ReadAddr    ),
-        .WADDR       ( WADDR       ),
-        .CLEAN       ( CLEAN       ),
-        .RDATE       ( ReadCounter1)
-    );
-
-
-    //atate two sent date to precheck or access memory
-    wire              HitWay0 ;
-    wire              HitWay1 ;
-    assign  HitWay0 = (Way0Tag== PhysicalAddr[SRAMEWIDE-1:12]) ;
-    assign  HitWay1 = (Way1Tag== PhysicalAddr[SRAMEWIDE-1:12]) ;
-
-    wire                         HitSentPreC     = HitWay0 | HitWay1 ;
-    wire  [(SRAMEWIDE*4)-1:0]    HitSentPrecDate = HitWay0 ? {Way0Part8, Way0Part7, Way0Part6, Way0Part4, Way0Part4, Way0Part3, Way0Part2, Way0Part1} :
-                                                   HitWay1 ? {Way1Part8, Way1Part7, Way1Part6, Way1Part4, Way1Part4, Way1Part3, Way1Part2, Way1Part1} :
-                                                  256'd0 ;
-    
-    reg                             RegInstReady  ;
-    reg  [(SRAMEWIDE*4)-1:0]        RegInstDateIc ;
-    always @(posedge Clk) begin
-        if(!Rest) begin
-            RegInstReady <= `EnableValue ;
-            RegInstDateIc <= 256'd0 ;
-        end
-        else begin
-            if(HitSentPreC) begin
-                RegInstReady <= `AbleValue ;
-                RegInstDateIc <= HitSentPrecDate ;
-            end 
-            if(RegInstFetch) begin
-
-            end 
-
-        end 
-    end
-
-
 
 endmodule

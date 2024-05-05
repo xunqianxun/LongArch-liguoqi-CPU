@@ -72,12 +72,12 @@ module AXIbus (
 
     // Icache Dcache ICache frist 
     // cahce and uncache won't come together 
-    // localparam IDLE   = 3'b000 ;
-    // localparam RADDRC = 3'b001 ;
-    // localparam RDATEC = 3'b010 ;
-    // localparam WADDRC = 3'b011 ;
-    // localparam WDATEC = 3'b100 ;
-    // localparam WRESPC = 3'b101 ;
+    localparam IDLE   = 3'b000 ;
+    localparam RADDRC = 3'b001 ;
+    localparam RDATEC = 3'b010 ;
+    localparam WADDRC = 3'b011 ;
+    localparam WDATEC = 3'b100 ;
+    localparam WRESPC = 3'b101 ;
 
     reg   [2:0]  ReadState     ;
     wire  [2:0]  NextReadState ;

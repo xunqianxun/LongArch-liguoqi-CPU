@@ -2,7 +2,7 @@
 //`include "IPsetting.v"
 
 module IcacheFIFO #(
-    parameter FIFOWIDE = 38
+    parameter FIFOWIDE = 68
 ) (
     input         wire                            Clk           ,
     input         wire                            Rest          ,
@@ -17,10 +17,10 @@ module IcacheFIFO #(
 
     input         wire                            StateWAble    ,
     input         wire       [2:0]                StatePtr      ,
-    input         wire       [2:0]                StateDate     ,
+    input         wire       [1:0]                StateDate     ,
 
     input         wire                            FifoClean     ,
-
+    output        wire                            FifoEmpty     ,
     output        wire                            FifoFull  
 );
 
@@ -37,7 +37,7 @@ module IcacheFIFO #(
             end
         end
         else begin
-            FIFOREG[StatePtr][4:2] <= StateWAble ? StateDate : FIFOREG[StatePtr][4:2] ;
+            FIFOREG[StatePtr][3:2] <= StateWAble ? StateDate : FIFOREG[StatePtr][3:2] ;
             if(Wable) begin
               Fifofront <=(Fifofront == 7) ? 0 : Fifofront + 1 ;
               FIFOREG[Fifofront] <= Din ;
@@ -65,7 +65,7 @@ module IcacheFIFO #(
 
     //assign Dout = FifoOutReg ;
     assign FifoFull = (((Fifotril - Fifofront) == 1) || ((Fifotril == 0) && (Fifofront == 7))) ;
-    //assign FifoEmpty = (Fifotril == Fifofront) ;
+    assign FifoEmpty = (Fifotril == Fifofront) ;
     assign FifoPreOut = FIFOREG[Fifotril] ;
     assign FifoPrePtr = Fifotril ;
     

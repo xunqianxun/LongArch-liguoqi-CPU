@@ -18,7 +18,7 @@ module AXIbus (
     //for Dcache
     input       wire                       DcaWriteAble,
     output      wire                       DWshankhand , //与uncache 共用
-    inout       wire                       DWriteUncache,
+    input       wire                       DWriteUncache,
     input       wire     [3:0]             UncacheStrb , //uncache 时只可能是len为1的时候
     input       wire     [`InstAddrBus]    DcaWriteAddr,
     input       wire     [255:0]           DcaWDate    ,
@@ -75,9 +75,9 @@ module AXIbus (
     localparam IDLE   = 3'b000 ;
     localparam RADDRC = 3'b001 ;
     localparam RDATEC = 3'b010 ;
-    localparam WADDRC = 3'b011 ;
-    localparam WDATEC = 3'b100 ;
-    localparam WRESPC = 3'b101 ;
+    // localparam WADDRC = 3'b011 ;
+    // localparam WDATEC = 3'b100 ;
+    // localparam WRESPC = 3'b101 ;
 
     reg   [2:0]  ReadState     ;
     wire  [2:0]  NextReadState ;

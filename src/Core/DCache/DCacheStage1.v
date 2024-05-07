@@ -1,5 +1,7 @@
 `timescale 1ps/1ps
 `include "../define.v"
+`include "../../IP/data_128x256.xcix"
+`include "../../IP/tag_128x256.xcix"
 
 module DCacheStage1 (
     input        wire                                 Clk          ,
@@ -34,21 +36,26 @@ module DCacheStage1 (
     output       wire     [2:0]                       MSHRPtr      ,  
     input        wire                                 MSHRUpAble   ,
     input        wire     [255:0]                     MSHRUpDate   ,
-    input        wire     [6:0]                       MSHRUpIndex  ,
-    input        wire     [4:0]                       MSHRUpOffset ,
+    input        wire     [`InstAddrBus]              MSHRUpAddr   ,
     input        wire     [3:0]                       MSHRUpWay    ,
-    //hit cont up 
-    input        wire                                 HitUpCntAble ,
-    input        wire     [6:0]                       HitUpIndex   ,
-    input        wire                                 InHitWay1    ,
-    input        wire                                 InHitWay2    ,
-    input        wire                                 InHitWay3    ,   
-    input        wire                                 InHitWay4    ,
-    //up New enty 
-    input        wire                                 InNewAble    ,
-    input        wire     [5:0]                       InNewIndex   ,
-    input        wire     [19:0]                      InNewTag     ,
-    input        wire     [511:0]                     InNewDate     
+    input        wire                                 In2HitAble   ,
+    input        wire     [6:0]                       In2HitIndex  ,
+    input        wire                                 In2HitWay1   ,
+    input        wire                                 In2HitWay2   ,
+    input        wire                                 In2HitWay3   ,
+    input        wire                                 In2HitWay4   ,
+    input        wire                                 Writ2DirtAble,
+    input        wire     [6:0]                       Writ2HitIndex,
+    input        wire                                 Writ2Way1Hit ,
+    input        wire                                 Writ2Way2Hit ,
+    input        wire                                 Writ2Way3Hit ,
+    input        wire                                 Writ2Way4Hit ,
+    //to AGU 
+    output       wire                                 LoadBack     ,
+    output       wire     [2:0]                       LoadBackPtr  ,
+    output       wire     [`DataBus]                  LoadBackDate ,
+    output       wire                                 StoreBack    ,
+    output       wire     [2:0]                       StoreBackPtr
     
 );
 
@@ -157,40 +164,43 @@ module DCacheStage1 (
 
 
     reg         LoadStoreSelct ;
-    reg         LoadSuccess    ;
-    reg         StoreSuccess   ;
+    reg         RLoadSuccess   ;
+    reg         RStoreSuccess  ;
     always @(posedge Clk) begin
         if(!Rest) begin
             LoadStoreSelct <= 1'b0 ;
-            LoadSuccess    <= 1'b0 ;
-            StoreSuccess   <= 1'b0 ;
+            RLoadSuccess    <= 1'b0 ;
+            RStoreSuccess   <= 1'b0 ;
         end
         else if(LoadAble & StoreAble & ~LoadStoreSelct) begin
             LoadStoreSelct <= 1'b1 ;
-            LoadSuccess    <= 1'b1 ;
-            StoreSuccess   <= 1'b0 ;
+            RLoadSuccess    <= 1'b1 ;
+            RStoreSuccess   <= 1'b0 ;
         end
         else if(LoadAble & StoreAble & LoadStoreSelct) begin
             LoadStoreSelct <= 1'b0 ;
-            LoadSuccess    <= 1'b0 ;
-            StoreSuccess   <= 1'b1 ;
+            RLoadSuccess    <= 1'b0 ;
+            RStoreSuccess   <= 1'b1 ;
         end
         else if(LoadAble & ~StoreAble) begin
             LoadStoreSelct <= 1'b1 ;
-            LoadSuccess    <= 1'b1 ;
-            StoreSuccess   <= 1'b0 ;
+            RLoadSuccess    <= 1'b1 ;
+            RStoreSuccess   <= 1'b0 ;
         end
         else if(~LoadAble & StoreAble) begin
             LoadStoreSelct <= 1'b0 ;
-            LoadSuccess    <= 1'b0 ;
-            StoreSuccess   <= 1'b1 ;
+            RLoadSuccess    <= 1'b0 ;
+            RStoreSuccess   <= 1'b1 ;
         end
         else begin
             LoadStoreSelct <= 1'b0 ;
-            LoadSuccess    <= 1'b0 ;
-            StoreSuccess   <= 1'b0 ;
+            RLoadSuccess    <= 1'b0 ;
+            RStoreSuccess   <= 1'b0 ;
         end
     end
+
+    assign LoadSuccess  = RLoadSuccess ;
+    assign StoreSuccess = RStoreSuccess;
 
 
     wire [6:0] AGUIndex  = ((LoadAble & StoreAble & ~LoadStoreSelct) | (LoadAble & ~StoreAble)) ? LoadPhyAddr [11:5]   :
@@ -204,13 +214,21 @@ module DCacheStage1 (
     wire       FinalStore= ((LoadAble & StoreAble &  LoadStoreSelct) | (~LoadAble & StoreAble)) ;
 
 
-    wire         Way1Able = `AbleValue ;
-    wire  [6:0]  Way1Index= InNewAble              ? InNewIndex         : 
-                            (LoadAble | StoreAble) ? AGUIndex           : 7'd0 ;
-    wire         Way1Wen  = InNewAble & (((CountWay1[InNewIndex] > CountWay2[InNewIndex]) & (CountWay1[InNewIndex] > CountWay3[InNewIndex]) & 
-                                          (CountWay1[InNewIndex] > CountWay4[InNewIndex])) | (CountWay1[InNewIndex] == 3'b111));
-    wire  [19:0] Way1Tag  = InNewTag  ;
-    wire  [255:0]Way1Date = InNewDate ;
+    wire         Way1Able   = `AbleValue ;
+    wire  [6:0]  Way1Index  = MSHRUpAble              ? MSHRUpAddr[11:5] : 
+                              (LoadAble | StoreAble)  ? AGUIndex         : 7'd0 ;
+    wire  [31:0] Way1Wen    = ({32{(DcacheHit[0] & FinalStore)}} & {{4{(AGUOffset[4:2] == 3'd7)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd6)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd5)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd4)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd3)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd2)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd1)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd0)}}}) | {32{(MSHRUpAble & MSHRUpWay[0])}} ;
+    wire         Way1TagWen = (MSHRUpAble & MSHRUpWay[0])   ;
+    wire  [19:0] Way1Tag    = MSHRUpAddr[31:12]  ;
+    wire  [255:0]Way1Date   = (DcacheHit[0] & FinalStore) ? {StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate} :
+                              (MSHRUpAble & MSHRUpWay[0]) ? MSHRUpDate                                                                        : 256'd0 ;
     wire  [19:0] OutWay1Tag   ;
     wire  [255:0]OutWay1Date  ;
 
@@ -227,19 +245,27 @@ module DCacheStage1 (
     tag_128x256 way1_tag_128x256(
     .clka  ( Clk         ),
     .ena   ( Way1Able    ),
-    .wea   ( Way1Wen     ),
+    .wea   ( Way1TagWen  ),
     .addra ( Way1Index   ),
     .dina  ( Way1Tag     ),
     .douta ( OutWay1Tag  )
     ); 
 
-    wire         Way2Able = `AbleValue ;
-    wire  [6:0]  Way2Index= InNewAble              ? InNewIndex         : 
-                            (LoadAble | StoreAble) ? AGUIndex           : 7'd0 ;
-    wire         Way2Wen  = InNewAble & (((CountWay2[InNewIndex] > CountWay1[InNewIndex]) & (CountWay2[InNewIndex] > CountWay3[InNewIndex]) & 
-                                          (CountWay2[InNewIndex] > CountWay4[InNewIndex])) | (CountWay2[InNewIndex] == 3'b111));
-    wire  [19:0] Way2Tag  = InNewTag  ;
-    wire  [255:0]Way2Date = InNewDate ;
+    wire         Way2Able   = `AbleValue ;
+    wire  [6:0]  Way2Index  = MSHRUpAble              ? MSHRUpAddr[11:5] : 
+                              (LoadAble | StoreAble)  ? AGUIndex         : 7'd0 ;
+    wire  [31:0] Way2Wen    = ({32{(DcacheHit[1] & FinalStore)}} & {{4{(AGUOffset[4:2] == 3'd7)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd6)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd5)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd4)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd3)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd2)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd1)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd0)}}}) | {32{(MSHRUpAble & MSHRUpWay[1])}} ;
+    wire         Way2TagWen = (MSHRUpAble & MSHRUpWay[1])   ;
+    wire  [19:0] Way2Tag    = MSHRUpAddr[31:12]  ;
+    wire  [255:0]Way2Date   = (DcacheHit[1] & FinalStore) ? {StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate} :
+                              (MSHRUpAble & MSHRUpWay[1]) ? MSHRUpDate                                                                        : 256'd0 ;
 
     wire  [19:0] OutWay2Tag   ;
     wire  [255:0]OutWay2Date  ;
@@ -256,19 +282,27 @@ module DCacheStage1 (
     tag_128x256 way2_tag_128x256(
     .clka  ( Clk         ),
     .ena   ( Way2Able    ),
-    .wea   ( Way2Wen     ),
+    .wea   ( Way2TagWen  ),
     .addra ( Way2Index   ),
     .dina  ( Way2Tag     ),
     .douta ( OutWay2Tag  )
     ); 
 
-    wire         Way3Able = `AbleValue ;
-    wire  [5:0]  Way3Index= InNewAble              ? InNewIndex         : 
-                            (LoadAble | StoreAble) ? AGUIndex           : 7'd0 ;
-    wire         Way3Wen  = InNewAble & (((CountWay4[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
-                                          (CountWay4[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111));
-    wire  [19:0] Way3Tag  = InNewTag  ;
-    wire  [255:0]Way3Date = InNewDate ;
+    wire         Way3Able   = `AbleValue ;
+    wire  [6:0]  Way3Index  = MSHRUpAble              ? MSHRUpAddr[11:5] : 
+                              (LoadAble | StoreAble)  ? AGUIndex         : 7'd0 ;
+    wire  [31:0] Way3Wen    = ({32{(DcacheHit[2] & FinalStore)}} & {{4{(AGUOffset[4:2] == 3'd7)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd6)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd5)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd4)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd3)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd2)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd1)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd0)}}}) | {32{(MSHRUpAble & MSHRUpWay[2])}} ;
+    wire         Way3TagWen = (MSHRUpAble & MSHRUpWay[2])   ;
+    wire  [19:0] Way3Tag    = MSHRUpAddr[31:12]  ;
+    wire  [255:0]Way3Date   = (DcacheHit[2] & FinalStore) ? {StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate} :
+                              (MSHRUpAble & MSHRUpWay[2]) ? MSHRUpDate                                                                        : 256'd0 ;
 
     wire  [19:0] OutWay3Tag   ;
     wire  [255:0]OutWay3Date  ;
@@ -285,19 +319,27 @@ module DCacheStage1 (
     tag_128x256 way3_tag_128x256(
     .clka  ( Clk         ),
     .ena   ( Way3Able    ),
-    .wea   ( Way3Wen     ),
+    .wea   ( Way3TagWen  ),
     .addra ( Way3Index   ),
     .dina  ( Way3Tag     ),
     .douta ( OutWay3Tag  )
     ); 
 
-    wire         Way4Able = `AbleValue ;
-    wire  [5:0]  Way4Index= InNewAble              ? InNewIndex         : 
-                            (LoadAble | StoreAble) ? AGUIndex           : 7'd0 ;
-    wire         Way4Wen  = InNewAble & (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
-                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111));
-    wire  [19:0] Way4Tag  = InNewTag  ;
-    wire  [255:0]Way4Date = InNewDate ;
+    wire         Way4Able   = `AbleValue ;
+    wire  [6:0]  Way4Index  = MSHRUpAble              ? MSHRUpAddr[11:5] : 
+                              (LoadAble | StoreAble)  ? AGUIndex         : 7'd0 ;
+    wire  [31:0] Way4Wen    = ({32{(DcacheHit[3] & FinalStore)}} & {{4{(AGUOffset[4:2] == 3'd7)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd6)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd5)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd4)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd3)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd2)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd1)}},
+                                                                    {4{(AGUOffset[4:2] == 3'd0)}}}) | {32{(MSHRUpAble & MSHRUpWay[3])}} ;
+    wire         Way4TagWen = (MSHRUpAble & MSHRUpWay[3])   ;
+    wire  [19:0] Way4Tag    = MSHRUpAddr[31:12]  ;
+    wire  [255:0]Way4Date   = (DcacheHit[3] & FinalStore) ? {StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate,StoreDate} :
+                              (MSHRUpAble & MSHRUpWay[3]) ? MSHRUpDate                                                                        : 256'd0 ;
 
     wire  [19:0] OutWay4Tag   ;
     wire  [255:0]OutWay4Date  ;
@@ -323,25 +365,34 @@ module DCacheStage1 (
     wire [1:0]  DcacheMat = ((LoadAble & StoreAble & ~LoadStoreSelct) | (LoadAble & ~StoreAble)) ? LoadMat   :
                             ((LoadAble & StoreAble &  LoadStoreSelct) | (~LoadAble & StoreAble)) ? StoreMat  :  2'b0 ;
 
-    wire [3:0]  DcacheHit  = {4{(AGUTag == OutWay4Tag) & (DcacheMat == 2'b00)}} & 4'b1000 |
-                             {4{(AGUTag == OutWay3Tag) & (DcacheMat == 2'b00)}} & 4'b0100 |
-                             {4{(AGUTag == OutWay2Tag) & (DcacheMat == 2'b00)}} & 4'b0010 |
-                             {4{(AGUTag == OutWay1Tag) & (DcacheMat == 2'b00)}} & 4'b0001 ;
+    wire [3:0]  DcacheHit  = {4{(AGUTag == OutWay4Tag) & (DcacheMat != 2'b00)}} & 4'b1000 |
+                             {4{(AGUTag == OutWay3Tag) & (DcacheMat != 2'b00)}} & 4'b0100 |
+                             {4{(AGUTag == OutWay2Tag) & (DcacheMat != 2'b00)}} & 4'b0010 |
+                             {4{(AGUTag == OutWay1Tag) & (DcacheMat != 2'b00)}} & 4'b0001 ;
 
-    wire [5:0]  DIrtyindex = InNewAble              ? InNewIndex         : 
+    wire [255:0]DcacheHitDate = {256{(AGUTag == OutWay4Tag) & (DcacheMat != 2'b00)}} & Way4Date |
+                                {256{(AGUTag == OutWay3Tag) & (DcacheMat != 2'b00)}} & Way3Date |
+                                {256{(AGUTag == OutWay2Tag) & (DcacheMat != 2'b00)}} & Way2Date |
+                                {256{(AGUTag == OutWay1Tag) & (DcacheMat != 2'b00)}} & Way1Date ;
+
+    wire [255:0] LoadOut = DcacheHitDate >> {AGUOffset[4:2],5'd0} ;
+
+    wire [6:0]  DIrtyindex = MSHRUpAble             ? MSHRUpAddr[11:5]   : 
                              (LoadAble | StoreAble) ? AGUIndex           : 7'd0 ;
     wire [3:0]  DcacheDirty= Dirty[DIrtyindex] ;
 
-    wire [3:0]  ReplaceSelect = (((CountWay4[InNewIndex] > CountWay1[InNewIndex]) & (CountWay4[InNewIndex] > CountWay2[InNewIndex]) & 
-                                  (CountWay4[InNewIndex] > CountWay3[InNewIndex]))) & 4'b1000 |
-                                (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
-                                  (CountWay3[InNewIndex] > CountWay4[InNewIndex]))) & 4'b0100 |
-                                (((CountWay2[InNewIndex] > CountWay1[InNewIndex]) & (CountWay2[InNewIndex] > CountWay3[InNewIndex]) & 
-                                  (CountWay2[InNewIndex] > CountWay4[InNewIndex]))) & 4'b0010 |
-                                (((CountWay1[InNewIndex] > CountWay2[InNewIndex]) & (CountWay1[InNewIndex] > CountWay3[InNewIndex]) & 
-                                  (CountWay1[InNewIndex] > CountWay4[InNewIndex]))) & 4'b0001 ;
+    wire [3:0]  ReplaceSelect = {4{((CountWay4[AGUIndex] > CountWay1[AGUIndex]) & (CountWay4[AGUIndex] > CountWay2[AGUIndex]) & 
+                                  (CountWay4[AGUIndex] > CountWay3[AGUIndex]))}} & 4'b1000 |
+                                {4{ ((CountWay3[AGUIndex] > CountWay1[AGUIndex]) & (CountWay3[AGUIndex] > CountWay2[AGUIndex]) & 
+                                  (CountWay3[AGUIndex] > CountWay4[AGUIndex]))}} & 4'b0100 |
+                                {4{((CountWay2[AGUIndex] > CountWay1[AGUIndex]) & (CountWay2[AGUIndex] > CountWay3[AGUIndex]) & 
+                                  (CountWay2[AGUIndex] > CountWay4[AGUIndex]))}} & 4'b0010 |
+                                {4{((CountWay1[AGUIndex] > CountWay2[AGUIndex]) & (CountWay1[AGUIndex] > CountWay3[AGUIndex]) & 
+                                  (CountWay1[AGUIndex] > CountWay4[AGUIndex]))}} & 4'b0001 ;
+
+    wire [3:0] DirtyReplace = ReplaceSelect & DcacheDirty ;
     
-    assign WriteBuffAble = (((FinalLoad) && (ReplaceSelect & DcacheDirty)) | (FinalStore && ((ReplaceSelect & DcacheDirty) | (DcacheMat == 2'b00))) && (DcacheHit == 4'b0000)); 
+    assign WriteBuffAble = ((((FinalLoad) && (DirtyReplace != 4'b0000)) || (FinalStore && ((DirtyReplace != 4'b0000) || (DcacheMat == 2'b00)))) && (DcacheHit == 4'b0000)); 
     assign WriteBuffAddr = {AGUTag, AGUIndex,5'd0} ;
     assign WriteBuffPtr  = ((LoadAble & StoreAble & ~LoadStoreSelct) | (LoadAble & ~StoreAble)) ? LoadPtr   :
                            ((LoadAble & StoreAble &  LoadStoreSelct) | (~LoadAble & StoreAble)) ? StorePtr  :  3'b0 ;
@@ -352,7 +403,71 @@ module DCacheStage1 (
                                                                                         {256{ReplaceSelect[2] & DcacheDirty[2]}} & OutWay3Date | 
                                                                                         {256{ReplaceSelect[3] & DcacheDirty[3]}} & OutWay4Date ) ;
 
-    assign MSHRAble      = 
+    assign WriteBackAble = (((FinalLoad) && (DirtyReplace != 4'b0000)) | (FinalStore && ((DirtyReplace != 4'b0000) && (DcacheMat != 2'b00))) && (DcacheHit == 4'b0000)); 
+    assign WriteBackIdex = AGUIndex ;
+    assign WriteBack1Hit = ReplaceSelect[0] & DcacheDirty[0] ;
+    assign WriteBack2Hit = ReplaceSelect[1] & DcacheDirty[1] ;
+    assign WriteBack3Hit = ReplaceSelect[2] & DcacheDirty[2] ;
+    assign WriteBack4Hit = ReplaceSelect[3] & DcacheDirty[3] ;
+
+    assign InHitAble     = ((FinalLoad | FinalStore) & (DcacheHit != 4'd0 )) | (In2HitAble);
+    assign InHitIndex    = (FinalLoad | FinalStore) ? AGUIndex    : 
+                           In2HitAble               ? In2HitIndex : 7'd0 ;
+    assign InHitWay1     = (FinalLoad | FinalStore) ? DcacheHit[0]: 
+                           In2HitAble               ? In2HitWay1  : 1'd0 ;
+    assign InHitWay2     = (FinalLoad | FinalStore) ? DcacheHit[1]: 
+                           In2HitAble               ? In2HitWay2  : 1'd0 ;
+    assign InHitWay3     = (FinalLoad | FinalStore) ? DcacheHit[2]: 
+                           In2HitAble               ? In2HitWay3  : 1'd0 ;
+    assign InHitWay4     = (FinalLoad | FinalStore) ? DcacheHit[3]: 
+                           In2HitAble               ? In2HitWay4  : 1'd0 ;
+
+    assign WriteDirtAble = (FinalStore & (DcacheHit != 4'd0 )) | Writ2DirtAble ;
+    assign WriteHitIndex = FinalStore    ? AGUIndex      : 
+                           Writ2DirtAble ? Writ2HitIndex : 7'd0 ;
+    assign WriteWay1Hit  = FinalStore    ? DcacheHit[0]  : 
+                           Writ2DirtAble ? Writ2Way1Hit  : 1'd0 ;
+    assign WriteWay2Hit  = FinalStore    ? DcacheHit[1]  : 
+                           Writ2DirtAble ? Writ2Way2Hit  : 1'd0 ;
+    assign WriteWay3Hit  = FinalStore    ? DcacheHit[2]  : 
+                           Writ2DirtAble ? Writ2Way3Hit  : 1'd0 ;
+    assign WriteWay4Hit  = FinalStore    ? DcacheHit[3]  : 
+                           Writ2DirtAble ? Writ2Way4Hit  : 1'd0 ;
+
+    assign MSHRAble      = (FinalLoad | (FinalStore && (DcacheMat != 2'b00))) && (DcacheHit == 4'b0000) ;
+    assign MSHRAddr      = {AGUTag, AGUIndex,5'd0} ; 
+    assign MSHRWay       = ReplaceSelect ;
+    assign MSHRPtr       = ((LoadAble & StoreAble & ~LoadStoreSelct) | (LoadAble & ~StoreAble)) ? LoadPtr   :
+                           ((LoadAble & StoreAble &  LoadStoreSelct) | (~LoadAble & StoreAble)) ? StorePtr  :  3'b0 ;
+
+    reg                RLoadBack     ;
+    reg    [2:0]       RLoadBackPtr  ;
+    reg    [`DataBus]  RLoadBackDate ;
+    reg                RStoreBack    ;
+    reg    [2:0]       RStoreBackPtr ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            RLoadBack <= `EnableValue ;
+            RLoadBackPtr <= 3'd0   ;
+            RLoadBackDate <= 32'd0 ;
+            RStoreBack <= `EnableValue ;
+            RStoreBackPtr <= 3'd0 ;
+        end
+        else begin
+            RLoadBack <= (DcacheHit != 4'b0000) & FinalLoad  ;
+            RLoadBackPtr <= LoadPtr   ;
+            RLoadBackDate <= LoadOut[31:0];
+            RStoreBack <= (DcacheHit != 4'b0000) & FinalStore ;
+            RStoreBackPtr <= StorePtr ;
+        end
+    end
+
+    assign LoadBack     = RLoadBack      ;
+    assign LoadBackPtr  = RLoadBackPtr   ;
+    assign LoadBackDate = RLoadBackDate  ;
+    assign StoreBack    = RStoreBack     ;
+    assign StoreBackPtr = RStoreBackPtr  ;
     
 
 endmodule 

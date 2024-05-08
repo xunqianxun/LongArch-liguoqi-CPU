@@ -7,65 +7,54 @@ module Pc (
     //from ctrl
     input          wire                                    PcStop         , //stop also include icache req stop
     input          wire                                    PcFlash        ,
+    //from btb
+    input          wire                                    BtbPredictAble ,
+    input          wire          [`InstAddrBus]            BtbPreDictPc   ,
     //from predecode 
     input          wire                                    PreReDirAble   ,
-    input          wire          [`InstAddrBus]            PreReDirOldPc  ,
-    input          wire          [`InstAddrBus]            PreReDIrPc     ,
+    input          wire          [`InstAddrBus]            PreReDirPc     ,
     //from ROb
     input          wire                                    RobReDirAble   ,
     input          wire          [`InstAddrBus]            RobReDirPc     ,
-    //to ICache
-    output         wire                                    IcacheFlash    ,
-    output         wire                                    IcacheFlashAll ,
-    output         wire          [`InstAddrBus]            IcacheFlashEnty,
-    //to icache and bpu 
-    output         wire          [`InstAddrBus]            PcDate                   
+    //to ICache and bpu
+    output         wire                                    PcAble         ,
+    output         wire          [`InstAddrBus]            PcDate                        
 );
 
-    reg [`InstAddrBus] RegPc              ;
-    reg                RegIcacheFlash     ;
-    reg [`InstAddrBus] RegIcacheFlashEnty ;
-    reg                RegIcacheFlashAll  ;
+    reg [`InstAddrBus] RegPc      ;
+    reg                RegAble    ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            RegPc              <= `_Entry      ;
-            RegIcacheFlash     <= `EnableValue ;
-            RegIcacheFlashAll  <= `EnableValue ;
-            RegIcacheFlashEnty <= `ZeorDate    ;
+            RegPc   <= `_Entry      ;
+            RegAble <= `EnableValue ;
         end
         else if(PcFlash)begin
-            RegPc              <= `_Entry      ;
-            RegIcacheFlash     <= `EnableValue ;
-            RegIcacheFlashAll  <= `EnableValue ;
-            RegIcacheFlashEnty <= `ZeorDate    ;
+            RegPc   <= `_Entry      ;
+            RegAble <= `EnableValue ;
         end 
         else if(PcStop) begin
-            RegPc              <= RegPc             ;
-            RegIcacheFlash     <= RegIcacheFlash    ;
-            RegIcacheFlashAll  <= RegIcacheFlashAll ;
-            RegIcacheFlashEnty <= RegIcacheFlashEnty;
+            RegPc   <= RegPc        ;
+            RegAble <= RegAble      ;
         end
         else begin
+            if(BtbPredictAble) begin
+                RegPc   <= BtbPreDictPc  ;
+                RegAble <= `AbleValue    ;
+            end
             if(PreReDirAble) begin
-                RegPc              <= PreReDIrPc    ;
-                RegIcacheFlash     <= `AbleValue    ;
-                RegIcacheFlashAll  <= `EnableValue  ;
-                RegIcacheFlashEnty <= PreReDirOldPc ; 
+                RegPc   <= PreReDirPc    ; 
+                RegAble <= `AbleValue    ;
             end
             if(RobReDirAble) begin
-                RegPc              <= RobReDirPc   ;
-                RegIcacheFlash     <= `EnableValue ;
-                RegIcacheFlashAll  <= `AbleValue   ;
-                RegIcacheFlashEnty <= `ZeorDate    ; 
+                RegPc   <= RobReDirPc    ;
+                RegAble <= `AbleValue    ;
             end
         end
     end
 
-    assign PcDate          = RegPc              ;
-    assign IcacheFlash     = RegIcacheFlash     ;
-    assign IcacheFlashAll  = RegIcacheFlashAll  ;
-    assign IcacheFlashEnty = RegIcacheFlashEnty ;
+    assign PcDate          = RegPc      ;
+    assign PcAble          = RegAble    ;
 
     
 endmodule  

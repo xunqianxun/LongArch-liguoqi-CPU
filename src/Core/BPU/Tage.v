@@ -469,7 +469,7 @@ module Tage (
             RegT6Useful <= RegT6Useful  ;
         end
         else if(TageFlash) begin
-            //RegUpDate   <= `EnableValue ;
+            RegUpDate   <= `EnableValue ;
             RegBaseDate <= 6'd0         ;
             RegT1Date   <= 13'd0        ;
             RegT1Tag    <= 7'd0         ;

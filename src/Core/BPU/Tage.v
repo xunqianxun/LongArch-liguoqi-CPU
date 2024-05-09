@@ -14,7 +14,7 @@ module Tage (
     //from BTB
     input     wire                                     BtbAble          ,
     input     wire       [2:0]                         BtbType          ,
-    input     wire                                     BtbMode          ,                        
+    input     wire                                     BtbMode          ,
     //update from predecode 
     input     wire                                     PreUpDable       ,
     input     wire       [63:0]                        PreUpDate        ,
@@ -94,7 +94,7 @@ module Tage (
     wire [63:0] GHR = InALwDateAble ? GHRDate[63:0] :
                       PcAble        ? (BtbAble ? {BtbMode,GHRDATE[62:0]} : GHRDATE)  :  64'd0 ;
 
-    wire [32:0] PcAddr = InALwDateAble ? InALwUpDatePc :
+    wire [31:0] PcAddr = InALwDateAble ? InALwUpDatePc :
                          PcAble        ? PcDate        : 32'd0 ;
 
     //pc cut 7
@@ -278,7 +278,7 @@ module Tage (
     wire [7:0] T3readTag   = XorPc8^FoldT3TagGHR ;
     wire       T3Ena       = `AbleValue          ;
     wire       T3Wen       = ((InALwDateAble & (InALwUpNum == 3)) | (InNewDateAble & (InNewUpNum == 3))) & ~TageStop ;
-    wire [12:0]T3Din       = {14{(InALwDateAble & (InALwUpNum == 3)) & ~TageStop}} & {T3readTag,InALwUpDate,3'd0} | 
+    wire [13:0]T3Din       = {14{(InALwDateAble & (InALwUpNum == 3)) & ~TageStop}} & {T3readTag,InALwUpDate,3'd0} | 
                              {14{(InNewDateAble & (InNewUpNum == 3)) & ~TageStop}} & {T3readTag,InNewUpDate,3'd0} ;
     wire       T3CWen      = ((InALwDateAble & (InALwUpNum == 3)) | (InNewDateAble & (InNewUpNum == 3)) | (InNewCnt3Able)) & ~TageStop ;
     wire [2:0] T3CDin      = {3{(InALwDateAble & (InALwUpNum == 3)) & ~TageStop}} & InALwUpCnt | 
@@ -310,8 +310,8 @@ module Tage (
     wire [7:0] T4readTag   = XorPc8^FoldT4TagGHR ;
     wire       T4Ena       = `AbleValue          ;
     wire       T4Wen       = ((InALwDateAble & (InALwUpNum == 4)) | (InNewDateAble & (InNewUpNum == 4))) & ~TageStop ;
-    wire [12:0]T4Din       = {14{(InALwDateAble & (InALwUpNum == 4)) & ~TageStop}} & {T3readTag,InALwUpDate,3'd0} | 
-                             {14{(InNewDateAble & (InNewUpNum == 4)) & ~TageStop}} & {T3readTag,InNewUpDate,3'd0} ;
+    wire [13:0]T4Din       = {14{(InALwDateAble & (InALwUpNum == 4)) & ~TageStop}} & {T4readTag,InALwUpDate,3'd0} | 
+                             {14{(InNewDateAble & (InNewUpNum == 4)) & ~TageStop}} & {T4readTag,InNewUpDate,3'd0} ;
     wire       T4CWen      = ((InALwDateAble & (InALwUpNum == 4)) | (InNewDateAble & (InNewUpNum == 4)) | (InNewCnt4Able)) & ~TageStop ;
     wire [2:0] T4CDin      = {3{(InALwDateAble & (InALwUpNum == 4)) & ~TageStop}} & InALwUpCnt | 
                              {3{(InNewDateAble & (InNewUpNum == 4)) & ~TageStop}} & InNewUpCnt |
@@ -342,8 +342,8 @@ module Tage (
     wire [8:0] T5readTag   = XorPc9^FoldT5TagGHR ;
     wire       T5Ena       = `AbleValue          ;
     wire       T5Wen       = ((InALwDateAble & (InALwUpNum == 5)) | (InNewDateAble & (InNewUpNum == 5))) & ~TageStop ;
-    wire [12:0]T5Din       = {15{(InALwDateAble & (InALwUpNum == 5)) & ~TageStop}} & {T3readTag,InALwUpDate,3'd0} | 
-                             {15{(InNewDateAble & (InNewUpNum == 5)) & ~TageStop}} & {T3readTag,InNewUpDate,3'd0} ;
+    wire [14:0]T5Din       = {15{(InALwDateAble & (InALwUpNum == 5)) & ~TageStop}} & {T5readTag,InALwUpDate,3'd0} | 
+                             {15{(InNewDateAble & (InNewUpNum == 5)) & ~TageStop}} & {T5readTag,InNewUpDate,3'd0} ;
     wire       T5CWen      = ((InALwDateAble & (InALwUpNum == 5)) | (InNewDateAble & (InNewUpNum == 5)) | (InNewCnt5Able)) & ~TageStop ;
     wire [2:0] T5CDin      = {3{(InALwDateAble & (InALwUpNum == 5)) & ~TageStop}} & InALwUpCnt | 
                              {3{(InNewDateAble & (InNewUpNum == 5)) & ~TageStop}} & InNewUpCnt |
@@ -374,8 +374,8 @@ module Tage (
     wire [8:0] T6readTag   = XorPc9^FoldT6TagGHR ;
     wire       T6Ena       = `AbleValue          ;
     wire       T6Wen       = ((InALwDateAble & (InALwUpNum == 6)) | (InNewDateAble & (InNewUpNum == 6))) & ~TageStop ;
-    wire [12:0]T6Din       = {15{(InALwDateAble & (InALwUpNum == 6)) & ~TageStop}} & {T3readTag,InALwUpDate,3'd0} | 
-                             {15{(InNewDateAble & (InNewUpNum == 6)) & ~TageStop}} & {T3readTag,InNewUpDate,3'd0} ;
+    wire [14:0]T6Din       = {15{(InALwDateAble & (InALwUpNum == 6)) & ~TageStop}} & {T6readTag,InALwUpDate,3'd0} | 
+                             {15{(InNewDateAble & (InNewUpNum == 6)) & ~TageStop}} & {T6readTag,InNewUpDate,3'd0} ;
     wire       T6CWen      = ((InALwDateAble & (InALwUpNum == 6)) | (InNewDateAble & (InNewUpNum == 6)) | (InNewCnt6Able)) & ~TageStop ;
     wire [2:0] T6CDin      = {3{(InALwDateAble & (InALwUpNum == 6)) & ~TageStop}} & InALwUpCnt | 
                              {3{(InNewDateAble & (InNewUpNum == 6)) & ~TageStop}} & InNewUpCnt |
@@ -402,7 +402,6 @@ module Tage (
         .Din   ( T6CDin       )
     );
     reg                   RegUpDate      ;
-    reg                   RegPcAble      ;
     reg [5:0]             RegBaseDate    ;
     reg [12:0]            RegT1Date      ;
     reg [6:0]             RegT1Tag       ;
@@ -491,27 +490,26 @@ module Tage (
             RegT6Useful <= 3'd0         ;
         end
         else begin
-            RegPcAble   <= PcAble       ;
-            RegUpDate   <= UpdateAble   ;
+            RegUpDate   <= PcAble       ;
             RegBaseDate <= BasePart     ;
-            RegT1Date   <= T1Date       ;
-            RegT1Tag    <= T1Tag        ;
-            RegT1Useful <= T1Useful     ;
-            RegT2Date   <= T2Date       ;
-            RegT2Tag    <= T2Tag        ;
-            RegT2Useful <= T2Useful     ;
-            RegT3Date   <= T3Date       ;
-            RegT3Tag    <= T3Tag        ;
-            RegT3Useful <= T3Useful     ;
-            RegT4Date   <= T4Date       ;
-            RegT4Tag    <= T4Tag        ;
-            RegT4Useful <= T4Useful     ;
-            RegT5Date   <= T5Date       ;
-            RegT5Tag    <= T5Tag        ;
-            RegT5Useful <= T5Useful     ;
-            RegT6Date   <= T6Date       ;
-            RegT6Tag    <= T6Tag        ;
-            RegT6Useful <= T6Useful     ;
+            RegT1Date   <= T1Part       ;
+            RegT1Tag    <= T1readTag    ;
+            RegT1Useful <= T1Count      ;
+            RegT2Date   <= T2Part       ;
+            RegT2Tag    <= T2readTag    ;
+            RegT2Useful <= T2Count      ;
+            RegT3Date   <= T3Part       ;
+            RegT3Tag    <= T3readTag    ;
+            RegT3Useful <= T3Count      ;
+            RegT4Date   <= T4Part       ;
+            RegT4Tag    <= T4readTag    ;
+            RegT4Useful <= T4Count      ;
+            RegT5Date   <= T5Part       ;
+            RegT5Tag    <= T5readTag    ;
+            RegT5Useful <= T5Count      ;
+            RegT6Date   <= T6Part       ;
+            RegT6Tag    <= T6readTag    ;
+            RegT6Useful <= T6Count      ;
         end
     end
 
@@ -574,7 +572,7 @@ module Tage (
             RegPredictUset6 <= 3'b0          ;
         end
         else begin
-            RegPredictAble   =  RegPcAble   ;
+            RegPredictAble   =  RegUpDate   ;
             {RegPredictMode, RegPredictJdate, RegPredictNum}  = T6HitAble ? {((RegT6Date[5:3] > 3'b100) ? `AbleValue : `EnableValue), RegT6Date[5:3], 3'd6 } :
                                                                 T5HitAble ? {((RegT5Date[5:3] > 3'b100) ? `AbleValue : `EnableValue), RegT5Date[5:3], 3'd5 } :
                                                                 T4HitAble ? {((RegT4Date[5:3] > 3'b100) ? `AbleValue : `EnableValue), RegT4Date[5:3], 3'd4 } :
@@ -602,9 +600,6 @@ module Tage (
     assign PredictUset4  =  RegPredictUset4 ;
     assign PredictUset5  =  RegPredictUset5 ;
     assign PredictUset6  =  RegPredictUset6 ;
-
-
-
 
     
 endmodule

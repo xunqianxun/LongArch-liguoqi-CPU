@@ -6,6 +6,7 @@ module Btb (
     input        wire                                   Rest            ,
     // stop
     input        wire                                   BtbStop         ,
+    input        wire                                   BtbFlash        ,
     //input from pc
     input        wire                                   InstPcAble      ,
     input        wire     [`InstAddrBus]                InstPc          , //bit [4:0] un use
@@ -25,6 +26,19 @@ module Btb (
     output       wire     [`InstAddrBus]                InstNextPc      ,
     output       wire     [2:0]                         InstNextType   
 );
+
+    reg           StopTemp  ;
+    //reg           FLashTemp ;
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp  <= 1'b0 ;
+            //FLashTemp <= 1'b0 ;
+        end
+        else begin
+            StopTemp  <= BtbStop  ;
+            //FLashTemp <= BtbFlash ;
+        end
+    end
 
     reg   [58:0]  BtbRamBank0 [0:255];
     reg   [58:0]  BtbRamBank1 [0:255];
@@ -83,12 +97,12 @@ module Btb (
             end
         end 
             else begin
-                CountBan0[InstPc[12:5]] <= HitBan0Able  ? 4'd0 :
-                                           HitBan1Able  ? CountBan0[InstPc[12:5]] + 1 : CountBan0[InstPc[12:5]] ;
-                CountBan1[InstPc[12:5]] <= HitBan1Able  ? 4'd0 :
-                                           HitBan0Able  ? CountBan1[InstPc[12:5]] + 1 : CountBan1[InstPc[12:5]] ;
-                CountBan0[UpPc[12:5]]   <= WriteBan0Able ? 4'd0 : CountBan0[UpPc[12:5]] ;
-                CountBan1[UpPc[12:5]]   <= WriteBan1Able ? 4'd0 : CountBan1[UpPc[12:5]] ;
+                CountBan0[InstPc[12:5]] <= (HitBan0Able & ~StopTemp)  ? 4'd0 :
+                                           (HitBan1Able & ~StopTemp)  ? CountBan0[InstPc[12:5]] + 1 : CountBan0[InstPc[12:5]] ;
+                CountBan1[InstPc[12:5]] <= (HitBan1Able & ~StopTemp)  ? 4'd0 :
+                                           (HitBan0Able & ~StopTemp)  ? CountBan1[InstPc[12:5]] + 1 : CountBan1[InstPc[12:5]] ;
+                CountBan0[UpPc[12:5]]   <= (WriteBan0Able & ~StopTemp) ? 4'd0 : CountBan0[UpPc[12:5]] ;
+                CountBan1[UpPc[12:5]]   <= (WriteBan1Able & ~StopTemp) ? 4'd0 : CountBan1[UpPc[12:5]] ;
             end
     end
     
@@ -108,6 +122,12 @@ module Btb (
             RegNextPc   <= RegNextPc   ;
             RegNextType <= RegNextType ;
             RegNextHitBn<= RegNextHitBn;
+        end
+        else if(BtbFlash) begin
+            RegNextAble <= `EnableValue ;
+            RegNextPc   <= `ZeorDate    ;
+            RegNextType <= 3'd0         ;
+            RegNextHitBn<= 2'd0         ;
         end
         else if(InstPcAble) begin
             RegNextAble <= `AbleValue ;
@@ -159,12 +179,12 @@ module Btb (
             end
         end
         else begin
-            BtbRamBank0[UpPc[12:5]] <= (UpDateChiose0 & UpAble) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank0[UpPc[12:5]]) |
+            BtbRamBank0[UpPc[12:5]] <= (UpDateChiose0 & UpAble & ~StopTemp) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank0[UpPc[12:5]]) |
                                                        ({1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {`AbleValue,UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank0[UpPc[12:5]] ;
-            BtbRamBank1[UpPc[12:5]] <= (UpDateChiose1 & UpAble) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank1[UpPc[12:5]]) |
+            BtbRamBank1[UpPc[12:5]] <= (UpDateChiose1 & UpAble & ~StopTemp) ? (~{1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & BtbRamBank1[UpPc[12:5]]) |
                                                        ({1'b1,{19{1'b1}},{4{UpCntAble}},{3{BtbUpTypeAble}},{32{BtbUpTagetAble}}} & {`AbleValue,UpPc[31:13],UpCnt,BtbUpType,BtbUpTaget}) : BtbRamBank1[UpPc[12:5]] ;
-            BtbRamBank0[InstPc[12:5]][38:35] <= HitBan0Able ?  {BtbRamBank0[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank0[InstPc[12:5]][38:35] ;
-            BtbRamBank1[InstPc[12:5]][38:35] <= HitBan1Able ?  {BtbRamBank1[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank1[InstPc[12:5]][38:35] ;
+            BtbRamBank0[InstPc[12:5]][38:35] <= (HitBan0Able  & ~StopTemp) ?  {BtbRamBank0[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank0[InstPc[12:5]][38:35] ;
+            BtbRamBank1[InstPc[12:5]][38:35] <= (HitBan1Able  & ~StopTemp) ?  {BtbRamBank1[InstPc[12:5]][37:35],((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2)} : BtbRamBank1[InstPc[12:5]][38:35] ;
         end
     end
 

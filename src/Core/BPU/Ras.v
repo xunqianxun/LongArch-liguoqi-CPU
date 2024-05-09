@@ -8,6 +8,7 @@ module Ras  (
     input    wire                               Rest          ,
     //stop
     input    wire                               RasStop       ,
+    input    wire                               RasFLash      ,
     //from BTB
     input    wire                               BtbAble       ,
     input    wire        [2:0]                  BtbPredictType,
@@ -50,6 +51,10 @@ module Ras  (
         else if(RasStop) begin
             RegToPreAble <= RegToPreAble ;
             RegToPreAddr <= RegToPreAddr ;
+        end
+        else if(RasFLash) begin
+            RegToPreAble <= `EnableValue ;
+            RegToPreAddr <= `ZeorDate    ;
         end
         else begin
             RegToPreAble <= BtbAble ;

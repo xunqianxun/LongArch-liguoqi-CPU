@@ -8,6 +8,7 @@ module ICache (
     input      wire                             Rest           ,  
     //for ctrl 
     input      wire                             IcFLash        ,
+    input      wire                             IcStop         ,
     output     wire                             IcReq          ,
     output     wire                             BpReq          ,
     //for mmu 
@@ -59,7 +60,8 @@ module ICache (
     ICacheStage1 u_ICacheStage1(
         .Clk           ( Clk            ),
         .Rest          ( Rest           ),
-        .IcacheStop    ( BpReq          ),
+        .IcacheStop    ( IcStop         ),
+        .IcacheFlash   ( IcFLash        ),
         .FetchAble     ( BpuReqAble     ),
         .FetchPc       ( BpuReqPc       ),
         .ToStage2Able  ( Stage1to2Able  ),

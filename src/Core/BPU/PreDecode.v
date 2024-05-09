@@ -6,10 +6,10 @@ module PreDecode (
     input          wire                                        Rest               ,
     //in form Ctrll Block
     input          wire                                        PreDecodeFlash     ,   
-    input          wire                                        PreDecodeStop      ,
-    //output         wire                                        PreDecodeReq       ,   
+    input          wire                                        PreDecodeStop      , 
     //from Btb
     input          wire                                        BtbAble            ,
+    input          wire           [1:0]                        BtbBanKN           ,
     input          wire           [2:0]                        BtbType            ,
     input          wire           [`InstAddrBus]               BtbPc              ,
     //from Ras
@@ -19,16 +19,17 @@ module PreDecode (
     input          wire                                        TageAble           ,
     input          wire                                        TageMode           ,
     //from Icache 
-    input          wire           [2:0]                        FinalType          ,
-    input          wire           [32*8-1:0]                   FetchPcIvt         ,
+    input          wire                                        FetchAble          ,
+    input          wire           [255:0]                      FetchPcIvt         ,
     input          wire           [7:0]                        FetchInstIvt       ,
-    input          wire           [32*8-1:0]                   FetchDate          ,
+    input          wire           [255:0]                      FetchDate          ,
     //to pc 
     output         wire                                        PreReDirectAble    ,
     output         wire           [`InstAddrBus]               PreReDirectPc      ,
     //to btb
     output         wire                                        BtbUpPcAble        ,
     output         wire           [`InstAddrBus]               BtbUpPc            ,
+    output         wire           [1:0]                        BtbUpBanKN         ,
     output         wire                                        BtbUpTypeAble      ,
     output         wire           [2:0]                        BtbUpType          ,
     output         wire                                        BtbUpTagetAble     ,
@@ -196,6 +197,7 @@ module PreDecode (
     reg [`InstAddrBus]   RegPreReDirectPc    ;
     reg                  RegBtbUpPcAble      ;
     reg [`InstAddrBus]   RegBtbUpPc          ;
+    reg [1:0]            RegBtbUpBanKN       ;
     reg                  RegBtbUpTypeAble    ;
     reg [2:0]            RegBtbUpType        ;
     reg                  RegBtbUpTagetAble   ;
@@ -251,6 +253,7 @@ module PreDecode (
             RegPreReDirectPc    <= `ZeorDate    ;
             RegBtbUpPcAble      <= `EnableValue ;
             RegBtbUpPc          <= `ZeorDate    ;
+            RegBtbUpBanKN       <= 2'b0         ;
             RegBtbUpTypeAble    <= `EnableValue ;
             RegBtbUpType        <= 3'd0         ;
             RegBtbUpTagetAble   <= `EnableValue ;
@@ -299,12 +302,66 @@ module PreDecode (
             RToIbInst8Pc        <= `ZeorDate    ;
             RToIbInst8Redir     <= `ZeorDate    ;
             RToIbInst8Date      <= `ZeorDate    ;
+        end
+        else if(PreDecodeStop) begin
+            RegPreReDirectAble  <= RegPreReDirectAble ;
+            RegPreReDirectPc    <= RegPreReDirectPc   ;
+            RegBtbUpPcAble      <= RegBtbUpPcAble     ;
+            RegBtbUpPc          <= RegBtbUpPc         ;
+            RegBtbUpBanKN       <= RegBtbUpBanKN      ;
+            RegBtbUpTypeAble    <= RegBtbUpTypeAble   ;
+            RegBtbUpType        <= RegBtbUpType       ;
+            RegBtbUpTagetAble   <= RegBtbUpTagetAble  ;
+            RegBtbUpTaget       <= RegBtbUpTaget      ;
+            RegRasUpAble        <= RegRasUpAble       ;
+            RegRasPtrType       <= RegRasPtrType      ;
+            RegRasAddrDate      <= RegRasAddrDate     ;
+            RegTageUpAble       <= RegTageUpAble      ;
+            RToIbInst1Mode      <= RToIbInst1Able     ;
+            RToIbInst1Pc        <= RToIbInst1Pc       ;
+            RToIbInst1Redir     <= RToIbInst1Redir    ;
+            RToIbInst1Date      <= RToIbInst1Date     ;
+            RToIbInst2Able      <= RToIbInst2Able     ;
+            RToIbInst2Mode      <= RToIbInst2Mode     ;
+            RToIbInst2Pc        <= RToIbInst2Pc       ;
+            RToIbInst2Redir     <= RToIbInst2Redir    ;
+            RToIbInst2Date      <= RToIbInst2Date     ;
+            RToIbInst3Able      <= RToIbInst3Able     ;
+            RToIbInst3Mode      <= RToIbInst3Mode     ;
+            RToIbInst3Pc        <= RToIbInst3Pc       ;
+            RToIbInst3Date      <= RToIbInst3Date     ;
+            RToIbInst4Able      <= RToIbInst4Able     ;
+            RToIbInst4Mode      <= RToIbInst4Mode     ;
+            RToIbInst4Pc        <= RToIbInst4Pc       ;
+            RToIbInst4Redir     <= RToIbInst4Redir    ;
+            RToIbInst4Date      <= RToIbInst4Date     ;
+            RToIbInst5Able      <= RToIbInst5Able     ;
+            RToIbInst5Mode      <= RToIbInst5Mode     ;
+            RToIbInst5Pc        <= RToIbInst5Pc       ;
+            RToIbInst5Redir     <= RToIbInst5Redir    ;
+            RToIbInst5Date      <= RToIbInst5Date     ;
+            RToIbInst6Able      <= RToIbInst6Able     ;
+            RToIbInst6Mode      <= RToIbInst6Mode     ;
+            RToIbInst6Pc        <= RToIbInst6Pc       ;
+            RToIbInst6Redir     <= RToIbInst6Redir    ;
+            RToIbInst6Date      <= RToIbInst6Date     ;
+            RToIbInst7Able      <= RToIbInst7Able     ;
+            RToIbInst7Mode      <= RToIbInst7Mode     ;
+            RToIbInst7Pc        <= RToIbInst7Pc       ;
+            RToIbInst7Redir     <= RToIbInst7Redir    ;
+            RToIbInst7Date      <= RToIbInst7Date     ;
+            RToIbInst8Able      <= RToIbInst8Able     ;
+            RToIbInst8Mode      <= RToIbInst8Mode     ;
+            RToIbInst8Pc        <= RToIbInst8Pc       ;
+            RToIbInst8Redir     <= RToIbInst8Redir    ;
+            RToIbInst8Date      <= RToIbInst8Date     ;
         end
         else if(PreDecodeFlash) begin
             RegPreReDirectAble  <= `EnableValue ;
             RegPreReDirectPc    <= `ZeorDate    ;
             RegBtbUpPcAble      <= `EnableValue ;
             RegBtbUpPc          <= `ZeorDate    ;
+            RegBtbUpBanKN       <= 2'b0         ;
             RegBtbUpTypeAble    <= `EnableValue ;
             RegBtbUpType        <= 3'd0         ;
             RegBtbUpTagetAble   <= `EnableValue ;
@@ -354,21 +411,22 @@ module PreDecode (
             RToIbInst8Redir     <= `ZeorDate    ;
             RToIbInst8Date      <= `ZeorDate    ;
         end
-        else begin
+        else if(FetchAble) begin
 
             RegPreReDirectAble <= TagetFault1 | TagetFault2 | TagetFault3 | TagetFault4 | TagetFault5; 
             RegPreReDirectPc   <= ReviseAddr                                                         ;
             RegBtbUpPcAble     <= TypeFault | TagetFault1 | TagetFault2 | TagetFault3 | TagetFault4 | TagetFault5  ;
             RegBtbUpPc         <= InstPc[1]                                                          ;
+            RegBtbUpBanKN      <= BtbBanKN                                                           ;
             RegBtbUpTypeAble   <= TypeFault                                                          ;
             RegBtbUpType       <= InstType[JumpInstNum]                                              ;
             RegBtbUpTagetAble  <= TagetFault1 | TagetFault2 | TagetFault3 | TagetFault4 | TagetFault5;
             RegBtbUpTaget      <= ReviseAddr                                                         ;
-            RegRasUpAble       <= ((FinalType == `TypeCALL) & (InstType[JumpInstNum] != `TypeCALL)) | ((FinalType == `TypeRTURN) & (InstType[JumpInstNum] != `TypeRTURN)) ;
-            RegRasPtrType      <= {2{((FinalType == `TypeCALL)  & (InstType[JumpInstNum] != `TypeCALL))}}  & 2'b01 |   // 2'b01 mean ptr sub 1
-                                  {2{((FinalType == `TypeRTURN) & (InstType[JumpInstNum] != `TypeRTURN))}} & 2'b10 ;   // 2'b10 mean ptr add 1.  2'b00 no operate
+            RegRasUpAble       <= ((BtbType == `TypeCALL) & (InstType[JumpInstNum] != `TypeCALL)) | ((BtbType == `TypeRTURN) & (InstType[JumpInstNum] != `TypeRTURN)) ;
+            RegRasPtrType      <= {2{((BtbType == `TypeCALL)  & (InstType[JumpInstNum] != `TypeCALL))}}  & 2'b01 |   // 2'b01 mean ptr sub 1
+                                  {2{((BtbType == `TypeRTURN) & (InstType[JumpInstNum] != `TypeRTURN))}} & 2'b10 ;   // 2'b10 mean ptr add 1.  2'b00 no operate
             RegRasAddrDate     <= RasPc                                                              ;
-            RegTageUpAble      <= (FinalType == `TypeBRANCH) & (InstType[JumpInstNum] != `TypeBRANCH);
+            RegTageUpAble      <= (BtbType == `TypeBRANCH) & (InstType[JumpInstNum] != `TypeBRANCH);
 
             RToIbInst1Able <=  (JumpInstNum == 4'd1) | (JumpInstNum == 4'd2) | (JumpInstNum == 4'd3) | (JumpInstNum == 4'd4) |
                                (JumpInstNum == 4'd5) | (JumpInstNum == 4'd6) | (JumpInstNum == 4'd7) | (JumpInstNum == 4'd8) ;
@@ -417,57 +475,58 @@ module PreDecode (
         end
     end
     
-    assign PreReDirectAble = ~PreDecodeStop ? RegPreReDirectAble : `EnableValue  ;
-    assign PreReDirectPc   = ~PreDecodeStop ? RegPreReDirectPc   : `ZeorDate     ;
-    assign BtbUpPcAble     = ~PreDecodeStop ? RegBtbUpPcAble     : `EnableValue  ;
-    assign BtbUpPc         = ~PreDecodeStop ? RegBtbUpPc         : `ZeorDate     ;
-    assign BtbUpTypeAble   = ~PreDecodeStop ? RegBtbUpTypeAble   : `EnableValue  ;
-    assign BtbUpType       = ~PreDecodeStop ? RegBtbUpType       : 3'b000        ;
-    assign BtbUpTagetAble  = ~PreDecodeStop ? RegBtbUpTagetAble  : `EnableValue  ;
-    assign BtbUpTaget      = ~PreDecodeStop ? RegBtbUpTaget      : `ZeorDate     ;
-    assign RasUpAble       = ~PreDecodeStop ? RegRasUpAble       : `EnableValue  ;
-    assign RasPtrType      = ~PreDecodeStop ? RegRasPtrType      : 2'b00         ;
-    assign RasAddrDate     = ~PreDecodeStop ? RegRasAddrDate     : `ZeorDate     ;
-    assign TageUpAble      = ~PreDecodeStop ? RegTageUpAble      : `EnableValue  ;
-    assign ToIbInst1Able   = ~PreDecodeStop ? RToIbInst1Able     : `EnableValue  ;
-    assign ToIbInst1Mode   = ~PreDecodeStop ? RToIbInst1Mode     : `EnableValue  ;
-    assign ToIbInst1Pc     = ~PreDecodeStop ? RToIbInst1Pc       : `ZeorDate     ;
-    assign ToIbInst1Redir  = ~PreDecodeStop ? RToIbInst1Redir    : `ZeorDate     ;
-    assign ToIbInst1Date   = ~PreDecodeStop ? RToIbInst1Date     : `ZeorDate     ;
-    assign ToIbInst2Able   = ~PreDecodeStop ? RToIbInst2Able     : `EnableValue  ;
-    assign ToIbInst2Mode   = ~PreDecodeStop ? RToIbInst2Mode     : `EnableValue  ;
-    assign ToIbInst2Pc     = ~PreDecodeStop ? RToIbInst2Pc       : `ZeorDate     ;
-    assign ToIbInst2Redir  = ~PreDecodeStop ? RToIbInst2Redir    : `ZeorDate     ;
-    assign ToIbInst2Date   = ~PreDecodeStop ? RToIbInst2Date     : `ZeorDate     ;
-    assign ToIbInst3Able   = ~PreDecodeStop ? RToIbInst3Able     : `EnableValue  ;
-    assign ToIbInst3Mode   = ~PreDecodeStop ? RToIbInst3Mode     : `EnableValue  ;
-    assign ToIbInst3Pc     = ~PreDecodeStop ? RToIbInst3Pc       : `ZeorDate     ;
-    assign ToIbInst3Redir  = ~PreDecodeStop ? RToIbInst3Redir    : `ZeorDate     ;
-    assign ToIbInst3Date   = ~PreDecodeStop ? RToIbInst3Date     : `ZeorDate     ;
-    assign ToIbInst4Able   = ~PreDecodeStop ? RToIbInst4Able     : `EnableValue  ;
-    assign ToIbInst4Mode   = ~PreDecodeStop ? RToIbInst4Mode     : `EnableValue  ;
-    assign ToIbInst4Pc     = ~PreDecodeStop ? RToIbInst4Pc       : `ZeorDate     ;
-    assign ToIbInst4Redir  = ~PreDecodeStop ? RToIbInst4Redir    : `ZeorDate     ;
-    assign ToIbInst4Date   = ~PreDecodeStop ? RToIbInst4Date     : `ZeorDate     ;
-    assign ToIbInst5Able   = ~PreDecodeStop ? RToIbInst5Able     : `EnableValue  ;
-    assign ToIbInst5Mode   = ~PreDecodeStop ? RToIbInst5Mode     : `EnableValue  ;
-    assign ToIbInst5Pc     = ~PreDecodeStop ? RToIbInst5Pc       : `ZeorDate     ;
-    assign ToIbInst5Redir  = ~PreDecodeStop ? RToIbInst5Redir    : `ZeorDate     ;
-    assign ToIbInst5Date   = ~PreDecodeStop ? RToIbInst5Date     : `ZeorDate     ;
-    assign ToIbInst6Able   = ~PreDecodeStop ? RToIbInst6Able     : `EnableValue  ;
-    assign ToIbInst6Mode   = ~PreDecodeStop ? RToIbInst6Mode     : `EnableValue  ;
-    assign ToIbInst6Pc     = ~PreDecodeStop ? RToIbInst6Pc       : `ZeorDate     ;
-    assign ToIbInst6Redir  = ~PreDecodeStop ? RToIbInst6Redir    : `ZeorDate     ;
-    assign ToIbInst6Date   = ~PreDecodeStop ? RToIbInst6Date     : `ZeorDate     ;
-    assign ToIbInst7Able   = ~PreDecodeStop ? RToIbInst7Able     : `EnableValue  ;
-    assign ToIbInst7Mode   = ~PreDecodeStop ? RToIbInst7Mode     : `EnableValue  ;
-    assign ToIbInst7Pc     = ~PreDecodeStop ? RToIbInst7Pc       : `ZeorDate     ;
-    assign ToIbInst7Redir  = ~PreDecodeStop ? RToIbInst7Redir    : `ZeorDate     ;
-    assign ToIbInst7Date   = ~PreDecodeStop ? RToIbInst7Date     : `ZeorDate     ;
-    assign ToIbInst8Able   = ~PreDecodeStop ? RToIbInst8Able     : `EnableValue  ;
-    assign ToIbInst8Mode   = ~PreDecodeStop ? RToIbInst8Mode     : `EnableValue  ;
-    assign ToIbInst8Pc     = ~PreDecodeStop ? RToIbInst8Pc       : `ZeorDate     ;
-    assign ToIbInst8Redir  = ~PreDecodeStop ? RToIbInst8Redir    : `ZeorDate     ;
-    assign ToIbInst8Date   = ~PreDecodeStop ? RToIbInst8Date     : `ZeorDate     ; 
+    assign PreReDirectAble = RegPreReDirectAble ;
+    assign PreReDirectPc   = RegPreReDirectPc   ;
+    assign BtbUpPcAble     = RegBtbUpPcAble     ;
+    assign BtbUpPc         = RegBtbUpPc         ;
+    assign BtbUpBanKN      = RegBtbUpBanKN      ;
+    assign BtbUpTypeAble   = RegBtbUpTypeAble   ;
+    assign BtbUpType       = RegBtbUpType       ;
+    assign BtbUpTagetAble  = RegBtbUpTagetAble  ;
+    assign BtbUpTaget      = RegBtbUpTaget      ;
+    assign RasUpAble       = RegRasUpAble       ;
+    assign RasPtrType      = RegRasPtrType      ;
+    assign RasAddrDate     = RegRasAddrDate     ;
+    assign TageUpAble      = RegTageUpAble      ;
+    assign ToIbInst1Able   = RToIbInst1Able     ;
+    assign ToIbInst1Mode   = RToIbInst1Mode     ;
+    assign ToIbInst1Pc     = RToIbInst1Pc       ;
+    assign ToIbInst1Redir  = RToIbInst1Redir    ;
+    assign ToIbInst1Date   = RToIbInst1Date     ;
+    assign ToIbInst2Able   = RToIbInst2Able     ;
+    assign ToIbInst2Mode   = RToIbInst2Mode     ;
+    assign ToIbInst2Pc     = RToIbInst2Pc       ;
+    assign ToIbInst2Redir  = RToIbInst2Redir    ;
+    assign ToIbInst2Date   = RToIbInst2Date     ;
+    assign ToIbInst3Able   = RToIbInst3Able     ;
+    assign ToIbInst3Mode   = RToIbInst3Mode     ;
+    assign ToIbInst3Pc     = RToIbInst3Pc       ;
+    assign ToIbInst3Redir  = RToIbInst3Redir    ;
+    assign ToIbInst3Date   = RToIbInst3Date     ;
+    assign ToIbInst4Able   = RToIbInst4Able     ;
+    assign ToIbInst4Mode   = RToIbInst4Mode     ;
+    assign ToIbInst4Pc     = RToIbInst4Pc       ;
+    assign ToIbInst4Redir  = RToIbInst4Redir    ;
+    assign ToIbInst4Date   = RToIbInst4Date     ;
+    assign ToIbInst5Able   = RToIbInst5Able     ;
+    assign ToIbInst5Mode   = RToIbInst5Mode     ;
+    assign ToIbInst5Pc     = RToIbInst5Pc       ;
+    assign ToIbInst5Redir  = RToIbInst5Redir    ;
+    assign ToIbInst5Date   = RToIbInst5Date     ;
+    assign ToIbInst6Able   = RToIbInst6Able     ;
+    assign ToIbInst6Mode   = RToIbInst6Mode     ;
+    assign ToIbInst6Pc     = RToIbInst6Pc       ;
+    assign ToIbInst6Redir  = RToIbInst6Redir    ;
+    assign ToIbInst6Date   = RToIbInst6Date     ;
+    assign ToIbInst7Able   = RToIbInst7Able     ;
+    assign ToIbInst7Mode   = RToIbInst7Mode     ;
+    assign ToIbInst7Pc     = RToIbInst7Pc       ;
+    assign ToIbInst7Redir  = RToIbInst7Redir    ;
+    assign ToIbInst7Date   = RToIbInst7Date     ;
+    assign ToIbInst8Able   = RToIbInst8Able     ;
+    assign ToIbInst8Mode   = RToIbInst8Mode     ;
+    assign ToIbInst8Pc     = RToIbInst8Pc       ;
+    assign ToIbInst8Redir  = RToIbInst8Redir    ;
+    assign ToIbInst8Date   = RToIbInst8Date     ; 
    
 endmodule

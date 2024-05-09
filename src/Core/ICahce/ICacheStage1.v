@@ -1,5 +1,7 @@
 `timescale 1ps/1ps
 `include "../define.v"
+`include "../../IP/date_64x512.xcix"
+`include "../../IP/tag_64x512.xcix"
 
 
 module ICacheStage1 (
@@ -7,7 +9,7 @@ module ICacheStage1 (
     input        wire                                     Rest          ,
     //from ictrl
     input        wire                                     IcacheStop    ,
-    //input        wire                                     IcacheFlash   ,
+    input        wire                                     IcacheFlash   ,
     //from Pc 
     input        wire                                     FetchAble     ,
     input        wire       [`InstAddrBus]                FetchPc       ,
@@ -37,6 +39,18 @@ module ICacheStage1 (
     input        wire       [511:0]                       InNewDate     
 
 );
+    reg           StopTemp  ;
+    reg           FLashTemp ;
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp  <= 1'b0 ;
+            FLashTemp <= 1'b0 ;
+        end
+        else begin
+            StopTemp  <= IcacheStop  ;
+            FLashTemp <= IcacheFlash ;
+        end
+    end
 
     reg   [2:0]  CountWay1 [0:63] ;
     reg   [2:0]  CountWay2 [0:63] ;
@@ -58,7 +72,7 @@ module ICacheStage1 (
             end
         end
         else begin
-            if(InHitAble) begin
+            if(InHitAble & ~IcacheStop) begin
                 if(InHitWay1) begin
                     CountWay1[InHitIndex] <= 3'd0 ;
                     CountWay2[InHitIndex] <= (CountWay2[InHitIndex] != 3'b111) ? CountWay2[InHitIndex] + 1 : CountWay2[InHitIndex] ;
@@ -103,8 +117,8 @@ module ICacheStage1 (
             {RegFetchAble,RVritualOffset,RVritualPc} <= 39'b0 ;  
         else if(IcacheStop) 
             {RegFetchAble,RVritualOffset,RVritualPc} <= {RegFetchAble,RVritualOffset,RVritualPc} ;
-        // else if(IcacheFlash)
-        //     {RegFetchAble,RVritualOffset,RVritualPc} <= 39'b0 ;
+        else if(IcacheFlash)
+            {RegFetchAble,RVritualOffset,RVritualPc} <= 39'b0 ;
         else 
             {RegFetchAble,RVritualOffset,RVritualPc} <= {FetchAble,VritualPcOffset,FetchPc} ;
     end
@@ -115,13 +129,13 @@ module ICacheStage1 (
     wire  [5:0]  Way1Index= InNewAble ? InNewIndex         : 
                             FetchAble ? VritualPcOffset    : 6'd0 ;
     wire         Way1Wen  = InNewAble & (((CountWay1[InNewIndex] > CountWay2[InNewIndex]) & (CountWay1[InNewIndex] > CountWay3[InNewIndex]) & 
-                                          (CountWay1[InNewIndex] > CountWay4[InNewIndex])) | (CountWay1[InNewIndex] == 3'b111)) & ~IcacheStop;
+                                          (CountWay1[InNewIndex] > CountWay4[InNewIndex])) ) & ~StopTemp;
     wire  [19:0] Way1Tag  = InNewTag  ;
     wire  [511:0]Way1Date = InNewDate ;
     wire  [19:0] OutWay1Tag   ;
     wire  [511:0]OutWay1Date  ;
 
-    data_64x512 way1_data_64x512(
+    date_64x512 way1_date_64x512(
     .clka  ( Clk         ),
     .ena   ( Way1Able    ),
     .wea   ( Way1Wen     ),
@@ -143,14 +157,14 @@ module ICacheStage1 (
     wire  [5:0]  Way2Index= InNewAble ? InNewIndex         : 
                             FetchAble ? VritualPcOffset    : 6'd0 ;
     wire         Way2Wen  = InNewAble & (((CountWay2[InNewIndex] > CountWay1[InNewIndex]) & (CountWay2[InNewIndex] > CountWay3[InNewIndex]) & 
-                                          (CountWay2[InNewIndex] > CountWay4[InNewIndex])) | (CountWay2[InNewIndex] == 3'b111))& ~IcacheStop;
+                                          (CountWay2[InNewIndex] > CountWay4[InNewIndex])) )& ~StopTemp;
     wire  [19:0] Way2Tag  = InNewTag  ;
     wire  [511:0]Way2Date = InNewDate ;
 
     wire  [19:0] OutWay2Tag   ;
     wire  [511:0]OutWay2Date  ;
 
-    data_64x512 way2_data_64x512(
+    date_64x512 way2_date_64x512(
     .clka  ( Clk         ),
     .ena   ( Way2Able    ),
     .wea   ( Way2Wen     ),
@@ -172,14 +186,14 @@ module ICacheStage1 (
     wire  [5:0]  Way3Index= InNewAble ? InNewIndex         : 
                             FetchAble ? VritualPcOffset    : 6'd0 ;
     wire         Way3Wen  = InNewAble & (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
-                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111))& ~IcacheStop;
+                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) )& ~StopTemp;
     wire  [19:0] Way3Tag  = InNewTag  ;
     wire  [511:0]Way3Date = InNewDate ;
 
     wire  [19:0] OutWay3Tag   ;
     wire  [511:0]OutWay3Date  ;
 
-    data_64x512 way3_data_64x512(
+    date_64x512 way3_date_64x512(
     .clka  ( Clk         ),
     .ena   ( Way3Able    ),
     .wea   ( Way3Wen     ),
@@ -201,14 +215,14 @@ module ICacheStage1 (
     wire  [5:0]  Way4Index= InNewAble ? InNewIndex         : 
                             FetchAble ? VritualPcOffset    : 6'd0 ;
     wire         Way4Wen  = InNewAble & (((CountWay3[InNewIndex] > CountWay1[InNewIndex]) & (CountWay3[InNewIndex] > CountWay2[InNewIndex]) & 
-                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) | (CountWay3[InNewIndex] == 3'b111))& ~IcacheStop;
+                                          (CountWay3[InNewIndex] > CountWay4[InNewIndex])) )& ~StopTemp;
     wire  [19:0] Way4Tag  = InNewTag  ;
     wire  [511:0]Way4Date = InNewDate ;
 
     wire  [19:0] OutWay4Tag   ;
     wire  [511:0]OutWay4Date  ;
 
-    data_64x512 way4_data_64x512(
+    date_64x512 way4_date_64x512(
     .clka  ( Clk         ),
     .ena   ( Way4Able    ),
     .wea   ( Way4Wen     ),
@@ -227,16 +241,15 @@ module ICacheStage1 (
     ); 
 
 
-    assign ToStage2Able = ~IcacheStop ?  RegFetchAble   : 1'b0 ;
-    assign ToStage2Pc   = ~IcacheStop ?  RVritualPc     : 32'b0;
-    //assign To2Offset    = ~IcacheStop ?  RVritualOffset : 8'b0 ;
-    assign To2Way1Date  = ~IcacheStop ?  OutWay1Date : 512'b0 ;
-    assign To2Way1Tag   = ~IcacheStop ?  OutWay1Tag  : 20'b0  ;
-    assign To2Way2Date  = ~IcacheStop ?  OutWay2Date : 512'b0 ;
-    assign To2Way2Tag   = ~IcacheStop ?  OutWay2Tag  : 20'b0  ;
-    assign To2Way3Date  = ~IcacheStop ?  OutWay3Date : 512'b0 ;
-    assign To2Way3Tag   = ~IcacheStop ?  OutWay3Tag  : 20'b0  ;
-    assign To2Way4Date  = ~IcacheStop ?  OutWay4Date : 512'b0 ;
-    assign To2Way4Tag   = ~IcacheStop ?  OutWay4Tag  : 20'b0  ;
+    assign ToStage2Able = ~FLashTemp ?  RegFetchAble: 1'b0   ;
+    assign ToStage2Pc   = ~FLashTemp ?  RVritualPc  : 32'b0  ;
+    assign To2Way1Date  = ~FLashTemp ?  OutWay1Date : 512'b0 ;
+    assign To2Way1Tag   = ~FLashTemp ?  OutWay1Tag  : 20'b0  ;
+    assign To2Way2Date  = ~FLashTemp ?  OutWay2Date : 512'b0 ;
+    assign To2Way2Tag   = ~FLashTemp ?  OutWay2Tag  : 20'b0  ;
+    assign To2Way3Date  = ~FLashTemp ?  OutWay3Date : 512'b0 ;
+    assign To2Way3Tag   = ~FLashTemp ?  OutWay3Tag  : 20'b0  ;
+    assign To2Way4Date  = ~FLashTemp ?  OutWay4Date : 512'b0 ;
+    assign To2Way4Tag   = ~FLashTemp ?  OutWay4Tag  : 20'b0  ;
 
 endmodule

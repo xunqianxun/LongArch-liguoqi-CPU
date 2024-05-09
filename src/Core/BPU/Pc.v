@@ -6,7 +6,6 @@ module Pc (
     input          wire                                    Rest           ,
     //from ctrl
     input          wire                                    PcStop         , //stop also include icache req stop
-    input          wire                                    PcFlash        ,
     //from btb
     input          wire                                    BtbPredictAble ,
     input          wire          [`InstAddrBus]            BtbPreDictPc   ,
@@ -29,18 +28,14 @@ module Pc (
             RegPc   <= `_Entry      ;
             RegAble <= `EnableValue ;
         end
-        else if(PcFlash)begin
-            RegPc   <= `_Entry      ;
-            RegAble <= `EnableValue ;
-        end 
-        else if(PcStop) begin
-            RegPc   <= RegPc        ;
-            RegAble <= RegAble      ;
-        end
         else begin
             if(BtbPredictAble) begin
                 RegPc   <= BtbPreDictPc  ;
                 RegAble <= `AbleValue    ;
+            end
+            if(PcStop) begin
+                RegPc   <= RegPc        ;
+                RegAble <= RegAble      ;
             end
             if(PreReDirAble) begin
                 RegPc   <= PreReDirPc    ; 

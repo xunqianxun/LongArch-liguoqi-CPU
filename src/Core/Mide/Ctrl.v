@@ -12,7 +12,8 @@ module Ctrl (
     output       wire                                      StopMidFlash     ,
     output       wire                                      StopTage         ,
     output       wire                                      FLashTage        ,
-    //output       wire                                      StopToTag        ,
+    output       wire                                      StopRas          ,
+    output       wire                                      FLashRas         ,
     output       wire                                      IcacheFLash      ,
     output       wire                                      IcacheStop       ,
     output       wire                                      PredStop         ,
@@ -39,7 +40,8 @@ module Ctrl (
     assign StopMidFlash = PreReq | ROBredir ;
     assign StopTage     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
     assign FLashTage    = PreReq | ROBredir ;
-    //assign StopToTag    = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
+    assign StopRas      = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ; 
+    assign FLashRas     = PreReq | ROBredir ;
     assign IcacheStop   = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
     assign IcacheFLash  = PreReq | ROBredir ;
     assign PredStop     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;

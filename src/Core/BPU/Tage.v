@@ -1,5 +1,13 @@
 `timescale 1ps/1ps
 `include "../define.v"
+`include "../../IP/data_Base_128.xcix"
+`include "../../IP/data_T1_128.xcix"
+`include "../../IP/Counter_128.v"
+`include "../../IP/data_T3_256.xcix"
+`include "../../IP/Counter_256.v"
+`include "../../IP/data_T5_128.xcix"
+`include "../../IP/data_T6_128.xcix"
+
 
 
 module Tage (

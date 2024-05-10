@@ -24,6 +24,8 @@ module Btb (
     output       wire                                   InstNextAble    ,
     output       wire     [1:0]                         InstHitBanN     ,
     output       wire     [`InstAddrBus]                InstNextPc      ,
+    output       wire     [4:0]                         InstNextOffset  ,
+    output       wire                                   InstNextMode    ,
     output       wire     [2:0]                         InstNextType   
 );
 
@@ -108,45 +110,59 @@ module Btb (
     
     reg                  RegNextAble  ;
     reg  [`InstAddrBus]  RegNextPc    ;
+    reg  [4:0]           RegNextOffset;
     reg  [2:0]           RegNextType  ;
+    reg                  RegNextMode ;
     reg  [1:0]           RegNextHitBn ;
     always @(posedge Clk) begin
         if(!Rest) begin
             RegNextAble <= `EnableValue ;
             RegNextPc   <= `ZeorDate    ;
+            RegNextOffset<= 5'd0        ;
             RegNextType <= 3'd0         ;
+            RegNextMode <= 1'b0         ;
             RegNextHitBn<= 2'd0         ;
         end
         else if(BtbStop) begin
             RegNextAble <= RegNextAble ;
             RegNextPc   <= RegNextPc   ;
+            RegNextOffset<= RegNextOffset;
             RegNextType <= RegNextType ;
+            RegNextMode <= RegNextMode ;
             RegNextHitBn<= RegNextHitBn;
         end
         else if(BtbFlash) begin
             RegNextAble <= `EnableValue ;
             RegNextPc   <= `ZeorDate    ;
+            RegNextOffset<= 5'd0        ;
             RegNextType <= 3'd0         ;
+            RegNextMode <= 1'b0         ;
             RegNextHitBn<= 2'd0         ;
         end
         else if(InstPcAble) begin
             RegNextAble <= `AbleValue ;
             RegNextPc   <= (HitDate[34:32] == `TypeBRANCH) ? (((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2) ? HitDate[31:0] : ({InstPc[31:5],5'd0} + 32'd32)) : HitDate[31:0] ;
+            RegNextOffset<= InstPc[4:0]  ;
             RegNextType <= HitDate[34:32] ;
+            RegNextMode <= (HitDate[34:32] == `TypeBRANCH) & ((HitDate[38] + HitDate[37] + HitDate[36] + HitDate[35]) > 2) ;
             RegNextHitBn<= HitBan0Able ? 2'b01 :
                            HitBan1Able ? 2'b10 : 2'b00 ;                   
         end
         else begin
             RegNextAble <= `EnableValue ;
             RegNextPc   <= `ZeorDate    ;
+            RegNextOffset<= 5'd0        ;
             RegNextType <= 3'd0         ;
+            RegNextMode <= 1'b0         ;
             RegNextHitBn<= 2'd0         ;
         end
     end
 
     assign InstNextAble = RegNextAble ;
     assign InstNextPc   = RegNextPc   ;
+    assign InstNextOffset= RegNextOffset;
     assign InstNextType = RegNextType ;
+    assign InstNextMode = RegNextMode ;
     assign InstHitBanN  = RegNextHitBn;
 
 

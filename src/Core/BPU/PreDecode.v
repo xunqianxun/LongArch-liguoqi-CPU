@@ -18,6 +18,14 @@ module PreDecode (
     //from tage
     input          wire                                        TageAble           ,
     input          wire                                        TageMode           ,
+    input          wire           [2:0]                        TageJdate          ,
+    input          wire           [2:0]                        TageNum            ,
+    input          wire           [2:0]                        TageInt1           ,
+    input          wire           [2:0]                        TageInt2           ,
+    input          wire           [2:0]                        TageInt3           ,
+    input          wire           [2:0]                        TageInt4           ,
+    input          wire           [2:0]                        TageInt5           ,
+    input          wire           [2:0]                        TageInt6           ,
     //from Icache 
     input          wire                                        FetchAble          ,
     input          wire           [255:0]                      FetchPcIvt         ,
@@ -40,6 +48,16 @@ module PreDecode (
     output         wire           [`InstAddrBus]               RasAddrDate        ,
     //to tage      
     output         wire                                        TageUpAble         ,
+    //to ftq
+    output         wire                                        PredAble           ,
+    output         wire           [2:0]                        PredJdate          ,
+    output         wire           [2:0]                        PredNum            ,
+    output         wire           [2:0]                        PredInt1           ,
+    output         wire           [2:0]                        PredInt2           ,
+    output         wire           [2:0]                        PredInt3           ,
+    output         wire           [2:0]                        PredInt4           ,
+    output         wire           [2:0]                        PredInt5           ,
+    output         wire           [2:0]                        PredInt6           ,
     //to InstBuffer 
     output         wire                                        ToIbInst1Able      ,
     output         wire                                        ToIbInst1Mode      ,
@@ -206,6 +224,15 @@ module PreDecode (
     reg [1:0]            RegRasPtrType       ;
     reg [`InstAddrBus]   RegRasAddrDate      ;
     reg                  RegTageUpAble       ;
+    reg                  RegPredAble         ;
+    reg [2:0]            RegPredJdate        ;
+    reg [2:0]            RegPredNum          ;
+    reg [2:0]            RegPredInt1         ;
+    reg [2:0]            RegPredInt2         ;
+    reg [2:0]            RegPredInt3         ;
+    reg [2:0]            RegPredInt4         ;
+    reg [2:0]            RegPredInt5         ;
+    reg [2:0]            RegPredInt6         ;
     reg                  RToIbInst1Able      ;
     reg                  RToIbInst1Mode      ;
     reg [`InstAddrBus]   RToIbInst1Pc        ;
@@ -262,6 +289,15 @@ module PreDecode (
             RegRasPtrType       <= 2'b0         ;
             RegRasAddrDate      <= `ZeorDate    ;
             RegTageUpAble       <= `EnableValue ;
+            RegPredAble         <= `EnableValue ;
+            RegPredJdate        <= 3'd0         ;
+            RegPredNum          <= 3'd0         ;
+            RegPredInt1         <= 3'd0         ;
+            RegPredInt2         <= 3'd0         ;
+            RegPredInt3         <= 3'd0         ;
+            RegPredInt4         <= 3'd0         ;
+            RegPredInt5         <= 3'd0         ;
+            RegPredInt6         <= 3'd0         ;
             RToIbInst1Able      <= `EnableValue ;
             RToIbInst1Mode      <= `EnableValue ;
             RToIbInst1Pc        <= `ZeorDate    ;
@@ -317,6 +353,15 @@ module PreDecode (
             RegRasPtrType       <= RegRasPtrType      ;
             RegRasAddrDate      <= RegRasAddrDate     ;
             RegTageUpAble       <= RegTageUpAble      ;
+            RegPredAble         <= RegPredAble        ;
+            RegPredJdate        <= RegPredJdate       ;
+            RegPredNum          <= RegPredNum         ;
+            RegPredInt1         <= RegPredInt1        ;
+            RegPredInt2         <= RegPredInt2        ;
+            RegPredInt3         <= RegPredInt3        ;
+            RegPredInt4         <= RegPredInt4        ;
+            RegPredInt5         <= RegPredInt5        ;
+            RegPredInt6         <= RegPredInt6        ;
             RToIbInst1Mode      <= RToIbInst1Able     ;
             RToIbInst1Pc        <= RToIbInst1Pc       ;
             RToIbInst1Redir     <= RToIbInst1Redir    ;
@@ -370,6 +415,15 @@ module PreDecode (
             RegRasPtrType       <= 2'b0         ;
             RegRasAddrDate      <= `ZeorDate    ;
             RegTageUpAble       <= `EnableValue ;
+            RegPredAble         <= `EnableValue ;
+            RegPredJdate        <= 3'd0         ;
+            RegPredNum          <= 3'd0         ;
+            RegPredInt1         <= 3'd0         ;
+            RegPredInt2         <= 3'd0         ;
+            RegPredInt3         <= 3'd0         ;
+            RegPredInt4         <= 3'd0         ;
+            RegPredInt5         <= 3'd0         ;
+            RegPredInt6         <= 3'd0         ;
             RToIbInst1Able      <= `EnableValue ;
             RToIbInst1Mode      <= `EnableValue ;
             RToIbInst1Pc        <= `ZeorDate    ;
@@ -417,6 +471,7 @@ module PreDecode (
             RegPreReDirectPc   <= ReviseAddr                                                         ;
             RegBtbUpPcAble     <= TypeFault | TagetFault1 | TagetFault2 | TagetFault3 | TagetFault4 | TagetFault5  ;
             RegBtbUpPc         <= InstPc[1]                                                          ;
+            //RegBtbUpOfs        <= 
             RegBtbUpBanKN      <= BtbBanKN                                                           ;
             RegBtbUpTypeAble   <= TypeFault                                                          ;
             RegBtbUpType       <= InstType[JumpInstNum]                                              ;
@@ -427,6 +482,16 @@ module PreDecode (
                                   {2{((BtbType == `TypeRTURN) & (InstType[JumpInstNum] != `TypeRTURN))}} & 2'b10 ;   // 2'b10 mean ptr add 1.  2'b00 no operate
             RegRasAddrDate     <= RasPc                                                              ;
             RegTageUpAble      <= (BtbType == `TypeBRANCH) & (InstType[JumpInstNum] != `TypeBRANCH);
+
+            RegPredAble        <= (InstType[JumpInstNum] == `TypeBRANCH) & TageAble ;
+            RegPredJdate       <= TageJdate         ;
+            RegPredNum         <= TageNum           ;
+            RegPredInt1        <= TageInt1          ;
+            RegPredInt2        <= TageInt2          ;
+            RegPredInt3        <= TageInt3          ;
+            RegPredInt4        <= TageInt4          ;
+            RegPredInt5        <= TageInt5          ;
+            RegPredInt6        <= TageInt6          ;
 
             RToIbInst1Able <=  (JumpInstNum == 4'd1) | (JumpInstNum == 4'd2) | (JumpInstNum == 4'd3) | (JumpInstNum == 4'd4) |
                                (JumpInstNum == 4'd5) | (JumpInstNum == 4'd6) | (JumpInstNum == 4'd7) | (JumpInstNum == 4'd8) ;
@@ -488,6 +553,15 @@ module PreDecode (
     assign RasPtrType      = RegRasPtrType      ;
     assign RasAddrDate     = RegRasAddrDate     ;
     assign TageUpAble      = RegTageUpAble      ;
+    assign PredAble        = RegPredAble        ;
+    assign PredJdate       = RegPredJdate       ;
+    assign PredNum         = RegPredNum         ;
+    assign PredInt1        = RegPredInt1        ;
+    assign PredInt2        = RegPredInt2        ;
+    assign PredInt3        = RegPredInt3        ;
+    assign PredInt4        = RegPredInt4        ;
+    assign PredInt5        = RegPredInt5        ;
+    assign PredInt6        = RegPredInt6        ;
     assign ToIbInst1Able   = RToIbInst1Able     ;
     assign ToIbInst1Mode   = RToIbInst1Mode     ;
     assign ToIbInst1Pc     = RToIbInst1Pc       ;

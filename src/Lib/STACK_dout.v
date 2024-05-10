@@ -12,18 +12,13 @@ module STACK_dout #(
     input         wire                            Rest          ,
 
     input         wire                            RABLE         ,
-    //output        wire       [STACKWIDE-1:0]      DOUT          , //23 wide
-
-
     input         wire                            WABLE         ,
+
     input         wire       [STACKWIDE-1:0]      DIN           ,
 
-    // output        wire                            STACKFULL     ,
-    // output        wire                            STACKEMPTY    ,
     //from FTQ
     input         wire                            REDIRCT       ,
 
-    //output        wire                            OUTDATE       ,
     output        wire [STACKPTRW-1:0]            OUTDATEPTR    ,
     output        wire [STACKWIDE+RECURCOUNT-1:0] OUTDATELINE1  ,
     output        wire [STACKWIDE+RECURCOUNT-1:0] OUTDATELINE2  ,     
@@ -46,7 +41,6 @@ module STACK_dout #(
     integer i ;
 
     reg [STACKPTRW-1:0] StackPtr  ;
-    //reg [STACKWIDE-1:0] RegDout   ;
 
     reg [STACKPTRW-1:0]            REGOUTDATEPTR   ;
     reg [STACKWIDE+RECURCOUNT-1:0] REGOUTDATELINE1 ;
@@ -85,12 +79,10 @@ module STACK_dout #(
             if(RABLE) begin
                 if(STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] > 1)begin
                     StackPtr <= StackPtr         ;
-                    //RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
                     STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] <= STACKREG[StackPtr-1][STACKWIDE+RECURCOUNT-1:STACKWIDE] - 1 ;
                 end
                 else begin 
                     StackPtr <= StackPtr - 1                        ;
-                    //RegDout  <= STACKREG[StackPtr-1][STACKWIDE-1:0] ;
                     STACKREG[StackPtr-1] <= {STACKWIDE+RECURCOUNT{1'b0}}       ;  
                 end 
             end
@@ -115,9 +107,6 @@ module STACK_dout #(
         end
     end
 
-    // assign STACKFULL    = (StackPtr == 15) ; //虽设计有第16项但设计的基本没有使用即可用15項
-    // assign STACKEMPTY   = (StackPtr == 0)  ;
-    //assign DOUT         = RegDout          ;
 
     assign OUTDATEPTR   = REGOUTDATEPTR    ;
     assign OUTDATELINE1 = REGOUTDATELINE1  ;

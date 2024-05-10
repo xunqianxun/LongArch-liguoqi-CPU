@@ -13,7 +13,7 @@ module Ras  (
     input    wire                               BtbAble       ,
     input    wire        [2:0]                  BtbPredictType,
     input    wire        [`InstAddrBus]         BtbPcDate     ,
-    input    wire        [3:0]                  BtbPcOffset   ,
+    input    wire        [4:0]                  BtbPcOffset   ,
     //speculate update with PreCheck
     input    wire                               UpAble        ,
     input    wire        [1:0]                  UpPtrType     ,

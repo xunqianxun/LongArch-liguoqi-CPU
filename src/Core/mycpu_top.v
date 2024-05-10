@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "../defone.v"
+`include "defone.v"
 
 module mycpu_top (
     input      wire                         aclk       ,
@@ -83,6 +83,8 @@ module mycpu_top (
     wire                    CtrlToBtbFlash ;
     wire                    CtrlToTageStop ;
     wire                    CtrlToTageFLash;
+    wire                    CtrlTORasStop  ;
+    wire                    CtrlToRasFlash ;
     wire                    CtrlToIcacStop ;
     wire                    CtrlToIcacFLash;
     wire                    CtrlToFTQStop  ;
@@ -94,6 +96,8 @@ module mycpu_top (
     wire                    BtbToMidAble  ;
     wire  [1:0]             BtbToMidBank  ;
     wire  [`InstAddrBus]    BtbToMidPc    ;
+    wire  [4:0]             BtbToRasOfs   ;
+    wire                    BtbToTageMode ;
     wire  [2:0]             BtbToMidType  ;
     wire                    PreToBtbAble  ;
     wire  [1:0]             PreToBtbBank  ;
@@ -111,22 +115,22 @@ module mycpu_top (
     wire  [2:0]             MidToPreType  ;
 
     // for pc 
-    wire                    InPcPreAble   ;
-    wire  [`InstAddrBus]    InPcPrePc     ;
-    wire                    InPcRobAble   ;
-    wire  [`InstAddrBus]    InPcRobPc     ;
+    wire                    PreToPcAble   ;
+    wire  [`InstAddrBus]    PreToPcPc     ;
+    wire                    RobToPcAble   ;
+    wire  [`InstAddrBus]    RobToPcPc     ;
 
     //for ftq 
-    wire                    TageToPreAble ;
-    wire                    TageToPreMode ;
-    wire  [2:0]             TageToFTQJdate;
-    wire  [2:0]             TageToFTQNum  ;
-    wire  [2:0]             TageToFTQU1   ;
-    wire  [2:0]             TageToFTQU2   ;
-    wire  [2:0]             TageToFTQU3   ;
-    wire  [2:0]             TageToFTQU4   ;
-    wire  [2:0]             TageToFTQU5   ;
-    wire  [2:0]             TageToFTQU6   ;
+    wire                    PredToFTQAble ;
+    wire                    PredToFTQMode ;
+    wire  [2:0]             PredToFTQJdate;
+    wire  [2:0]             PredToFTQNum  ;
+    wire  [2:0]             PredToFTQU1   ;
+    wire  [2:0]             PredToFTQU2   ;
+    wire  [2:0]             PredToFTQU3   ;
+    wire  [2:0]             PredToFTQU4   ;
+    wire  [2:0]             PredToFTQU5   ;
+    wire  [2:0]             PredToFTQU6   ;
 
     wire                    FTQToTageAble ;
     wire  [`InstAddrBus]    FTQToTagePc   ;
@@ -150,10 +154,42 @@ module mycpu_top (
     wire                    FTQToTageNC6Able;
     wire  [2:0]             FTQTOTAgeNC6  ;
     
+    //for RAS 
 
+    wire                    PreTORasAble ;
+    wire  [1:0]             PreToRasType ;
+    wire  [`InstAddrBus]    PreToRasPc   ;
+    wire                    RobToRasAble ;
+    wire                    RobToRasRload;
+    wire  [`InstAddrBus]    RobToRasDate ;
+    wire                    RobToRasCall ;
+    wire                    RobToRasRtrn ;
+    wire                    RasToPreAble ;
+    wire  [`InstAddrBus]    RasToPreAddr ;
 
-
+    //for tage                   
+    wire                    PreTOTageAble  ;
+    wire  [`InstAddrBus]    PreToTageDate  ;
+    wire                    RobToTageAtten ;
+    wire                    RobToTggeGAble ;
+    wire  [64:0]            RobToTageGHR   ;
+    wire                    TageToPreAble  ;
+    wire                    TageToPreMode  ;
+    wire  [2:0]             TageToPreJdate ;
+    wire  [2:0]             TageToPreNum   ;
+    wire  [2:0]             TageToPreC1    ;
+    wire  [2:0]             TageToPreC2    ;
+    wire  [2:0]             TageToPreC3    ;
+    wire  [2:0]             TageToPreC4    ;
+    wire  [2:0]             TageToPreC5    ;
+    wire  [2:0]             TageToPreC6    ;
     
+    //for pre
+    wire                    IcaToPreAble  ;
+    wire  [255:0]           IcaToPrePcgrp ;
+    wire  [7:0]             IcaToPreInvt  ;
+    wire  [255:0]           IcaToPreIgrp  ;
+    wire  
 
     Ctrl u_Ctrl(
     .Clk           ( Clk               ),
@@ -164,6 +200,8 @@ module mycpu_top (
     .StopMidFlash  ( CtrlToBtbFlash    ),
     .StopTage      ( CtrlToTageStop    ),
     .FLashTage     ( CtrlToTageFLash   ),
+    .StopRas       ( CtrlTORasStop     ),
+    .FLashRas      ( CtrlToRasFlash    ),
     .IcacheFLash   ( CtrlToIcacFLash   ),
     .IcacheStop    ( CtrlToIcacStop    ),
     .PredStop      ( CtrlTOPreStop     ),
@@ -182,10 +220,10 @@ module mycpu_top (
     .PcStop          ( CtrlToPcStop    ),
     .BtbPredictAble  ( BtbPcAble       ),
     .BtbPreDictPc    ( BtbPc           ),
-    .PreReDirAble    ( InPcPreAble     ),
-    .PreReDirPc      ( InPcPrePc       ),
-    .RobReDirAble    ( InPcRobAble     ),
-    .RobReDirPc      ( InPcRobPc       ),
+    .PreReDirAble    ( PreToPcAble     ),
+    .PreReDirPc      ( PreToPcPc       ),
+    .RobReDirAble    ( RobToPcAble     ),
+    .RobReDirPc      ( RobToPcPc       ),
     .PcAble          ( PcOutAble       ),
     .PcDate          ( PcOutPc         )
     );
@@ -211,6 +249,8 @@ module mycpu_top (
     .InstNextAble    ( BtbToMidAble    ),
     .InstHitBanN     ( BtbToMidBank    ),
     .InstNextPc      ( BtbToMidPc      ),
+    .InstNextOffset  ( BtbToRasOfs     ),
+    .InstNextMode    ( BtbToTageMode   ),
     .InstNextType    ( BtbToMidType    )
     );
 
@@ -231,147 +271,156 @@ module mycpu_top (
 
 
     FTQ u_FTQ(
-    .Clk           ( Clk           ),
-    .Rest          ( Rest          ),
-    .FTQStop       ( CtrlToFTQStop ),
-    .FTQFlash      ( CtrlToFTQFlash),
-    .FTQreq        ( CtrlFTQReq    ),
-    .ROBBranch     ( ROBBranch     ),
-    .ROBBranchYN   ( ROBBranchYN   ),
-    .ROBBranchMo   ( ROBBranchMo   ),
-    .ROBBranchPc   ( ROBBranchPc   ),
-    .PredictAble   ( PredictAble   ),
-    .PredictJdate  ( PredictJdate  ),
-    .PredictNum    ( PredictNum    ),
-    .PredictInt1   ( PredictInt1   ),
-    .PredictInt2   ( PredictInt2   ),
-    .PredictInt3   ( PredictInt3   ),
-    .PredictInt4   ( PredictInt4   ),
-    .PredictInt5   ( PredictInt5   ),
-    .PredictInt6   ( PredictInt6   ),
-    .OutUpDatePc   ( OutUpDatePc   ),
-    .OutDateAble   ( OutDateAble   ),
-    .OutUpDate     ( OutUpDate     ),
-    .OutUpNum      ( OutUpNum      ),
-    .OutUpCnt      ( OutUpCnt      ),
-    .NewDateAble   ( NewDateAble   ),
-    .NewUpDate     ( NewUpDate     ),
-    .NewUpNum      ( NewUpNum      ),
-    .NewUpCnt      ( NewUpCnt      ),
-    .NewCnt1Able   ( NewCnt1Able   ),
-    .NewCnt1Date   ( NewCnt1Date   ),
-    .NewCnt2Able   ( NewCnt2Able   ),
-    .NewCnt2Date   ( NewCnt2Date   ),
-    .NewCnt3Able   ( NewCnt3Able   ),
-    .NewCnt3Date   ( NewCnt3Date   ),
-    .NewCnt4Able   ( NewCnt4Able   ),
-    .NewCnt4Date   ( NewCnt4Date   ),
-    .NewCnt5Able   ( NewCnt5Able   ),
-    .NewCnt5Date   ( NewCnt5Date   ),
-    .NewCnt6Able   ( NewCnt6Able   ),
-    .NewCnt6Date   ( NewCnt6Date   )
+    .Clk           ( Clk             ),
+    .Rest          ( Rest            ),
+    .FTQStop       ( CtrlToFTQStop   ),
+    .FTQFlash      ( CtrlToFTQFlash  ),
+    .FTQreq        ( CtrlFTQReq      ),
+    .ROBBranch     ( ROBBranch       ),
+    .ROBBranchYN   ( ROBBranchYN     ),
+    .ROBBranchMo   ( ROBBranchMo     ),
+    .ROBBranchPc   ( ROBBranchPc     ),
+    .PredictAble   ( PredToFTQAble   ),
+    .PredictJdate  ( PredToFTQJdate  ),
+    .PredictNum    ( PredToFTQNum    ),
+    .PredictInt1   ( PredToFTQU1     ),
+    .PredictInt2   ( PredToFTQU2     ),
+    .PredictInt3   ( PredToFTQU3     ),
+    .PredictInt4   ( PredToFTQU4     ),
+    .PredictInt5   ( PredToFTQU5     ),
+    .PredictInt6   ( PredToFTQU6     ),
+    .OutUpDatePc   ( FTQToTagePc     ),
+    .OutDateAble   ( FTQToTageAble   ),
+    .OutUpDate     ( FTQToTageDate   ),
+    .OutUpNum      ( FTQToTageNum    ),
+    .OutUpCnt      ( FTQToTageCnt    ),
+    .NewDateAble   ( FTQToTageNable  ),
+    .NewUpDate     ( FTQToTageNDate  ),
+    .NewUpNum      ( FTQToTageNNum   ),
+    .NewUpCnt      ( FTQToTageNCnt   ),
+    .NewCnt1Able   ( FTQToTageNC1Able),
+    .NewCnt1Date   ( FTQTOTAgeNC1    ),
+    .NewCnt2Able   ( FTQToTageNC2Able),
+    .NewCnt2Date   ( FTQTOTAgeNC2    ),
+    .NewCnt3Able   ( FTQToTageNC3Able),
+    .NewCnt3Date   ( FTQTOTAgeNC3    ),
+    .NewCnt4Able   ( FTQToTageNC4Able),
+    .NewCnt4Date   ( FTQTOTAgeNC4    ),
+    .NewCnt5Able   ( FTQToTageNC5Able),
+    .NewCnt5Date   ( FTQTOTAgeNC5    ),
+    .NewCnt6Able   ( FTQToTageNC6Able),
+    .NewCnt6Date   ( FTQTOTAgeNC6    )
     );
 
     Ras u_Ras(
     .Clk            ( Clk            ),
     .Rest           ( Rest           ),
-    .RasStop        ( RasStop        ),
-    .RasFLash       ( ),
-    .BtbAble        ( BtbPcAble        ),
-    .BtbPredictType ( BtbType ),
-    .BtbPcDate      ( BtbPcDate      ),
-    .BtbPcOffset    ( BtbPcOffset    ),
-    .UpAble         ( UpAble         ),
-    .UpPtrType      ( UpPtrType      ),
-    .UpAddrDate     ( UpAddrDate     ),
-    .ToPreAble      ( ToPreAble      ),
-    .ToPreAddr      ( ToPreAddr      ),
-    .UpdateInAble   ( UpdateInAble   ),
-    .UpdateReload   ( UpdateReload   ),
-    .UpdateInDate   ( UpdateInDate   ),
-    .UpdateCall     ( UpdateCall     ),
-    .UpdateReturn   ( UpdateReturn   )
+    .RasStop        ( CtrlTORasStop  ),
+    .RasFLash       ( CtrlToRasFlash ),
+    .BtbAble        ( BtbToMidAble   ),
+    .BtbPredictType ( BtbToMidType   ),
+    .BtbPcDate      ( BtbToMidPc     ),
+    .BtbPcOffset    ( BtbToRasOfs    ),
+    .UpAble         ( PreTORasAble   ),
+    .UpPtrType      ( PreToRasType   ),
+    .UpAddrDate     ( PreToRasPc     ),
+    .ToPreAble      ( RasToPreAble   ),
+    .ToPreAddr      ( RasToPreAddr   ),
+    .UpdateInAble   ( RobToRasAble   ),
+    .UpdateReload   ( RobToRasRload  ),
+    .UpdateInDate   ( RobToRasDate   ),
+    .UpdateCall     ( RobToRasCall   ),
+    .UpdateReturn   ( RobToRasRtrn   )
     );
 
     Tage u_Tage(
-    .Clk            ( Clk            ),
-    .Rest           ( Rest           ),
-    .TageStop       ( TageStop       ),
-    .TageFlash      ( TageFlash      ),
+    .Clk            ( Clk               ),
+    .Rest           ( Rest              ),
+    .TageStop       ( CtrlToTageStop    ),
+    .TageFlash      ( CtrlToTageFLash   ),
     .PcAble         ( PcOutAble         ),
-    .PcDate         ( PcOutPc         ),
-    .BtbAble        ( BtbAble        ),
-    .BtbType        ( BtbType        ),
-    .BtbMode        ( BtbMode        ),
-    .PreUpDable     ( PreUpDable     ),
-    .PreUpDate      ( PreUpDate      ),
-    .Attenuate      ( Attenuate      ),
-    .GHRUpAble      ( GHRUpAble      ),
-    .GHRDate        ( GHRDate        ),
-    .InALwDateAble  ( InALwDateAble  ),
-    .InALwUpDatePc  ( InALwUpDatePc  ),
-    .InALwUpDate    ( InALwUpDate    ),
-    .InALwUpNum     ( InALwUpNum     ),
-    .InALwUpCnt     ( InALwUpCnt     ),
-    .InNewDateAble  ( InNewDateAble  ),
-    .InNewUpDate    ( InNewUpDate    ),
-    .InNewUpNum     ( InNewUpNum     ),
-    .InNewUpCnt     ( InNewUpCnt     ),
-    .InNewCnt1Able  ( InNewCnt1Able  ),
-    .InNewCnt1Date  ( InNewCnt1Date  ),
-    .InNewCnt2Able  ( InNewCnt2Able  ),
-    .InNewCnt2Date  ( InNewCnt2Date  ),
-    .InNewCnt3Able  ( InNewCnt3Able  ),
-    .InNewCnt3Date  ( InNewCnt3Date  ),
-    .InNewCnt4Able  ( InNewCnt4Able  ),
-    .InNewCnt4Date  ( InNewCnt4Date  ),
-    .InNewCnt5Able  ( InNewCnt5Able  ),
-    .InNewCnt5Date  ( InNewCnt5Date  ),
-    .InNewCnt6Able  ( InNewCnt6Able  ),
-    .InNewCnt6Date  ( InNewCnt6Date  ),
-    .PredictAble    ( PredictAble    ),
-    .PredictMode    ( PredictMode    ),
-    .PredictJdate   ( PredictJdate   ),
-    .PredictNum     ( PredictNum     ),
-    .PredictUset1   ( PredictUset1   ),
-    .PredictUset2   ( PredictUset2   ),
-    .PredictUset3   ( PredictUset3   ),
-    .PredictUset4   ( PredictUset4   ),
-    .PredictUset5   ( PredictUset5   ),
-    .PredictUset6   ( PredictUset6   )
+    .PcDate         ( PcOutPc           ),
+    .BtbAble        ( BtbToMidAble      ),
+    .BtbType        ( BtbToMidType      ),
+    .BtbMode        ( BtbToTageMode     ),
+    .PreUpDable     ( PreTOTageAble     ),
+    .PreUpDate      ( PreToTageDate     ),
+    .Attenuate      ( RobToTageAtten    ),
+    .GHRUpAble      ( RobToTggeGAble    ),
+    .GHRDate        ( RobToTageGHR      ),
+    .InALwDateAble  ( FTQToTageAble     ),
+    .InALwUpDatePc  ( FTQToTagePc       ),
+    .InALwUpDate    ( FTQToTageDate     ),
+    .InALwUpNum     ( FTQToTageNum      ),
+    .InALwUpCnt     ( FTQToTageCnt      ),
+    .InNewDateAble  ( FTQToTageNable    ),
+    .InNewUpDate    ( FTQToTageNDate    ),
+    .InNewUpNum     ( FTQToTageNNum     ),
+    .InNewUpCnt     ( FTQToTageNCnt     ),
+    .InNewCnt1Able  ( FTQToTageNC1Able  ),
+    .InNewCnt1Date  ( FTQTOTAgeNC1      ),
+    .InNewCnt2Able  ( FTQToTageNC2Able  ),
+    .InNewCnt2Date  ( FTQTOTAgeNC2      ),
+    .InNewCnt3Able  ( FTQToTageNC3Able  ),
+    .InNewCnt3Date  ( FTQTOTAgeNC3      ),
+    .InNewCnt4Able  ( FTQToTageNC4Able  ),
+    .InNewCnt4Date  ( FTQTOTAgeNC4      ),
+    .InNewCnt5Able  ( FTQToTageNC5Able  ),
+    .InNewCnt5Date  ( FTQTOTAgeNC5      ),
+    .InNewCnt6Able  ( FTQToTageNC6Able  ),
+    .InNewCnt6Date  ( FTQTOTAgeNC6      ),
+    .PredictAble    ( TageToPreAble     ),
+    .PredictMode    ( TageToPreMode     ),
+    .PredictJdate   ( TageToPreJdate    ),
+    .PredictNum     ( TageToPreNum      ),
+    .PredictUset1   ( TageToPreC1       ),
+    .PredictUset2   ( TageToPreC2       ),
+    .PredictUset3   ( TageToPreC3       ),
+    .PredictUset4   ( TageToPreC4       ),
+    .PredictUset5   ( TageToPreC5       ),
+    .PredictUset6   ( TageToPreC6       )
     );
 
 
     PreDecode u_PreDecode(
     .Clk              ( Clk              ),
     .Rest             ( Rest             ),
-    .PreDecodeFlash   ( PreDecodeFlash   ),
-    .PreDecodeStop    ( PreDecodeStop    ),
+    .PreDecodeFlash   ( CtrlToPreFLash   ),
+    .PreDecodeStop    ( CtrlTOPreStop    ),
     .BtbAble          ( MidToPreAble     ),
     .BtbBanKN         ( MidToPreBank     ),
     .BtbType          ( MidToPreType     ),
     .BtbPc            ( MidToPrePc       ),
-    .RasAble          ( RasAble          ),
-    .RasPc            ( RasPc            ),
-    .TageAble         ( TageAble         ),
-    .TageMode         ( TageMode         ),
+    .RasAble          ( RasToPreAble          ),
+    .RasPc            ( RasToPreAddr            ),
+    .TageAble         ( TageToPreAble         ),
+    .TageJdate        ( TageToPreJdate),
+    .TageMode         ( TageToPreMode         ),
+    .TageNum          ( TageToPreNum),
+    .TageInt1         ( TageToPreC1),
+    .TageInt2         ( TageToPreC2),
+    .TageInt3         ( TageToPreC3),
+    .TageInt4         ( TageToPreC4),
+    .TageInt5         ( TageToPreC5),
+    .TageInt6         ( TageToPreC6),
     .FetchAble        ( FetchAble        ),
     .FetchPcIvt       ( FetchPcIvt       ),
     .FetchInstIvt     ( FetchInstIvt     ),
     .FetchDate        ( FetchDate        ),
-    .PreReDirectAble  ( PreReDirectAble  ),
-    .PreReDirectPc    ( PreReDirectPc    ),
-    .BtbUpPcAble      ( BtbUpPcAble      ),
-    .BtbUpPc          ( BtbUpPc          ),
-    .BtbUpBanKN       ( BtbUpBanKN       ),
-    .BtbUpTypeAble    ( BtbUpTypeAble    ),
-    .BtbUpType        ( BtbUpType        ),
-    .BtbUpTagetAble   ( BtbUpTagetAble   ),
-    .BtbUpTaget       ( BtbUpTaget       ),
-    .RasUpAble        ( RasUpAble        ),
-    .RasPtrType       ( RasPtrType       ),
-    .RasAddrDate      ( RasAddrDate      ),
-    .TageUpAble       ( TageUpAble       ),
+    .PreReDirectAble  ( PreToPcAble  ),
+    .PreReDirectPc    ( PreToPcPc    ),
+    .BtbUpPcAble      ( PreToBtbAble      ),
+    .BtbUpPc          ( PreToBtbPc          ),
+    .BtbUpBanKN       ( PreToBtbBank       ),
+    .BtbUpTypeAble    ( PreToBtbTAble    ),
+    .BtbUpType        ( PreToBtbType        ),
+    .BtbUpTagetAble   ( PreToBtbGAble   ),
+    .BtbUpTaget       ( PreToBtbTargrt       ),
+    .RasUpAble        ( PreTORasAble        ),
+    .RasPtrType       ( PreToRasType       ),
+    .RasAddrDate      ( PreToRasPc      ),
+    .TageUpAble       ( PreTOTageAble       ),
+    
     .ToIbInst1Able    ( ToIbInst1Able    ),
     .ToIbInst1Mode    ( ToIbInst1Mode    ),
     .ToIbInst1Pc      ( ToIbInst1Pc      ),
@@ -412,6 +461,32 @@ module mycpu_top (
     .ToIbInst8Pc      ( ToIbInst8Pc      ),
     .ToIbInst8Redir   ( ToIbInst8Redir   ),
     .ToIbInst8Date    ( ToIbInst8Date    )
+    );
+
+    ICache u_ICache(
+    .Clk             ( Clk             ),
+    .Rest            ( Rest            ),
+    .IcFLash         ( IcFLash         ),
+    .IcReq           ( IcReq           ),
+    .BpReq           ( BpReq           ),
+    .ToMuFetch       ( ToMuFetch       ),
+    .ToMuVritualA    ( ToMuVritualA    ),
+    .InCOperType     ( InCOperType     ),
+    .InCTlbTrap      ( InCTlbTrap      ),
+    .InCPhysicalAddr ( InCPhysicalAddr ),
+    .BpuReqAble      ( BpuReqAble      ),
+    .BpuReqPc        ( BpuReqPc        ),
+    .ToPreAble       ( ToPreAble       ),
+    .ToPcIvt         ( ToPcIvt         ),
+    .ToInstIvt       ( ToInstIvt       ),
+    .ToDate          ( ToDate          ),
+    .OutReadAble     ( OutReadAble     ),
+    .Inshankhand     ( Inshankhand     ),
+    .OutUncacheRead  ( OutUncacheRead  ),
+    .OutReadAddr     ( OutReadAddr     ),
+    .InReadreq       ( InReadreq       ),
+    .InReadBackAble  ( InReadBackAble  ),
+    .InReadBackDate  ( InReadBackDate  )
     );
 
 
@@ -1443,32 +1518,6 @@ module mycpu_top (
         .CsruFlash         ( CsruFlash         )
     );
 
-
-    ICache u_ICache(
-        .Clk             ( Clk             ),
-        .Rest            ( Rest            ),
-        .IcFLash         ( IcFLash         ),
-        .IcReq           ( IcReq           ),
-        .BpReq           ( BpReq           ),
-        .ToMuFetch       ( ToMuFetch       ),
-        .ToMuVritualA    ( ToMuVritualA    ),
-        .InCOperType     ( InCOperType     ),
-        .InCTlbTrap      ( InCTlbTrap      ),
-        .InCPhysicalAddr ( InCPhysicalAddr ),
-        .BpuReqAble      ( BpuReqAble      ),
-        .BpuReqPc        ( BpuReqPc        ),
-        .ToPreAble       ( ToPreAble       ),
-        .ToPcIvt         ( ToPcIvt         ),
-        .ToInstIvt       ( ToInstIvt       ),
-        .ToDate          ( ToDate          ),
-        .OutReadAble     ( OutReadAble     ),
-        .Inshankhand     ( Inshankhand     ),
-        .OutUncacheRead  ( OutUncacheRead  ),
-        .OutReadAddr     ( OutReadAddr     ),
-        .InReadreq       ( InReadreq       ),
-        .InReadBackAble  ( InReadBackAble  ),
-        .InReadBackDate  ( InReadBackDate  )
-    );
 
     AXIbus u_AXIbus(
         .Clk           ( Clk           ),

@@ -1,5 +1,5 @@
 `timescale 1ps/1ps
-`include "defone.v"
+`include "define.v"
 
 module mycpu_top (
     input      wire                         aclk       ,
@@ -61,7 +61,7 @@ module mycpu_top (
     output     wire    [31:0]               debug0_wb_inst
 
 );
-    wire Clk  = clka    ;
+    wire Clk  = aclk    ;
     wire Rest = aresetn ;
 
     wire                    PcOutAble ;
@@ -189,7 +189,82 @@ module mycpu_top (
     wire  [255:0]           IcaToPrePcgrp ;
     wire  [7:0]             IcaToPreInvt  ;
     wire  [255:0]           IcaToPreIgrp  ;
-    wire  
+    wire                    PredTo1ISAble ;
+    wire                    PredTo1ISMode ;
+    wire  [`InstAddrBus]    PredTo1ISPc   ;
+    wire  [`InstAddrBus]    PredTo1ISRPc  ;
+    wire  [`InstDateBus]    PredTo1ISInst ;
+    wire                    PredTo2ISAble ;
+    wire                    PredTo2ISMode ;
+    wire  [`InstAddrBus]    PredTo2ISPc   ;
+    wire  [`InstAddrBus]    PredTo2ISRPc  ;
+    wire  [`InstDateBus]    PredTo2ISInst ;
+    wire                    PredTo3ISAble ;
+    wire                    PredTo3ISMode ;
+    wire  [`InstAddrBus]    PredTo3ISPc   ;
+    wire  [`InstAddrBus]    PredTo3ISRPc  ;
+    wire  [`InstDateBus]    PredTo3ISInst ;
+    wire                    PredTo4ISAble ;
+    wire                    PredTo4ISMode ;
+    wire  [`InstAddrBus]    PredTo4ISPc   ;
+    wire  [`InstAddrBus]    PredTo4ISRPc  ;
+    wire  [`InstDateBus]    PredTo4ISInst ;
+    wire                    PredTo5ISAble ;
+    wire                    PredTo5ISMode ;
+    wire  [`InstAddrBus]    PredTo5ISPc   ;
+    wire  [`InstAddrBus]    PredTo5ISRPc  ;
+    wire  [`InstDateBus]    PredTo5ISInst ;
+    wire                    PredTo6ISAble ;
+    wire                    PredTo6ISMode ;
+    wire  [`InstAddrBus]    PredTo6ISPc   ;
+    wire  [`InstAddrBus]    PredTo6ISRPc  ;
+    wire  [`InstDateBus]    PredTo6ISInst ;
+    wire                    PredTo7ISAble ;
+    wire                    PredTo7ISMode ;
+    wire  [`InstAddrBus]    PredTo7ISPc   ;
+    wire  [`InstAddrBus]    PredTo7ISRPc  ;
+    wire  [`InstDateBus]    PredTo7ISInst ;
+    wire                    PredTo8ISAble ;
+    wire                    PredTo8ISMode ;
+    wire  [`InstAddrBus]    PredTo8ISPc   ;
+    wire  [`InstAddrBus]    PredTo8ISRPc  ;
+    wire  [`InstDateBus]    PredTo8ISInst ;
+
+    //for ICache 
+    wire                    IcaToMmuAble  ;
+    wire  [31:0]            IcaToMmuVPc   ;
+    wire  [1:0]             MmuToIcaType  ;
+    wire                    MmuToIcaTrap  ;
+    wire  [`InstAddrBus]    MmuToIcaPPc   ;
+    wire                    IcaToAXIAble  ;
+    wire                    AXIToIcaSKH   ;
+    wire                    UcaToAXIAble  ;
+    wire  [`InstAddrBus]    IcaToAXIAddr  ;
+    wire                    AXIToIcaAble  ;
+    wire                    AXIToIcaReq   ;
+    wire  [511:0]           AXIToIcaDate  ; 
+
+    //fro InstQUeue 
+    wire                    ISToDcodePort1  ;
+    wire                    ISToDcodePort2  ;
+    wire                    ISToDcodePort3  ;
+    wire                    ISToDcodePort4  ;
+    wire  [`InstAddrBus]    ISToDcodeAddr1  ;
+    wire  [`InstDateBus]    ISToDcodeDate1  ; 
+    wire                    ISToDcodePart1  ; 
+    wire  [`InstAddrBus]    ISToDcodeRPc1   ; 
+    wire  [`InstAddrBus]    ISToDcodeAddr2  ;
+    wire  [`InstDateBus]    ISToDcodeDate2  ; 
+    wire                    ISToDcodePart2  ; 
+    wire  [`InstAddrBus]    ISToDcodeRPc2   ;   
+    wire  [`InstAddrBus]    ISToDcodeAddr3  ;
+    wire  [`InstDateBus]    ISToDcodeDate3  ; 
+    wire                    ISToDcodePart3  ; 
+    wire  [`InstAddrBus]    ISToDcodeRPc3   ; 
+    wire  [`InstAddrBus]    ISToDcodeAddr4  ;
+    wire  [`InstDateBus]    ISToDcodeDate4  ; 
+    wire                    ISToDcodePart4  ; 
+    wire  [`InstAddrBus]    ISToDcodeRPc4   ; 
 
     Ctrl u_Ctrl(
     .Clk           ( Clk               ),
@@ -391,230 +466,261 @@ module mycpu_top (
     .BtbBanKN         ( MidToPreBank     ),
     .BtbType          ( MidToPreType     ),
     .BtbPc            ( MidToPrePc       ),
-    .RasAble          ( RasToPreAble          ),
-    .RasPc            ( RasToPreAddr            ),
-    .TageAble         ( TageToPreAble         ),
-    .TageJdate        ( TageToPreJdate),
-    .TageMode         ( TageToPreMode         ),
-    .TageNum          ( TageToPreNum),
-    .TageInt1         ( TageToPreC1),
-    .TageInt2         ( TageToPreC2),
-    .TageInt3         ( TageToPreC3),
-    .TageInt4         ( TageToPreC4),
-    .TageInt5         ( TageToPreC5),
-    .TageInt6         ( TageToPreC6),
+    .RasAble          ( RasToPreAble     ),
+    .RasPc            ( RasToPreAddr     ),
+    .TageAble         ( TageToPreAble    ),
+    .TageJdate        ( TageToPreJdate   ),
+    .TageMode         ( TageToPreMode    ),
+    .TageNum          ( TageToPreNum     ),
+    .TageInt1         ( TageToPreC1      ),
+    .TageInt2         ( TageToPreC2      ),
+    .TageInt3         ( TageToPreC3      ),
+    .TageInt4         ( TageToPreC4      ),
+    .TageInt5         ( TageToPreC5      ),
+    .TageInt6         ( TageToPreC6      ),
     .FetchAble        ( FetchAble        ),
     .FetchPcIvt       ( FetchPcIvt       ),
     .FetchInstIvt     ( FetchInstIvt     ),
     .FetchDate        ( FetchDate        ),
-    .PreReDirectAble  ( PreToPcAble  ),
-    .PreReDirectPc    ( PreToPcPc    ),
-    .BtbUpPcAble      ( PreToBtbAble      ),
-    .BtbUpPc          ( PreToBtbPc          ),
-    .BtbUpBanKN       ( PreToBtbBank       ),
+    .PreReDirectAble  ( PreToPcAble      ),
+    .PreReDirectPc    ( PreToPcPc        ),
+    .BtbUpPcAble      ( PreToBtbAble     ),
+    .BtbUpPc          ( PreToBtbPc       ),
+    .BtbUpBanKN       ( PreToBtbBank     ),
     .BtbUpTypeAble    ( PreToBtbTAble    ),
-    .BtbUpType        ( PreToBtbType        ),
-    .BtbUpTagetAble   ( PreToBtbGAble   ),
-    .BtbUpTaget       ( PreToBtbTargrt       ),
-    .RasUpAble        ( PreTORasAble        ),
-    .RasPtrType       ( PreToRasType       ),
-    .RasAddrDate      ( PreToRasPc      ),
-    .TageUpAble       ( PreTOTageAble       ),
-    
-    .ToIbInst1Able    ( ToIbInst1Able    ),
-    .ToIbInst1Mode    ( ToIbInst1Mode    ),
-    .ToIbInst1Pc      ( ToIbInst1Pc      ),
-    .ToIbInst1Redir   ( ToIbInst1Redir   ),
-    .ToIbInst1Date    ( ToIbInst1Date    ),
-    .ToIbInst2Able    ( ToIbInst2Able    ),
-    .ToIbInst2Mode    ( ToIbInst2Mode    ),
-    .ToIbInst2Pc      ( ToIbInst2Pc      ),
-    .ToIbInst2Redir   ( ToIbInst2Redir   ),
-    .ToIbInst2Date    ( ToIbInst2Date    ),
-    .ToIbInst3Able    ( ToIbInst3Able    ),
-    .ToIbInst3Mode    ( ToIbInst3Mode    ),
-    .ToIbInst3Pc      ( ToIbInst3Pc      ),
-    .ToIbInst3Redir   ( ToIbInst3Redir   ),
-    .ToIbInst3Date    ( ToIbInst3Date    ),
-    .ToIbInst4Able    ( ToIbInst4Able    ),
-    .ToIbInst4Mode    ( ToIbInst4Mode    ),
-    .ToIbInst4Pc      ( ToIbInst4Pc      ),
-    .ToIbInst4Redir   ( ToIbInst4Redir   ),
-    .ToIbInst4Date    ( ToIbInst4Date    ),
-    .ToIbInst5Able    ( ToIbInst5Able    ),
-    .ToIbInst5Mode    ( ToIbInst5Mode    ),
-    .ToIbInst5Pc      ( ToIbInst5Pc      ),
-    .ToIbInst5Redir   ( ToIbInst5Redir   ),
-    .ToIbInst5Date    ( ToIbInst5Date    ),
-    .ToIbInst6Able    ( ToIbInst6Able    ),
-    .ToIbInst6Mode    ( ToIbInst6Mode    ),
-    .ToIbInst6Pc      ( ToIbInst6Pc      ),
-    .ToIbInst6Redir   ( ToIbInst6Redir   ),
-    .ToIbInst6Date    ( ToIbInst6Date    ),
-    .ToIbInst7Able    ( ToIbInst7Able    ),
-    .ToIbInst7Mode    ( ToIbInst7Mode    ),
-    .ToIbInst7Pc      ( ToIbInst7Pc      ),
-    .ToIbInst7Redir   ( ToIbInst7Redir   ),
-    .ToIbInst7Date    ( ToIbInst7Date    ),
-    .ToIbInst8Able    ( ToIbInst8Able    ),
-    .ToIbInst8Mode    ( ToIbInst8Mode    ),
-    .ToIbInst8Pc      ( ToIbInst8Pc      ),
-    .ToIbInst8Redir   ( ToIbInst8Redir   ),
-    .ToIbInst8Date    ( ToIbInst8Date    )
+    .BtbUpType        ( PreToBtbType     ),
+    .BtbUpTagetAble   ( PreToBtbGAble    ),
+    .BtbUpTaget       ( PreToBtbTargrt   ),
+    .RasUpAble        ( PreTORasAble     ),
+    .RasPtrType       ( PreToRasType     ),
+    .RasAddrDate      ( PreToRasPc       ),
+    .TageUpAble       ( PreTOTageAble    ),
+    .PredAble         ( PredToFTQAble    ),
+    .PredJdate        ( PredToFTQJdate   ),
+    .PredNum          ( PredToFTQNum     ),
+    .PredInt1         ( PredToFTQU1      ),
+    .PredInt2         ( PredToFTQU2      ),
+    .PredInt3         ( PredToFTQU3      ),
+    .PredInt4         ( PredToFTQU4      ),
+    .PredInt5         ( PredToFTQU5      ),
+    .PredInt6         ( PredToFTQU6      ),
+    .ToIbInst1Able    ( PredTo1ISAble    ),
+    .ToIbInst1Mode    ( PredTo1ISMode    ),
+    .ToIbInst1Pc      ( PredTo1ISPc      ),
+    .ToIbInst1Redir   ( PredTo1ISRPc     ),
+    .ToIbInst1Date    ( PredTo1ISInst    ),
+    .ToIbInst2Able    ( PredTo2ISAble    ),
+    .ToIbInst2Mode    ( PredTo2ISMode    ),
+    .ToIbInst2Pc      ( PredTo2ISPc      ),
+    .ToIbInst2Redir   ( PredTo2ISRPc     ),
+    .ToIbInst2Date    ( PredTo2ISInst    ),
+    .ToIbInst3Able    ( PredTo3ISAble    ),
+    .ToIbInst3Mode    ( PredTo3ISMode    ),
+    .ToIbInst3Pc      ( PredTo3ISPc      ),
+    .ToIbInst3Redir   ( PredTo3ISRPc     ),
+    .ToIbInst3Date    ( PredTo3ISInst    ),
+    .ToIbInst4Able    ( PredTo4ISAble    ),
+    .ToIbInst4Mode    ( PredTo4ISMode    ),
+    .ToIbInst4Pc      ( PredTo4ISPc      ),
+    .ToIbInst4Redir   ( PredTo4ISRPc     ),
+    .ToIbInst4Date    ( PredTo4ISInst    ),
+    .ToIbInst5Able    ( PredTo5ISAble    ),
+    .ToIbInst5Mode    ( PredTo5ISMode    ),
+    .ToIbInst5Pc      ( PredTo5ISPc      ),
+    .ToIbInst5Redir   ( PredTo5ISRPc     ),
+    .ToIbInst5Date    ( PredTo5ISInst    ),
+    .ToIbInst6Able    ( PredTo6ISAble    ),
+    .ToIbInst6Mode    ( PredTo6ISMode    ),
+    .ToIbInst6Pc      ( PredTo6ISPc      ),
+    .ToIbInst6Redir   ( PredTo6ISRPc     ),
+    .ToIbInst6Date    ( PredTo6ISInst    ),
+    .ToIbInst7Able    ( PredTo7ISAble    ),
+    .ToIbInst7Mode    ( PredTo7ISMode    ),
+    .ToIbInst7Pc      ( PredTo7ISPc      ),
+    .ToIbInst7Redir   ( PredTo7ISRPc     ),
+    .ToIbInst7Date    ( PredTo7ISInst    ),
+    .ToIbInst8Able    ( PredTo8ISAble    ),
+    .ToIbInst8Mode    ( PredTo8ISMode    ),
+    .ToIbInst8Pc      ( PredTo8ISPc      ),
+    .ToIbInst8Redir   ( PredTo8ISRPc     ),
+    .ToIbInst8Date    ( PredTo8ISInst    )
     );
 
     ICache u_ICache(
     .Clk             ( Clk             ),
     .Rest            ( Rest            ),
-    .IcFLash         ( IcFLash         ),
-    .IcReq           ( IcReq           ),
-    .BpReq           ( BpReq           ),
-    .ToMuFetch       ( ToMuFetch       ),
-    .ToMuVritualA    ( ToMuVritualA    ),
-    .InCOperType     ( InCOperType     ),
-    .InCTlbTrap      ( InCTlbTrap      ),
-    .InCPhysicalAddr ( InCPhysicalAddr ),
-    .BpuReqAble      ( BpuReqAble      ),
-    .BpuReqPc        ( BpuReqPc        ),
-    .ToPreAble       ( ToPreAble       ),
-    .ToPcIvt         ( ToPcIvt         ),
-    .ToInstIvt       ( ToInstIvt       ),
-    .ToDate          ( ToDate          ),
-    .OutReadAble     ( OutReadAble     ),
-    .Inshankhand     ( Inshankhand     ),
-    .OutUncacheRead  ( OutUncacheRead  ),
-    .OutReadAddr     ( OutReadAddr     ),
-    .InReadreq       ( InReadreq       ),
-    .InReadBackAble  ( InReadBackAble  ),
-    .InReadBackDate  ( InReadBackDate  )
+    .IcFLash         ( CtrlToIcacFLash ),
+    .IcStop          ( CtrlToIcacStop  ),
+    .IcReq           ( CtrlIcReq       ),
+    .BpReq           ( CtrlBpReq       ),
+    .ToMuFetch       ( IcaToMmuAble    ),
+    .ToMuVritualA    ( IcaToMmuVPc     ),
+    .InCOperType     ( MmuToIcaType    ),
+    .InCTlbTrap      ( MmuToIcaTrap    ),
+    .InCPhysicalAddr ( MmuToIcaPPc     ),
+    .BpuReqAble      ( PcOutAble       ),
+    .BpuReqPc        ( PcOutPc         ),
+    .ToPreAble       ( IcaToPreAble    ),
+    .ToPcIvt         ( IcaToPrePcgrp   ),
+    .ToInstIvt       ( IcaToPreInvt    ),
+    .ToDate          ( IcaToPreIgrp    ),
+    .OutReadAble     ( IcaToAXIAble    ),
+    .Inshankhand     ( AXIToIcaSKH     ),
+    .OutUncacheRead  ( UcaToAXIAble    ),
+    .OutReadAddr     ( IcaToAXIAddr    ),
+    .InReadreq       ( AXIToIcaReq     ),
+    .InReadBackAble  ( AXIToIcaAble    ),
+    .InReadBackDate  ( AXIToIcaDate    )
     );
 
 
 
     InstIssueQue#(
-        .INSTQUEUEDEEP ( 32 ),
-        .INSTQUEUEWIDE ( 97 )
+    .INSTQUEUEDEEP ( 32 ),
+    .INSTQUEUEWIDE ( 97 )
     )u_InstIssueQue(
-        .Clk           ( Clk           ),
-        .Rest          ( Rest          ),
-        .InstQStop     ( InstQStop     ),
-        .InstQFlash    ( InstQFlash    ),
-        .InstQReqStop  ( InstQReqStop  ),
-        .FromPre1Able  ( FromPre1Able  ),
-        .FromPre1Addr  ( FromPre1Addr  ),
-        .FromPre1Date  ( FromPre1Date  ),
-        .FromPre1Part  ( FromPre1Part  ),
-        .FromPre1NAdr  ( FromPre1NAdr  ),
-        .FromPre2Able  ( FromPre2Able  ),
-        .FromPre2Addr  ( FromPre2Addr  ),
-        .FromPre2Date  ( FromPre2Date  ),
-        .FromPre2Part  ( FromPre2Part  ),
-        .FromPre2NAdr  ( FromPre2NAdr  ),
-        .FromPre3Able  ( FromPre3Able  ),
-        .FromPre3Addr  ( FromPre3Addr  ),
-        .FromPre3Date  ( FromPre3Date  ),
-        .FromPre3Part  ( FromPre3Part  ),
-        .FromPre3NAdr  ( FromPre3NAdr  ),
-        .FromPre4Able  ( FromPre4Able  ),
-        .FromPre4Addr  ( FromPre4Addr  ),
-        .FromPre4Date  ( FromPre4Date  ),
-        .FromPre4Part  ( FromPre4Part  ),
-        .FromPre4NAdr  ( FromPre4NAdr  ),
-        .OutInstPort1  ( OutInstPort1  ),
-        .OutInstPort2  ( OutInstPort2  ),
-        .OutInstPort3  ( OutInstPort3  ),
-        .OutInstPort4  ( OutInstPort4  ),
-        .OutInstAddr1  ( OutInstAddr1  ),
-        .OutInstDate1  ( OutInstDate1  ),
-        .OutInstPart1  ( OutInstPart1  ),
-        .OutInstNAdr1  ( OutInstNAdr1  ),
-        .OutInstAddr2  ( OutInstAddr2  ),
-        .OutInstDate2  ( OutInstDate2  ),
-        .OutInstPart2  ( OutInstPart2  ),
-        .OutInstNAdr2  ( OutInstNAdr2  ),
-        .OutInstAddr3  ( OutInstAddr3  ),
-        .OutInstDate3  ( OutInstDate3  ),
-        .OutInstPart3  ( OutInstPart3  ),
-        .OutInstNAdr3  ( OutInstNAdr3  ),
-        .OutInstAddr4  ( OutInstAddr4  ),
-        .OutInstDate4  ( OutInstDate4  ),
-        .OutInstPart4  ( OutInstPart4  ),
-        .OutInstNAdr4  ( OutInstNAdr4  )
+    .Clk           ( Clk           ),
+    .Rest          ( Rest          ),
+    .InstQStop     ( InstQStop     ),
+    .InstQFlash    ( InstQFlash    ),
+    .InstQReqStop  ( InstQReqStop  ),
+    .FromPre1Able  ( PredTo1ISAble ),
+    .FromPre1Addr  ( PredTo1ISPc   ),
+    .FromPre1Date  ( PredTo1ISInst ),
+    .FromPre1Part  ( PredTo1ISMode ),
+    .FromPre1NAdr  ( PredTo1ISRPc  ),
+    .FromPre2Able  ( PredTo2ISAble ),
+    .FromPre2Addr  ( PredTo2ISPc   ),
+    .FromPre2Date  ( PredTo2ISInst ),
+    .FromPre2Part  ( PredTo2ISMode ),
+    .FromPre2NAdr  ( PredTo2ISRPc  ),
+    .FromPre3Able  ( PredTo3ISAble ),
+    .FromPre3Addr  ( PredTo3ISPc   ),
+    .FromPre3Date  ( PredTo3ISInst ),
+    .FromPre3Part  ( PredTo3ISMode ),
+    .FromPre3NAdr  ( PredTo3ISRPc  ),
+    .FromPre4Able  ( PredTo4ISAble ),
+    .FromPre4Addr  ( PredTo4ISPc   ),
+    .FromPre4Date  ( PredTo4ISRPc  ),
+    .FromPre4Part  ( PredTo4ISMode ),
+    .FromPre4NAdr  ( PredTo4ISRPc  ),
+    .FromPre5Able  ( PredTo5ISAble ),
+    .FromPre5Addr  ( PredTo5ISPc   ),
+    .FromPre5Date  ( PredTo5ISInst ),
+    .FromPre5Part  ( PredTo5ISMode ),
+    .FromPre5NAdr  ( PredTo5ISRPc  ),
+    .FromPre6Able  ( PredTo6ISAble ),
+    .FromPre6Addr  ( PredTo6ISPc   ),
+    .FromPre6Date  ( PredTo6ISInst ),
+    .FromPre6Part  ( PredTo6ISMode ),
+    .FromPre6NAdr  ( PredTo6ISRPc  ),
+    .FromPre7Able  ( PredTo7ISAble ),
+    .FromPre7Addr  ( PredTo7ISPc   ),
+    .FromPre7Date  ( PredTo7ISInst ),
+    .FromPre7Part  ( PredTo7ISMode ),
+    .FromPre7NAdr  ( PredTo7ISRPc  ),
+    .FromPre8Able  ( PredTo8ISAble ),
+    .FromPre8Addr  ( PredTo8ISPc   ),
+    .FromPre8Date  ( PredTo8ISInst ),
+    .FromPre8Part  ( PredTo8ISMode ),
+    .FromPre8NAdr  ( PredTo8ISRPc  ),
+    .OutInstPort1  ( ISToDcodePort1),
+    .OutInstPort2  ( ISToDcodePort2),
+    .OutInstPort3  ( ISToDcodePort3),
+    .OutInstPort4  ( ISToDcodePort4),
+    .OutInstAddr1  ( ISToDcodeAddr1),
+    .OutInstDate1  ( ISToDcodeDate1),
+    .OutInstPart1  ( ISToDcodePart1),
+    .OutInstNAdr1  ( ISToDcodeRPc1 ),
+    .OutInstAddr2  ( ISToDcodeAddr2),
+    .OutInstDate2  ( ISToDcodeDate2),
+    .OutInstPart2  ( ISToDcodePart2),
+    .OutInstNAdr2  ( ISToDcodeRPc2 ),
+    .OutInstAddr3  ( ISToDcodeAddr3),
+    .OutInstDate3  ( ISToDcodeDate3),
+    .OutInstPart3  ( ISToDcodePart3),
+    .OutInstNAdr3  ( ISToDcodeRPc3 ),
+    .OutInstAddr4  ( ISToDcodeAddr4),
+    .OutInstDate4  ( ISToDcodeDate4),
+    .OutInstPart4  ( ISToDcodePart4),
+    .OutInstNAdr4  ( ISToDcodeRPc4 )
     );
 
+
+
     Decode u_Decode(
-        .Clk           ( Clk           ),
-        .Rest          ( Rest          ),
-        .DecodeStopS   ( DecodeStopS   ),
-        .DecodeFlashS  ( DecodeFlashS  ),
-        .InInstPort1   ( InInstPort1   ),
-        .InInstPort2   ( InInstPort2   ),
-        .InInstPort3   ( InInstPort3   ),
-        .InInstPort4   ( InInstPort4   ),
-        .InInstAddr1   ( InInstAddr1   ),
-        .InInstDate1   ( InInstDate1   ),
-        .InInstPart1   ( InInstPart1   ),
-        .InInstNAdr1   ( InInstNAdr1   ),
-        .InInstAddr2   ( InInstAddr2   ),
-        .InInstDate2   ( InInstDate2   ),
-        .InInstPart2   ( InInstPart2   ),
-        .InInstNAdr2   ( InInstNAdr2   ),
-        .InInstAddr3   ( InInstAddr3   ),
-        .InInstDate3   ( InInstDate3   ),
-        .InInstPart3   ( InInstPart3   ),
-        .InInstNAdr3   ( InInstNAdr3   ),
-        .InInstAddr4   ( InInstAddr4   ),
-        .InInstDate4   ( InInstDate4   ),
-        .InInstPart4   ( InInstPart4   ),
-        .InInstNAdr4   ( InInstNAdr4   ),
-        .Inst1Addr     ( Inst1Addr     ),
-        .Inst1Opcode   ( Inst1Opcode   ),
-        .Inst1SinumA   ( Inst1SinumA   ),
-        .Inst1SiDate   ( Inst1SiDate   ),
-        .Inst1Sr1Abl   ( Inst1Sr1Abl   ),
-        .Inst1Sr1Num   ( Inst1Sr1Num   ),
-        .Inst1Sr2Abl   ( Inst1Sr2Abl   ),
-        .Inst1Sr2Num   ( Inst1Sr2Num   ),
-        .Insr1WriteA   ( Insr1WriteA   ),
-        .Inst1Part     ( Inst1Part     ),
-        .Inst1Nadr     ( Inst1Nadr     ),
-        .Inst1WriteN   ( Inst1WriteN   ),
-        .Inst2Addr     ( Inst2Addr     ),
-        .Inst2Opcode   ( Inst2Opcode   ),
-        .Inst2SinumA   ( Inst2SinumA   ),
-        .Inst2SiDate   ( Inst2SiDate   ),
-        .Inst2Sr1Abl   ( Inst2Sr1Abl   ),
-        .Inst2Sr1Num   ( Inst2Sr1Num   ),
-        .Inst2Sr2Abl   ( Inst2Sr2Abl   ),
-        .Inst2Sr2Num   ( Inst2Sr2Num   ),
-        .Insr2WriteA   ( Insr2WriteA   ),
-        .Inst2WriteN   ( Inst2WriteN   ),
-        .Inst2Part     ( Inst2Part     ),
-        .Inst2Nadr     ( Inst2Nadr     ),
-        .Inst3Addr     ( Inst3Addr     ),
-        .Inst3Opcode   ( Inst3Opcode   ),
-        .Inst3SinumA   ( Inst3SinumA   ),
-        .Inst3SiDate   ( Inst3SiDate   ),
-        .Inst3Sr1Abl   ( Inst3Sr1Abl   ),
-        .Inst3Sr1Num   ( Inst3Sr1Num   ),
-        .Inst3Sr2Abl   ( Inst3Sr2Abl   ),
-        .Inst3Sr2Num   ( Inst3Sr2Num   ),
-        .Insr3WriteA   ( Insr3WriteA   ),
-        .Inst3WriteN   ( Inst3WriteN   ),
-        .Inst3Part     ( Inst3Part     ),
-        .Inst3Nadr     ( Inst3Nadr     ),
-        .Inst4Addr     ( Inst4Addr     ),
-        .Inst4Opcode   ( Inst4Opcode   ),
-        .Inst4SinumA   ( Inst4SinumA   ),
-        .Inst4SiDate   ( Inst4SiDate   ),
-        .Inst4Sr1Abl   ( Inst4Sr1Abl   ),
-        .Inst4Sr1Num   ( Inst4Sr1Num   ),
-        .Inst4Sr2Abl   ( Inst4Sr2Abl   ),
-        .Inst4Sr2Num   ( Inst4Sr2Num   ),
-        .Insr4WriteA   ( Insr4WriteA   ),
-        .Inst4WriteN   ( Inst4WriteN   ),
-        .Inst4Part     ( Inst4Part     ),
-        .Inst4Nadr     ( Inst4Nadr     )
+    .Clk           ( Clk           ),
+    .Rest          ( Rest          ),
+    .DecodeStopS   ( DecodeStopS   ),
+    .DecodeFlashS  ( DecodeFlashS  ),
+    .InInstPort1   ( InInstPort1   ),
+    .InInstPort2   ( InInstPort2   ),
+    .InInstPort3   ( InInstPort3   ),
+    .InInstPort4   ( InInstPort4   ),
+    .InInstAddr1   ( InInstAddr1   ),
+    .InInstDate1   ( InInstDate1   ),
+    .InInstPart1   ( InInstPart1   ),
+    .InInstNAdr1   ( InInstNAdr1   ),
+    .InInstAddr2   ( InInstAddr2   ),
+    .InInstDate2   ( InInstDate2   ),
+    .InInstPart2   ( InInstPart2   ),
+    .InInstNAdr2   ( InInstNAdr2   ),
+    .InInstAddr3   ( InInstAddr3   ),
+    .InInstDate3   ( InInstDate3   ),
+    .InInstPart3   ( InInstPart3   ),
+    .InInstNAdr3   ( InInstNAdr3   ),
+    .InInstAddr4   ( InInstAddr4   ),
+    .InInstDate4   ( InInstDate4   ),
+    .InInstPart4   ( InInstPart4   ),
+    .InInstNAdr4   ( InInstNAdr4   ),
+    .Inst1Addr     ( Inst1Addr     ),
+    .Inst1Opcode   ( Inst1Opcode   ),
+    .Inst1SinumA   ( Inst1SinumA   ),
+    .Inst1SiDate   ( Inst1SiDate   ),
+    .Inst1Sr1Abl   ( Inst1Sr1Abl   ),
+    .Inst1Sr1Num   ( Inst1Sr1Num   ),
+    .Inst1Sr2Abl   ( Inst1Sr2Abl   ),
+    .Inst1Sr2Num   ( Inst1Sr2Num   ),
+    .Insr1WriteA   ( Insr1WriteA   ),
+    .Inst1Part     ( Inst1Part     ),
+    .Inst1Nadr     ( Inst1Nadr     ),
+    .Inst1WriteN   ( Inst1WriteN   ),
+    .Inst2Addr     ( Inst2Addr     ),
+    .Inst2Opcode   ( Inst2Opcode   ),
+    .Inst2SinumA   ( Inst2SinumA   ),
+    .Inst2SiDate   ( Inst2SiDate   ),
+    .Inst2Sr1Abl   ( Inst2Sr1Abl   ),
+    .Inst2Sr1Num   ( Inst2Sr1Num   ),
+    .Inst2Sr2Abl   ( Inst2Sr2Abl   ),
+    .Inst2Sr2Num   ( Inst2Sr2Num   ),
+    .Insr2WriteA   ( Insr2WriteA   ),
+    .Inst2WriteN   ( Inst2WriteN   ),
+    .Inst2Part     ( Inst2Part     ),
+    .Inst2Nadr     ( Inst2Nadr     ),
+    .Inst3Addr     ( Inst3Addr     ),
+    .Inst3Opcode   ( Inst3Opcode   ),
+    .Inst3SinumA   ( Inst3SinumA   ),
+    .Inst3SiDate   ( Inst3SiDate   ),
+    .Inst3Sr1Abl   ( Inst3Sr1Abl   ),
+    .Inst3Sr1Num   ( Inst3Sr1Num   ),
+    .Inst3Sr2Abl   ( Inst3Sr2Abl   ),
+    .Inst3Sr2Num   ( Inst3Sr2Num   ),
+    .Insr3WriteA   ( Insr3WriteA   ),
+    .Inst3WriteN   ( Inst3WriteN   ),
+    .Inst3Part     ( Inst3Part     ),
+    .Inst3Nadr     ( Inst3Nadr     ),
+    .Inst4Addr     ( Inst4Addr     ),
+    .Inst4Opcode   ( Inst4Opcode   ),
+    .Inst4SinumA   ( Inst4SinumA   ),
+    .Inst4SiDate   ( Inst4SiDate   ),
+    .Inst4Sr1Abl   ( Inst4Sr1Abl   ),
+    .Inst4Sr1Num   ( Inst4Sr1Num   ),
+    .Inst4Sr2Abl   ( Inst4Sr2Abl   ),
+    .Inst4Sr2Num   ( Inst4Sr2Num   ),
+    .Insr4WriteA   ( Insr4WriteA   ),
+    .Inst4WriteN   ( Inst4WriteN   ),
+    .Inst4Part     ( Inst4Part     ),
+    .Inst4Nadr     ( Inst4Nadr     )
     );
 
     BusyTable u_BusyTable(

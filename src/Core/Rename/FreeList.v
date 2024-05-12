@@ -46,6 +46,19 @@ module FreeList (
     input       wire                               FreeAble4    ,
     input       wire      [`ReNameRegBUs]          FreeAddr4    
 );
+    reg            StopTemp  ;
+    reg            FlashTemp ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp  <= 1'b0 ;
+            FlashTemp <= 1'b0 ;
+        end 
+        else begin
+            StopTemp  <= FreelistStop  ;
+            FlashTemp <= FreeListFlash ;
+        end
+    end
 
     reg [2:0] WritePtr ;
     reg [2:0] ReadPtr  ;
@@ -73,65 +86,65 @@ module FreeList (
             ReadPtr <= ReadPtr[1:0] + ReadCounter ;
     end
 
-    wire U1Write = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAble1 :
-                   ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAble4 :
-                   ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAble3 :
-                   ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAble2 : `EnableValue ;
+    wire U1Write = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAble1 :
+                   ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAble4 :
+                   ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAble3 :
+                   ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAble2 : `EnableValue ;
 
-    wire U2Write = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAble2 :
-                   ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAble1 :
-                   ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAble4 :
-                   ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAble3 : `EnableValue ;
+    wire U2Write = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAble2 :
+                   ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAble1 :
+                   ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAble4 :
+                   ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAble3 : `EnableValue ;
 
-    wire U3Write = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAble3 :
-                   ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAble2 :
-                   ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAble1 :
-                   ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAble4 : `EnableValue ;
+    wire U3Write = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAble3 :
+                   ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAble2 :
+                   ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAble1 :
+                   ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAble4 : `EnableValue ;
 
-    wire U4Write = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAble4 :
-                   ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAble3 :
-                   ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAble2 :
-                   ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAble1 : `EnableValue ;
+    wire U4Write = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAble4 :
+                   ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAble3 :
+                   ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAble2 :
+                   ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAble1 : `EnableValue ;
 
-    wire [`ReNameRegBUs] U1Date = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAddr1 :
-                                  ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAddr4 :
-                                  ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAddr3 :
-                                  ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAddr2 : 7'd0 ;
+    wire [`ReNameRegBUs] U1Date = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAddr1 :
+                                  ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAddr4 :
+                                  ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAddr3 :
+                                  ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAddr2 : 7'd0 ;
 
-    wire [`ReNameRegBUs] U2Date = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAddr2 :
-                                  ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAddr1 :
-                                  ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAddr4 :
-                                  ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAddr3 : 7'd0  ;
+    wire [`ReNameRegBUs] U2Date = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAddr2 :
+                                  ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAddr1 :
+                                  ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAddr4 :
+                                  ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAddr3 : 7'd0  ;
 
-    wire [`ReNameRegBUs] U3Date = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAddr3 :
-                                  ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAddr2 :
-                                  ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAddr1 :
-                                  ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAddr4 : 7'd0  ;
+    wire [`ReNameRegBUs] U3Date = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAddr3 :
+                                  ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAddr2 :
+                                  ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAddr1 :
+                                  ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAddr4 : 7'd0  ;
 
-    wire [`ReNameRegBUs] U4Date = ((WritePtr[1:0] == 0) & ~FreelistStop) ? FreeAddr4 :
-                                  ((WritePtr[1:0] == 1) & ~FreelistStop) ? FreeAddr3 :
-                                  ((WritePtr[1:0] == 2) & ~FreelistStop) ? FreeAddr2 :
-                                  ((WritePtr[1:0] == 3) & ~FreelistStop) ? FreeAddr1 : 7'd0  ;
+    wire [`ReNameRegBUs] U4Date = ((WritePtr[1:0] == 0) & ~StopTemp) ? FreeAddr4 :
+                                  ((WritePtr[1:0] == 1) & ~StopTemp) ? FreeAddr3 :
+                                  ((WritePtr[1:0] == 2) & ~StopTemp) ? FreeAddr2 :
+                                  ((WritePtr[1:0] == 3) & ~StopTemp) ? FreeAddr1 : 7'd0  ;
 
-    wire U1Read = ((ReadPtr[1:0] == 0) & ~FreelistStop) ? InWay1Rename :
-                  ((ReadPtr[1:0] == 1) & ~FreelistStop) ? InWay4Rename :
-                  ((ReadPtr[1:0] == 2) & ~FreelistStop) ? InWay3Rename :
-                  ((ReadPtr[1:0] == 3) & ~FreelistStop) ? InWay2Rename : `EnableValue ;
+    wire U1Read = ((ReadPtr[1:0] == 0) & ~StopTemp) ? InWay1Rename :
+                  ((ReadPtr[1:0] == 1) & ~StopTemp) ? InWay4Rename :
+                  ((ReadPtr[1:0] == 2) & ~StopTemp) ? InWay3Rename :
+                  ((ReadPtr[1:0] == 3) & ~StopTemp) ? InWay2Rename : `EnableValue ;
 
-    wire U2Read = ((ReadPtr[1:0] == 0) & ~FreelistStop) ? InWay2Rename :
-                  ((ReadPtr[1:0] == 1) & ~FreelistStop) ? InWay1Rename :
-                  ((ReadPtr[1:0] == 2) & ~FreelistStop) ? InWay4Rename :
-                  ((ReadPtr[1:0] == 3) & ~FreelistStop) ? InWay3Rename : `EnableValue ;
+    wire U2Read = ((ReadPtr[1:0] == 0) & ~StopTemp) ? InWay2Rename :
+                  ((ReadPtr[1:0] == 1) & ~StopTemp) ? InWay1Rename :
+                  ((ReadPtr[1:0] == 2) & ~StopTemp) ? InWay4Rename :
+                  ((ReadPtr[1:0] == 3) & ~StopTemp) ? InWay3Rename : `EnableValue ;
 
-    wire U3Read = ((ReadPtr[1:0] == 0) & ~FreelistStop) ? InWay3Rename :
-                  ((ReadPtr[1:0] == 1) & ~FreelistStop) ? InWay2Rename :
-                  ((ReadPtr[1:0] == 2) & ~FreelistStop) ? InWay1Rename :
-                  ((ReadPtr[1:0] == 3) & ~FreelistStop) ? InWay4Rename : `EnableValue ;
+    wire U3Read = ((ReadPtr[1:0] == 0) & ~StopTemp) ? InWay3Rename :
+                  ((ReadPtr[1:0] == 1) & ~StopTemp) ? InWay2Rename :
+                  ((ReadPtr[1:0] == 2) & ~StopTemp) ? InWay1Rename :
+                  ((ReadPtr[1:0] == 3) & ~StopTemp) ? InWay4Rename : `EnableValue ;
 
-    wire U4Read = ((ReadPtr[1:0] == 0) & ~FreelistStop) ? InWay4Rename :
-                  ((ReadPtr[1:0] == 1) & ~FreelistStop) ? InWay3Rename :
-                  ((ReadPtr[1:0] == 2) & ~FreelistStop) ? InWay2Rename :
-                  ((ReadPtr[1:0] == 3) & ~FreelistStop) ? InWay1Rename : `EnableValue ;
+    wire U4Read = ((ReadPtr[1:0] == 0) & ~StopTemp) ? InWay4Rename :
+                  ((ReadPtr[1:0] == 1) & ~StopTemp) ? InWay3Rename :
+                  ((ReadPtr[1:0] == 2) & ~StopTemp) ? InWay2Rename :
+                  ((ReadPtr[1:0] == 3) & ~StopTemp) ? InWay1Rename : `EnableValue ;
 
     wire [`ReNameRegBUs] U1PreDate ;
     wire [`ReNameRegBUs] U2PreDate ;
@@ -169,10 +182,10 @@ module FreeList (
     assign OutWay3Areg = InWay3RegNum ;
     assign OutWay4Areg = InWay4RegNum ;
 
-    wire U1Clean = ReloadAble | FreeListFlash ;
-    wire U2Clean = ReloadAble | FreeListFlash ;
-    wire U3Clean = ReloadAble | FreeListFlash ;
-    wire U4Clean = ReloadAble | FreeListFlash ;
+    wire U1Clean = ReloadAble | FlashTemp ;
+    wire U2Clean = ReloadAble | FlashTemp ;
+    wire U3Clean = ReloadAble | FlashTemp ;
+    wire U4Clean = ReloadAble | FlashTemp ;
 
     wire U1ReqStop ;
     wire U2ReqStop ;

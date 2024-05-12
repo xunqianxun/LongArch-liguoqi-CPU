@@ -218,6 +218,16 @@ module RenameArchTable (
             RegLock4Able <= `EnableValue ;
             RegLock4Addr <= 7'd0         ;
         end
+        else if(RATStop) begin
+            RegLock1Able <= RegLock1Able ;
+            RegLock1Addr <= RegLock1Addr ;
+            RegLock2Able <= RegLock2Able ;
+            RegLock2Addr <= RegLock2Addr ;
+            RegLock3Able <= RegLock3Able ;
+            RegLock3Addr <= RegLock3Addr ;
+            RegLock4Able <= RegLock4Able ;
+            RegLock4Addr <= RegLock4Addr ;
+        end
         else begin
             RegLock1Able <= ~RATStop ? Way1RdAble : `EnableValue         ;
             RegLock1Addr <= ~RATStop ? RENAMETABLE[Way1ArchAddr] : 7'd0  ;
@@ -341,37 +351,71 @@ module RenameArchTable (
             RegOut4RdAble     <= `EnableValue ;
             RegOut4RdAddr     <= 7'd0         ;
         end
+        else if(RATStop) begin
+            RegOut1Src1Able   <= RegOut1Src1Able   ;
+            RegOut1Src1NoDate <= RegOut1Src1NoDate ;
+            RegOut1Src1Addr   <= RegOut1Src1Addr   ;
+            RegOut1Src2Able   <= RegOut1Src2Able   ;
+            RegOut1Src2NoDate <= RegOut1Src2NoDate ;
+            RegOut1Src2Addr   <= RegOut1Src2Addr   ;
+            RegOut1RdAble     <= RegOut1RdAble     ;
+            RegOut1RdAddr     <= RegOut1RdAddr     ;
+            RegOut2Src1Able   <= RegOut2Src1Able   ;
+            RegOut2Src1NoDate <= RegOut2Src1NoDate ;
+            RegOut2Src1Addr   <= RegOut2Src1Addr   ;
+            RegOut2Src2Able   <= RegOut2Src2Able   ;
+            RegOut2Src2NoDate <= RegOut2Src2NoDate ;
+            RegOut2Src2Addr   <= RegOut2Src2Addr   ;
+            RegOut2RdAble     <= RegOut2RdAble     ;
+            RegOut2RdAddr     <= RegOut2RdAddr     ;
+            RegOut3Src1Able   <= RegOut3Src1Able   ;
+            RegOut3Src1NoDate <= RegOut3Src1NoDate ;
+            RegOut3Src1Addr   <= RegOut3Src1Addr   ;
+            RegOut3Src2Able   <= RegOut3Src2Able   ;
+            RegOut3Src2NoDate <= RegOut3Src2NoDate ;
+            RegOut3Src2Addr   <= RegOut3Src2Addr   ;
+            RegOut3RdAble     <= RegOut3RdAble     ;
+            RegOut3RdAddr     <= RegOut3RdAddr     ;
+            RegOut4Src1Able   <= RegOut4Src1Able   ;
+            RegOut4Src1NoDate <= RegOut4Src1NoDate ;
+            RegOut4Src1Addr   <= RegOut4Src1Addr   ;
+            RegOut4Src2Able   <= RegOut4Src2Able   ;
+            RegOut4Src2NoDate <= RegOut4Src2NoDate ;
+            RegOut4Src2Addr   <= RegOut4Src2Addr   ;
+            RegOut4RdAble     <= RegOut4RdAble     ;
+            RegOut4RdAddr     <= RegOut4RdAddr     ;
+        end
         else begin
-            RegOut1Src1Able                     <= (Way1Src1Able & ~RATStop) ;
-            {RegOut1Src1NoDate,RegOut1Src1Addr} <= (Way1Src1Able & ~RATStop) ? {`EnableValue,RENAMETABLE[Way1Src1Addr]} : {`EnableValue,7'd0} ;
-            RegOut1Src2Able                     <= (Way1Src2Able & ~RATStop) ;
-            {RegOut1Src2NoDate,RegOut1Src2Addr} <= (Way1Src2Able & ~RATStop) ? {`EnableValue,RENAMETABLE[Way1Src2Addr]} : {`EnableValue,7'd0} ;
-            RegOut1RdAble                       <= (Way1RdAble   & ~RATStop) ; 
-            RegOut1RdAddr                       <= (Way1RdAble   & ~RATStop) ? Way1RdAddr : 7'd0                ;
-            RegOut2Src1Able                     <= (Way2Src1Able & ~RATStop) ;
-            {RegOut2Src1NoDate,RegOut2Src1Addr} <= (Way2Src1Able & ~RATStop) ? (((Way2Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src1Addr]}) : {`EnableValue,7'd0} ;
-            RegOut2Src2Able                     <= (Way2Src2Able & ~RATStop) ;
-            {RegOut2Src2NoDate,RegOut2Src2Addr} <= (Way2Src2Able & ~RATStop) ? (((Way2Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src2Addr]}) : {`EnableValue,7'd0} ;
-            RegOut2RdAble                       <= (Way2RdAble   & ~RATStop) ; 
-            RegOut2RdAddr                       <= (Way2RdAble   & ~RATStop) ? Way2RdAddr : 7'd0                ;
-            RegOut3Src1Able                     <= (Way3Src1Able & ~RATStop) ;
-            {RegOut3Src1NoDate,RegOut3Src1Addr} <= (Way3Src1Able & ~RATStop) ? (((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
-                                                                                ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src1Addr]}) : {`EnableValue,7'd0} ;
-            RegOut3Src2Able                     <= (Way3Src2Able & ~RATStop) ;
-            {RegOut3Src2NoDate,RegOut3Src2Addr} <= (Way3Src2Able & ~RATStop) ? (((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
-                                                                                ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src2Addr]}) : {`EnableValue,7'd0} ;
-            RegOut3RdAble                       <= (Way3RdAble   & ~RATStop) ; 
-            RegOut3RdAddr                       <= (Way3RdAble   & ~RATStop) ? Way3RdAddr : 7'd0                ;
-            RegOut4Src1Able                     <= (Way4Src1Able & ~RATStop) ;
-            {RegOut4Src1NoDate,RegOut4Src1Addr} <= (Way4Src1Able & ~RATStop) ? (((Way3Src1Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
-                                                                                ((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
-                                                                                ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src1Addr]}) : {`EnableValue,7'd0} ;
-            RegOut4Src2Able                     <= (Way4Src2Able & ~RATStop) ;
-            {RegOut4Src2NoDate,RegOut4Src2Addr} <= (Way4Src2Able & ~RATStop) ? (((Way3Src2Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
-                                                                                ((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
-                                                                                ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src2Addr]}) : {`EnableValue,7'd0} ;
-            RegOut4RdAble                       <= (Way4RdAble   & ~RATStop) ; 
-            RegOut4RdAddr                       <= (Way4RdAble   & ~RATStop) ? Way4RdAddr : 7'd0                ;
+            RegOut1Src1Able                     <= (Way1Src1Able ) ;
+            {RegOut1Src1NoDate,RegOut1Src1Addr} <= (Way1Src1Able ) ? {`EnableValue,RENAMETABLE[Way1Src1Addr]} : {`EnableValue,7'd0} ;
+            RegOut1Src2Able                     <= (Way1Src2Able ) ;
+            {RegOut1Src2NoDate,RegOut1Src2Addr} <= (Way1Src2Able ) ? {`EnableValue,RENAMETABLE[Way1Src2Addr]} : {`EnableValue,7'd0} ;
+            RegOut1RdAble                       <= (Way1RdAble   ) ; 
+            RegOut1RdAddr                       <= (Way1RdAble   ) ? Way1RdAddr : 7'd0                ;
+            RegOut2Src1Able                     <= (Way2Src1Able ) ;
+            {RegOut2Src1NoDate,RegOut2Src1Addr} <= (Way2Src1Able ) ? (((Way2Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut2Src2Able                     <= (Way2Src2Able ) ;
+            {RegOut2Src2NoDate,RegOut2Src2Addr} <= (Way2Src2Able ) ? (((Way2Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way2Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut2RdAble                       <= (Way2RdAble   ) ; 
+            RegOut2RdAddr                       <= (Way2RdAble   ) ? Way2RdAddr : 7'd0                ;
+            RegOut3Src1Able                     <= (Way3Src1Able ) ;
+            {RegOut3Src1NoDate,RegOut3Src1Addr} <= (Way3Src1Able ) ? (((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                      ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut3Src2Able                     <= (Way3Src2Able ) ;
+            {RegOut3Src2NoDate,RegOut3Src2Addr} <= (Way3Src2Able ) ? (((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                      ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way3Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut3RdAble                       <= (Way3RdAble   ) ; 
+            RegOut3RdAddr                       <= (Way3RdAble   ) ? Way3RdAddr : 7'd0                ;
+            RegOut4Src1Able                     <= (Way4Src1Able ) ;
+            {RegOut4Src1NoDate,RegOut4Src1Addr} <= (Way4Src1Able ) ? (((Way3Src1Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
+                                                                      ((Way3Src1Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                      ((Way3Src1Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src1Addr]}) : {`EnableValue,7'd0} ;
+            RegOut4Src2Able                     <= (Way4Src2Able ) ;
+            {RegOut4Src2NoDate,RegOut4Src2Addr} <= (Way4Src2Able ) ? (((Way3Src2Addr == Way3ArchAddr) & Way3RdAble) ? {`AbleValue,Way3RdAddr} :
+                                                                      ((Way3Src2Addr == Way2ArchAddr) & Way2RdAble) ? {`AbleValue,Way2RdAddr} :
+                                                                      ((Way3Src2Addr == Way1ArchAddr) & Way1RdAble) ? {`AbleValue,Way1RdAddr} : {`EnableValue,RENAMETABLE[Way4Src2Addr]}) : {`EnableValue,7'd0} ;
+            RegOut4RdAble                       <= (Way4RdAble   ) ; 
+            RegOut4RdAddr                       <= (Way4RdAble   ) ? Way4RdAddr : 7'd0                ;
         end
     end
 

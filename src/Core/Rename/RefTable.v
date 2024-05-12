@@ -315,78 +315,96 @@ module RefTable (
     integer j ;
     always @(posedge Clk) begin
         if(!Rest) begin
-            for (i = 0; i<128;i=i+1 ) begin
+            for (i = 0; i<32;i=i+1 ) begin
                 REFTABLEUSE[i] <= 7'd0 ;
                 REFLOCK    [i] <= 1'b0 ;
+                REFTABLEUSE[i+32] <= 7'd0 ;
+                REFLOCK    [i+32] <= 1'b0 ;
+                REFTABLEUSE[i+64] <= 7'd0 ;
+                REFLOCK    [i+64] <= 1'b0 ;
+                REFTABLEUSE[i+96] <= 7'd0 ;
+                REFLOCK    [i+96] <= 1'b0 ;
             end
         end
         else if(RefTableFLash) begin
-            for (j = 0; j<128;j=j+1 ) begin
-                REFTABLEUSE[j] <= 7'd0 ;
-                REFLOCK    [j] <= 1'b0 ;
+            for (j = 0; j<32;j=j+1 ) begin
+                REFTABLEUSE[i] <= 7'd0 ;
+                REFLOCK    [i] <= 1'b0 ;
+                REFTABLEUSE[i+32] <= 7'd0 ;
+                REFLOCK    [i+32] <= 1'b0 ;
+                REFTABLEUSE[i+64] <= 7'd0 ;
+                REFLOCK    [i+64] <= 1'b0 ;
+                REFTABLEUSE[i+96] <= 7'd0 ;
+                REFLOCK    [i+96] <= 1'b0 ;
             end
         end
         else begin
-            REFTABLEUSE[Inst1Src1Addr] <= (Inst1Src1Able  & ~RefTableStop)? REFTABLEUSE[Inst1Src1Addr] + 1 : REFTABLEUSE[Inst1Src1Addr] ;
-            REFTABLEUSE[Inst1Src2Addr] <= (Inst1Src2Able  & ~RefTableStop )? REFTABLEUSE[Inst1Src2Addr] + 1 : REFTABLEUSE[Inst1Src2Addr] ;
-            REFTABLEUSE[Inst2Src1Addr] <= (Inst2Src1Able  & ~RefTableStop) ? REFTABLEUSE[Inst2Src1Addr] + 1 : REFTABLEUSE[Inst2Src1Addr] ;
-            REFTABLEUSE[Inst2Src2Addr] <= (Inst2Src2Able  & ~RefTableStop) ? REFTABLEUSE[Inst2Src2Addr] + 1 : REFTABLEUSE[Inst2Src2Addr] ;
-            REFTABLEUSE[Inst3Src1Addr] <= (Inst3Src1Able  & ~RefTableStop) ? REFTABLEUSE[Inst3Src1Addr] + 1 : REFTABLEUSE[Inst3Src1Addr] ;
-            REFTABLEUSE[Inst3Src2Addr] <= (Inst3Src2Able  & ~RefTableStop) ? REFTABLEUSE[Inst3Src2Addr] + 1 : REFTABLEUSE[Inst3Src2Addr] ;
-            REFTABLEUSE[Inst4Src1Addr] <= (Inst4Src1Able  & ~RefTableStop)  ? REFTABLEUSE[Inst4Src1Addr] + 1 : REFTABLEUSE[Inst4Src1Addr] ;
-            REFTABLEUSE[Inst4Src2Addr] <= (Inst4Src2Able  & ~RefTableStop) ? REFTABLEUSE[Inst4Src2Addr] + 1 : REFTABLEUSE[Inst4Src2Addr] ;
-            REFTABLEUSE[Inst1RdAddr]   <= (Inst1RdAble & ~RefTableStop)   ? REFTABLEUSE[Inst1RdAddr]   + 1 : REFTABLEUSE[Inst1RdAddr]   ;
-            REFTABLEUSE[Inst2RdAddr]   <= (Inst2RdAble & ~RefTableStop)   ? REFTABLEUSE[Inst2RdAddr]   + 1 : REFTABLEUSE[Inst2RdAddr]   ;
-            REFTABLEUSE[Inst3RdAddr]   <= (Inst3RdAble & ~RefTableStop)   ? REFTABLEUSE[Inst3RdAddr]   + 1 : REFTABLEUSE[Inst3RdAddr]   ;
-            REFTABLEUSE[Inst4RdAddr]   <= (Inst4RdAble & ~RefTableStop)   ? REFTABLEUSE[Inst4RdAddr]   + 1 : REFTABLEUSE[Inst4RdAddr]   ;
-            REFLOCK    [Lock1Addr]     <= (Lock1Able & ~RefTableStop)     ? REFLOCK    [Lock1Addr]     + 1 : REFLOCK    [Lock1Addr]     ;
-            REFLOCK    [Lock2Addr]     <= (Lock2Able & ~RefTableStop)     ? REFLOCK    [Lock2Addr]     + 1 : REFLOCK    [Lock2Addr]     ;
-            REFLOCK    [Lock3Addr]     <= (Lock3Able & ~RefTableStop)     ? REFLOCK    [Lock3Addr]     + 1 : REFLOCK    [Lock3Addr]     ;
-            REFLOCK    [Lock4Addr]     <= (Lock4Able & ~RefTableStop)     ? REFLOCK    [Lock4Addr]     + 1 : REFLOCK    [Lock4Addr]     ;
-            REFLOCK    [Index1Unuse[6:0]]   <=  (Index1Unuse[7] & ~RefTableStop) ? `EnableValue : REFLOCK    [Index1Unuse[6:0]]  ;
-            REFTABLEUSE[Index1Unuse[6:0]]   <=  (Index1Unuse[7] & ~RefTableStop) ? 7'd0         : REFTABLEUSE[Index1Unuse[6:0]]  ;
-            REFLOCK    [Index2Unuse[6:0]]   <=  (Index2Unuse[7] & ~RefTableStop) ? `EnableValue : REFLOCK    [Index2Unuse[6:0]]  ;
-            REFTABLEUSE[Index2Unuse[6:0]]   <=  (Index2Unuse[7] & ~RefTableStop) ? 7'd0         : REFTABLEUSE[Index2Unuse[6:0]]  ;
-            REFLOCK    [Index3Unuse[6:0]]   <=  (Index3Unuse[7] & ~RefTableStop) ? `EnableValue : REFLOCK    [Index3Unuse[6:0]]  ;
-            REFTABLEUSE[Index3Unuse[6:0]]   <=  (Index3Unuse[7] & ~RefTableStop) ? 7'd0         : REFTABLEUSE[Index3Unuse[6:0]]  ;
-            REFLOCK    [Index4Unuse[6:0]]   <=  (Index4Unuse[7] & ~RefTableStop) ? `EnableValue : REFLOCK    [Index4Unuse[6:0]]  ;
-            REFTABLEUSE[Index4Unuse[6:0]]   <=  (Index4Unuse[7] & ~RefTableStop) ? 7'd0         : REFTABLEUSE[Index4Unuse[6:0]]  ;
+            REFTABLEUSE[Inst1Src1Addr] <= (Inst1Src1Able  )? REFTABLEUSE[Inst1Src1Addr] + 1 : REFTABLEUSE[Inst1Src1Addr] ;
+            REFTABLEUSE[Inst1Src2Addr] <= (Inst1Src2Able  )? REFTABLEUSE[Inst1Src2Addr] + 1 : REFTABLEUSE[Inst1Src2Addr] ;
+            REFTABLEUSE[Inst2Src1Addr] <= (Inst2Src1Able  ) ? REFTABLEUSE[Inst2Src1Addr] + 1 : REFTABLEUSE[Inst2Src1Addr] ;
+            REFTABLEUSE[Inst2Src2Addr] <= (Inst2Src2Able  ) ? REFTABLEUSE[Inst2Src2Addr] + 1 : REFTABLEUSE[Inst2Src2Addr] ;
+            REFTABLEUSE[Inst3Src1Addr] <= (Inst3Src1Able  ) ? REFTABLEUSE[Inst3Src1Addr] + 1 : REFTABLEUSE[Inst3Src1Addr] ;
+            REFTABLEUSE[Inst3Src2Addr] <= (Inst3Src2Able  ) ? REFTABLEUSE[Inst3Src2Addr] + 1 : REFTABLEUSE[Inst3Src2Addr] ;
+            REFTABLEUSE[Inst4Src1Addr] <= (Inst4Src1Able  )  ? REFTABLEUSE[Inst4Src1Addr] + 1 : REFTABLEUSE[Inst4Src1Addr] ;
+            REFTABLEUSE[Inst4Src2Addr] <= (Inst4Src2Able  ) ? REFTABLEUSE[Inst4Src2Addr] + 1 : REFTABLEUSE[Inst4Src2Addr] ;
+            REFTABLEUSE[Inst1RdAddr]   <= (Inst1RdAble )   ? REFTABLEUSE[Inst1RdAddr]   + 1 : REFTABLEUSE[Inst1RdAddr]   ;
+            REFTABLEUSE[Inst2RdAddr]   <= (Inst2RdAble )   ? REFTABLEUSE[Inst2RdAddr]   + 1 : REFTABLEUSE[Inst2RdAddr]   ;
+            REFTABLEUSE[Inst3RdAddr]   <= (Inst3RdAble )   ? REFTABLEUSE[Inst3RdAddr]   + 1 : REFTABLEUSE[Inst3RdAddr]   ;
+            REFTABLEUSE[Inst4RdAddr]   <= (Inst4RdAble )   ? REFTABLEUSE[Inst4RdAddr]   + 1 : REFTABLEUSE[Inst4RdAddr]   ;
+            REFLOCK    [Lock1Addr]     <= (Lock1Able   )     ? REFLOCK    [Lock1Addr]     + 1 : REFLOCK    [Lock1Addr]     ;
+            REFLOCK    [Lock2Addr]     <= (Lock2Able   )     ? REFLOCK    [Lock2Addr]     + 1 : REFLOCK    [Lock2Addr]     ;
+            REFLOCK    [Lock3Addr]     <= (Lock3Able   )     ? REFLOCK    [Lock3Addr]     + 1 : REFLOCK    [Lock3Addr]     ;
+            REFLOCK    [Lock4Addr]     <= (Lock4Able   )     ? REFLOCK    [Lock4Addr]     + 1 : REFLOCK    [Lock4Addr]     ;
+            REFLOCK    [Index1Unuse[6:0]]   <=  (Index1Unuse[7] ) ? `EnableValue : REFLOCK    [Index1Unuse[6:0]]  ;
+            REFTABLEUSE[Index1Unuse[6:0]]   <=  (Index1Unuse[7] ) ? 7'd0         : REFTABLEUSE[Index1Unuse[6:0]]  ;
+            REFLOCK    [Index2Unuse[6:0]]   <=  (Index2Unuse[7] ) ? `EnableValue : REFLOCK    [Index2Unuse[6:0]]  ;
+            REFTABLEUSE[Index2Unuse[6:0]]   <=  (Index2Unuse[7] ) ? 7'd0         : REFTABLEUSE[Index2Unuse[6:0]]  ;
+            REFLOCK    [Index3Unuse[6:0]]   <=  (Index3Unuse[7] ) ? `EnableValue : REFLOCK    [Index3Unuse[6:0]]  ;
+            REFTABLEUSE[Index3Unuse[6:0]]   <=  (Index3Unuse[7] ) ? 7'd0         : REFTABLEUSE[Index3Unuse[6:0]]  ;
+            REFLOCK    [Index4Unuse[6:0]]   <=  (Index4Unuse[7] ) ? `EnableValue : REFLOCK    [Index4Unuse[6:0]]  ;
+            REFTABLEUSE[Index4Unuse[6:0]]   <=  (Index4Unuse[7] ) ? 7'd0         : REFTABLEUSE[Index4Unuse[6:0]]  ;
         end 
         
     end
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            for (i = 0; i<128;i=i+1 ) begin
+            for (i = 0; i<32;i=i+1 ) begin
                 REFTABLEUNUSE[i] <= 7'd0 ;
+                REFTABLEUNUSE[i+32] <= 7'd0 ;
+                REFTABLEUNUSE[i+64] <= 7'd0 ;
+                REFTABLEUNUSE[i+96] <= 7'd0 ;
             end
         end
         else if(RefTableFLash) begin
-           for (j = 0; j<128;j=j+1 ) begin
-                REFTABLEUNUSE[j] <= 7'd0 ;
+           for (j = 0; j<32;j=j+1 ) begin
+                REFTABLEUNUSE[i] <= 7'd0 ;
+                REFTABLEUNUSE[i+32] <= 7'd0 ;
+                REFTABLEUNUSE[i+64] <= 7'd0 ;
+                REFTABLEUNUSE[i+96] <= 7'd0 ;
             end 
         end
         else begin
-            REFTABLEUNUSE[Inst1Read1Addr] <= (Inst1Read1Able & ~RefTableStop) ? REFTABLEUNUSE[Inst1Read1Addr] + 1 : REFTABLEUNUSE[Inst1Read1Addr] ;
-            REFTABLEUNUSE[Inst1Read2Addr] <= (Inst1Read2Able & ~RefTableStop) ? REFTABLEUNUSE[Inst1Read2Addr] + 1 : REFTABLEUNUSE[Inst1Read2Addr] ;
-            REFTABLEUNUSE[Inst2Read1Addr] <= (Inst2Read1Able & ~RefTableStop) ? REFTABLEUNUSE[Inst2Read1Addr] + 1 : REFTABLEUNUSE[Inst2Read1Addr] ;
-            REFTABLEUNUSE[Inst2Read2Addr] <= (Inst2Read2Able & ~RefTableStop) ? REFTABLEUNUSE[Inst2Read2Addr] + 1 : REFTABLEUNUSE[Inst2Read2Addr] ;
-            REFTABLEUNUSE[Inst3Read1Addr] <= (Inst3Read1Able & ~RefTableStop) ? REFTABLEUNUSE[Inst3Read1Addr] + 1 : REFTABLEUNUSE[Inst3Read1Addr] ;
-            REFTABLEUNUSE[Inst3Read2Addr] <= (Inst3Read2Able & ~RefTableStop) ? REFTABLEUNUSE[Inst3Read2Addr] + 1 : REFTABLEUNUSE[Inst3Read2Addr] ;
-            REFTABLEUNUSE[Inst4Read1Addr] <= (Inst4Read1Able & ~RefTableStop) ? REFTABLEUNUSE[Inst4Read1Addr] + 1 : REFTABLEUNUSE[Inst4Read1Addr] ;
-            REFTABLEUNUSE[Inst4Read2Addr] <= (Inst4Read2Able & ~RefTableStop) ? REFTABLEUNUSE[Inst4Read2Addr] + 1 : REFTABLEUNUSE[Inst4Read2Addr] ;
-            REFTABLEUNUSE[WritBack1Addr]  <= (WritBack1Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack1Addr]  + 1 : REFTABLEUNUSE[WritBack1Addr]  ;
-            REFTABLEUNUSE[WritBack2Addr]  <= (WritBack2Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack2Addr]  + 1 : REFTABLEUNUSE[WritBack2Addr]  ;
-            REFTABLEUNUSE[WritBack3Addr]  <= (WritBack3Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack3Addr]  + 1 : REFTABLEUNUSE[WritBack3Addr]  ;
-            REFTABLEUNUSE[WritBack4Addr]  <= (WritBack4Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack4Addr]  + 1 : REFTABLEUNUSE[WritBack4Addr]  ;
-            REFTABLEUNUSE[WritBack5Addr]  <= (WritBack5Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack5Addr]  + 1 : REFTABLEUNUSE[WritBack5Addr]  ;
-            REFTABLEUNUSE[WritBack6Addr]  <= (WritBack6Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack6Addr]  + 1 : REFTABLEUNUSE[WritBack6Addr]  ;
-            REFTABLEUNUSE[WritBack7Addr]  <= (WritBack7Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack7Addr]  + 1 : REFTABLEUNUSE[WritBack7Addr]  ;
-            REFTABLEUNUSE[WritBack8Addr]  <= (WritBack8Able & ~RefTableStop) ? REFTABLEUNUSE[WritBack8Addr]  + 1 : REFTABLEUNUSE[WritBack8Addr]  ;
-            REFTABLEUNUSE[Index1Unuse[6:0]] <= (Index1Unuse[7] & ~RefTableStop) ? 7'd0 : REFTABLEUNUSE[Index1Unuse[6:0]] ;
-            REFTABLEUNUSE[Index2Unuse[6:0]] <= (Index2Unuse[7] & ~RefTableStop) ? 7'd0 : REFTABLEUNUSE[Index2Unuse[6:0]] ;
-            REFTABLEUNUSE[Index3Unuse[6:0]] <= (Index3Unuse[7] & ~RefTableStop) ? 7'd0 : REFTABLEUNUSE[Index3Unuse[6:0]] ;
-            REFTABLEUNUSE[Index4Unuse[6:0]] <= (Index4Unuse[7] & ~RefTableStop) ? 7'd0 : REFTABLEUNUSE[Index4Unuse[6:0]] ;
+            REFTABLEUNUSE[Inst1Read1Addr] <= (Inst1Read1Able ) ? REFTABLEUNUSE[Inst1Read1Addr] + 1 : REFTABLEUNUSE[Inst1Read1Addr] ;
+            REFTABLEUNUSE[Inst1Read2Addr] <= (Inst1Read2Able ) ? REFTABLEUNUSE[Inst1Read2Addr] + 1 : REFTABLEUNUSE[Inst1Read2Addr] ;
+            REFTABLEUNUSE[Inst2Read1Addr] <= (Inst2Read1Able ) ? REFTABLEUNUSE[Inst2Read1Addr] + 1 : REFTABLEUNUSE[Inst2Read1Addr] ;
+            REFTABLEUNUSE[Inst2Read2Addr] <= (Inst2Read2Able ) ? REFTABLEUNUSE[Inst2Read2Addr] + 1 : REFTABLEUNUSE[Inst2Read2Addr] ;
+            REFTABLEUNUSE[Inst3Read1Addr] <= (Inst3Read1Able ) ? REFTABLEUNUSE[Inst3Read1Addr] + 1 : REFTABLEUNUSE[Inst3Read1Addr] ;
+            REFTABLEUNUSE[Inst3Read2Addr] <= (Inst3Read2Able ) ? REFTABLEUNUSE[Inst3Read2Addr] + 1 : REFTABLEUNUSE[Inst3Read2Addr] ;
+            REFTABLEUNUSE[Inst4Read1Addr] <= (Inst4Read1Able ) ? REFTABLEUNUSE[Inst4Read1Addr] + 1 : REFTABLEUNUSE[Inst4Read1Addr] ;
+            REFTABLEUNUSE[Inst4Read2Addr] <= (Inst4Read2Able ) ? REFTABLEUNUSE[Inst4Read2Addr] + 1 : REFTABLEUNUSE[Inst4Read2Addr] ;
+            REFTABLEUNUSE[WritBack1Addr]  <= (WritBack1Able ) ? REFTABLEUNUSE[WritBack1Addr]  + 1 : REFTABLEUNUSE[WritBack1Addr]  ;
+            REFTABLEUNUSE[WritBack2Addr]  <= (WritBack2Able ) ? REFTABLEUNUSE[WritBack2Addr]  + 1 : REFTABLEUNUSE[WritBack2Addr]  ;
+            REFTABLEUNUSE[WritBack3Addr]  <= (WritBack3Able ) ? REFTABLEUNUSE[WritBack3Addr]  + 1 : REFTABLEUNUSE[WritBack3Addr]  ;
+            REFTABLEUNUSE[WritBack4Addr]  <= (WritBack4Able ) ? REFTABLEUNUSE[WritBack4Addr]  + 1 : REFTABLEUNUSE[WritBack4Addr]  ;
+            REFTABLEUNUSE[WritBack5Addr]  <= (WritBack5Able ) ? REFTABLEUNUSE[WritBack5Addr]  + 1 : REFTABLEUNUSE[WritBack5Addr]  ;
+            REFTABLEUNUSE[WritBack6Addr]  <= (WritBack6Able ) ? REFTABLEUNUSE[WritBack6Addr]  + 1 : REFTABLEUNUSE[WritBack6Addr]  ;
+            REFTABLEUNUSE[WritBack7Addr]  <= (WritBack7Able ) ? REFTABLEUNUSE[WritBack7Addr]  + 1 : REFTABLEUNUSE[WritBack7Addr]  ;
+            REFTABLEUNUSE[WritBack8Addr]  <= (WritBack8Able ) ? REFTABLEUNUSE[WritBack8Addr]  + 1 : REFTABLEUNUSE[WritBack8Addr]  ;
+            REFTABLEUNUSE[Index1Unuse[6:0]] <= (Index1Unuse[7] ) ? 7'd0 : REFTABLEUNUSE[Index1Unuse[6:0]] ;
+            REFTABLEUNUSE[Index2Unuse[6:0]] <= (Index2Unuse[7] ) ? 7'd0 : REFTABLEUNUSE[Index2Unuse[6:0]] ;
+            REFTABLEUNUSE[Index3Unuse[6:0]] <= (Index3Unuse[7] ) ? 7'd0 : REFTABLEUNUSE[Index3Unuse[6:0]] ;
+            REFTABLEUNUSE[Index4Unuse[6:0]] <= (Index4Unuse[7] ) ? 7'd0 : REFTABLEUNUSE[Index4Unuse[6:0]] ;
         end
     end
 

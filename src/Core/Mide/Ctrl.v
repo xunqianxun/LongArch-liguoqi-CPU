@@ -24,7 +24,8 @@ module Ctrl (
     input        wire                                      IcReq            , //只stop stage2 和PC
     input        wire                                      BpReq            , //stop BPU 不需要管Pc暂存数据因为是有Icache缺页所致会造成trap
     input        wire                                      PreReq           , //需要将icache状态和MSHR刷新
-    input        wire                                      FTQReq             //FTQ满了需要把前面全暂停
+    input        wire                                      FTQReq           ,  //FTQ满了需要把前面全暂停
+    input        wire                                      ISReq            
 
 );
 
@@ -35,18 +36,18 @@ module Ctrl (
         else if(ROBredir)  ICacheTrapReq <= ROBredir; 
     end
 
-    assign StopToPc     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
-    assign StopToBtb    = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ; 
+    assign StopToPc     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ;
+    assign StopToBtb    = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ; 
     assign StopMidFlash = PreReq | ROBredir ;
-    assign StopTage     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
+    assign StopTage     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ;
     assign FLashTage    = PreReq | ROBredir ;
-    assign StopRas      = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ; 
+    assign StopRas      = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ; 
     assign FLashRas     = PreReq | ROBredir ;
-    assign IcacheStop   = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
+    assign IcacheStop   = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ;
     assign IcacheFLash  = PreReq | ROBredir ;
-    assign PredStop     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
+    assign PredStop     = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ;
     assign PredFlash    = ROBredir ;
-    assign FTQStop      = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq ;
+    assign FTQStop      = IcReq | (BpReq | (ICacheTrapReq & ~ROBredir)) | FTQReq | ISReq ;
     assign FTQFlash     = ROBredir ;
 
 

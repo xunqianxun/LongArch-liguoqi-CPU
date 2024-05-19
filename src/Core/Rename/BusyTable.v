@@ -7,7 +7,7 @@ module BusyTable (
     //for ctrl  
     input       wire                                 BusyStop        ,
     input       wire                                 BusyFlash       ,
-    //from Issue
+    //from delay weak-up and physical 
     input       wire                                 UnBusyAble1     ,
     input       wire      [`ReNameRegBUs]            UnBusyAddr1     ,    
     input       wire                                 UnBusyAble2     ,

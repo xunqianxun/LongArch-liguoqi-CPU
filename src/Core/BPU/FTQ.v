@@ -41,7 +41,7 @@ module FTQ (
     output      wire                           NewCnt3Able  ,
     output      wire       [2:0]               NewCnt3Date  ,  
     output      wire                           NewCnt4Able  ,
-    output      wire       [2:0]               NewCnt4Date  ,                               
+    output      wire       [2:0]               NewCnt4Date  , 
     output      wire                           NewCnt5Able  ,
     output      wire       [2:0]               NewCnt5Date  ,  
     output      wire                           NewCnt6Able  ,

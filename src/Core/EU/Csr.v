@@ -54,7 +54,6 @@ module Csr (
     output       wire      [`DataBus]                       CsrCrmdDate     ,
     output       wire      [`DataBus]                       CsrEraDate      ,
     output       wire      [`DataBus]                       CsrEstatDate    
-
 );
 
     localparam CRMD  = 14'h0;

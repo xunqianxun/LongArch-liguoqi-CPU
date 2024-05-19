@@ -120,6 +120,20 @@ module IssueQueueBrCsr (
     output      wire        [5:0]                         BInst2RoBptr                                           
 );
 
+    reg StopTemp  ;
+    reg FlashTemp ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp    <= 1'b0 ;
+            FlashTemp   <= 1'b0 ;
+        end
+        else begin
+            StopTemp    <= BrCsrStop ;
+            FlashTemp   <= BrCsrFlash;
+        end
+    end
+
     reg  [100:0] CBISSUE [0:15] ;
 
     reg  [2:0]  CBWritePtr ;
@@ -216,17 +230,17 @@ module IssueQueueBrCsr (
                                    ((BIn4Src2Addr == BCsrIssueAddr  ) && (BCsrIssueAble))||
                                    ((BIn4Src2Addr == BBrIssueAddr   ) && (BBrIssueAble)) ;
 
-    wire [100:0] Write1Issue = {BIn1ReDirAddr,BIn1RobPtr,BIn1Src2Able,((BrCsrStop | BIn1Src2Ready | ~BIn1Src2Able) ? BIn1Src2Ready : BInst1Src2Ready),BIn1Src2Addr,
-                                                         BIn1Src1Able,((BrCsrStop | BIn1Src1Ready | ~BIn1Src1Able) ? BIn1Src1Ready : BInst1Src1Ready),BIn1Src1Addr,
+    wire [100:0] Write1Issue = {BIn1ReDirAddr,BIn1RobPtr,BIn1Src2Able,((StopTemp | BIn1Src2Ready | ~BIn1Src2Able) ? BIn1Src2Ready : BInst1Src2Ready),BIn1Src2Addr,
+                                                         BIn1Src1Able,((StopTemp | BIn1Src1Ready | ~BIn1Src1Able) ? BIn1Src1Ready : BInst1Src1Ready),BIn1Src1Addr,
                                                          BIn1RdAble,BIn1RdAddr,BIn1MicOpcode,BIn1ImmAble,BIn1ImmDate,BIn1Mode} ; 
-    wire [100:0] Write2Issue = {BIn2ReDirAddr,BIn2RobPtr,BIn2Src2Able,((BrCsrStop | BIn2Src2Ready | ~BIn2Src2Able) ? BIn2Src2Ready : BInst2Src2Ready),BIn2Src2Addr,
-                                                         BIn2Src1Able,((BrCsrStop | BIn2Src1Ready | ~BIn2Src1Able) ? BIn2Src1Ready : BInst2Src1Ready),BIn2Src1Addr,
+    wire [100:0] Write2Issue = {BIn2ReDirAddr,BIn2RobPtr,BIn2Src2Able,((StopTemp | BIn2Src2Ready | ~BIn2Src2Able) ? BIn2Src2Ready : BInst2Src2Ready),BIn2Src2Addr,
+                                                         BIn2Src1Able,((StopTemp | BIn2Src1Ready | ~BIn2Src1Able) ? BIn2Src1Ready : BInst2Src1Ready),BIn2Src1Addr,
                                                          BIn2RdAble,BIn2RdAddr,BIn2MicOpcode,BIn2ImmAble,BIn2ImmDate,BIn2Mode} ;  
-    wire [100:0] Write3Issue = {BIn3ReDirAddr,BIn3RobPtr,BIn3Src2Able,((BrCsrStop | BIn3Src2Ready | ~BIn3Src2Able) ? BIn3Src2Ready : BInst3Src2Ready),BIn3Src2Addr,
-                                                         BIn3Src1Able,((BrCsrStop | BIn3Src1Ready | ~BIn3Src1Able) ? BIn3Src1Ready : BInst3Src1Ready),BIn3Src1Addr,
+    wire [100:0] Write3Issue = {BIn3ReDirAddr,BIn3RobPtr,BIn3Src2Able,((StopTemp | BIn3Src2Ready | ~BIn3Src2Able) ? BIn3Src2Ready : BInst3Src2Ready),BIn3Src2Addr,
+                                                         BIn3Src1Able,((StopTemp | BIn3Src1Ready | ~BIn3Src1Able) ? BIn3Src1Ready : BInst3Src1Ready),BIn3Src1Addr,
                                                          BIn3RdAble,BIn3RdAddr,BIn3MicOpcode,BIn3ImmAble,BIn3ImmDate,BIn3Mode} ;
-    wire [100:0] Write4Issue = {BIn4ReDirAddr,BIn4RobPtr,BIn4Src2Able,((BrCsrStop | BIn4Src2Ready | ~BIn4Src2Able) ? BIn4Src2Ready : BInst4Src2Ready),BIn4Src2Addr,
-                                                         BIn4Src1Able,((BrCsrStop | BIn4Src1Ready | ~BIn4Src1Able) ? BIn4Src1Ready : BInst4Src1Ready),BIn4Src1Addr,
+    wire [100:0] Write4Issue = {BIn4ReDirAddr,BIn4RobPtr,BIn4Src2Able,((StopTemp | BIn4Src2Ready | ~BIn4Src2Able) ? BIn4Src2Ready : BInst4Src2Ready),BIn4Src2Addr,
+                                                         BIn4Src1Able,((StopTemp | BIn4Src1Ready | ~BIn4Src1Able) ? BIn4Src1Ready : BInst4Src1Ready),BIn4Src1Addr,
                                                          BIn4RdAble,BIn4RdAddr,BIn4MicOpcode,BIn4ImmAble,BIn4ImmDate,BIn4Mode} ;
 
     wire          U1ReadAble  ;
@@ -587,29 +601,29 @@ module IssueQueueBrCsr (
     end
 
 
-    assign BInst1MicOperate = ~BrCsrStop ? RegBInst1MicOperate : 8'b0 ;
-    assign BInst1Src1RAble  = ~BrCsrStop ? RegBInst1Src1RAble  : `EnableValue ;
-    assign BInst1Src1RAddr  = ~BrCsrStop ? RegBInst1Src1RAddr  : 7'b0 ;
-    assign BInst1Src2RAble  = ~BrCsrStop ? RegBInst1Src2RAble  : `EnableValue ;
-    assign BInst1Src2RAddr  = ~BrCsrStop ? RegBInst1Src2RAddr  : 7'b0 ;
-    assign BInst1ImmAble    = ~BrCsrStop ? RegBInst1ImmAble    : `EnableValue ;
-    assign BInst1ImmDate    = ~BrCsrStop ? RegBInst1ImmDate    : 26'b0 ;
-    assign BInst1RdAble     = ~BrCsrStop ? RegBInst1RdAble     : `EnableValue ;
-    assign BInst1RdAddr     = ~BrCsrStop ? RegBInst1RdAddr     : 7'b0 ;
-    assign BInst1Mode       = ~BrCsrStop ? RegBInst1Mode       : `EnableValue ;
-    assign BInst1RedieAddr  = ~BrCsrStop ? RegBInst1RedieAddr  : 32'b0 ;
-    assign BInst1RoBptr     = ~BrCsrStop ? RegBInst1RoBptr     : 6'b0 ;
+    assign BInst1MicOperate = ~StopTemp ? RegBInst1MicOperate : 8'b0 ;
+    assign BInst1Src1RAble  = ~StopTemp ? RegBInst1Src1RAble  : `EnableValue ;
+    assign BInst1Src1RAddr  = ~StopTemp ? RegBInst1Src1RAddr  : 7'b0 ;
+    assign BInst1Src2RAble  = ~StopTemp ? RegBInst1Src2RAble  : `EnableValue ;
+    assign BInst1Src2RAddr  = ~StopTemp ? RegBInst1Src2RAddr  : 7'b0 ;
+    assign BInst1ImmAble    = ~StopTemp ? RegBInst1ImmAble    : `EnableValue ;
+    assign BInst1ImmDate    = ~StopTemp ? RegBInst1ImmDate    : 26'b0 ;
+    assign BInst1RdAble     = ~StopTemp ? RegBInst1RdAble     : `EnableValue ;
+    assign BInst1RdAddr     = ~StopTemp ? RegBInst1RdAddr     : 7'b0 ;
+    assign BInst1Mode       = ~StopTemp ? RegBInst1Mode       : `EnableValue ;
+    assign BInst1RedieAddr  = ~StopTemp ? RegBInst1RedieAddr  : 32'b0 ;
+    assign BInst1RoBptr     = ~StopTemp ? RegBInst1RoBptr     : 6'b0 ;
 
-    assign BInst2MicOperate = ~BrCsrStop ? RegBInst2MicOperate : 8'b0 ;
-    assign BInst2Src1RAble  = ~BrCsrStop ? RegBInst2Src1RAble  : `EnableValue ;
-    assign BInst2Src1RAddr  = ~BrCsrStop ? RegBInst2Src1RAddr  : 7'b0 ;
-    assign BInst2Src2RAble  = ~BrCsrStop ? RegBInst2Src2RAble  : `EnableValue ;
-    assign BInst2Src2RAddr  = ~BrCsrStop ? RegBInst2Src2RAddr  : 7'b0 ;
-    assign BInst2ImmAble    = ~BrCsrStop ? RegBInst2ImmAble    : `EnableValue ;
-    assign BInst2ImmDate    = ~BrCsrStop ? RegBInst2ImmDate    : 26'b0 ;
-    assign BInst2RdAble     = ~BrCsrStop ? RegBInst2RdAble     : `EnableValue ;
-    assign BInst2RdAddr     = ~BrCsrStop ? RegBInst2RdAddr     : 7'b0 ;
-    assign BInst2RoBptr     = ~BrCsrStop ? RegBInst2RoBptr     : 6'b0 ;
+    assign BInst2MicOperate = ~StopTemp ? RegBInst2MicOperate : 8'b0 ;
+    assign BInst2Src1RAble  = ~StopTemp ? RegBInst2Src1RAble  : `EnableValue ;
+    assign BInst2Src1RAddr  = ~StopTemp ? RegBInst2Src1RAddr  : 7'b0 ;
+    assign BInst2Src2RAble  = ~StopTemp ? RegBInst2Src2RAble  : `EnableValue ;
+    assign BInst2Src2RAddr  = ~StopTemp ? RegBInst2Src2RAddr  : 7'b0 ;
+    assign BInst2ImmAble    = ~StopTemp ? RegBInst2ImmAble    : `EnableValue ;
+    assign BInst2ImmDate    = ~StopTemp ? RegBInst2ImmDate    : 26'b0 ;
+    assign BInst2RdAble     = ~StopTemp ? RegBInst2RdAble     : `EnableValue ;
+    assign BInst2RdAddr     = ~StopTemp ? RegBInst2RdAddr     : 7'b0 ;
+    assign BInst2RoBptr     = ~StopTemp ? RegBInst2RoBptr     : 6'b0 ;
   
 
     genvar i ;
@@ -662,39 +676,44 @@ module IssueQueueBrCsr (
                 CBISSUE[ii] <= 101'd0 ;
             end
         end
+        else if(BrCsrStop) begin
+            for (ii =0 ;ii<32 ;ii=ii+1 ) begin
+                CBISSUE[ii] <= CBISSUE[ii] ;
+            end 
+        end
         else begin
-            CBISSUE[0][60] <= (BrCsrStop | ~CBISSUE[0][61] | CBISSUE[0][60]) ? CBISSUE[0][60] : InstSrc1Ready[0] ;
-            CBISSUE[0][51] <= (BrCsrStop | ~CBISSUE[0][52] | CBISSUE[0][51]) ? CBISSUE[0][51] : InstSrc2Ready[0] ;
-            CBISSUE[1][60] <= (BrCsrStop | ~CBISSUE[1][61] | CBISSUE[1][60]) ? CBISSUE[1][60] : InstSrc1Ready[1] ;
-            CBISSUE[1][51] <= (BrCsrStop | ~CBISSUE[1][52] | CBISSUE[1][51]) ? CBISSUE[1][51] : InstSrc2Ready[1] ;
-            CBISSUE[2][60] <= (BrCsrStop | ~CBISSUE[2][61] | CBISSUE[2][60]) ? CBISSUE[2][60] : InstSrc1Ready[2] ;
-            CBISSUE[2][51] <= (BrCsrStop | ~CBISSUE[2][52] | CBISSUE[2][51]) ? CBISSUE[2][51] : InstSrc2Ready[2] ;
-            CBISSUE[3][60] <= (BrCsrStop | ~CBISSUE[3][61] | CBISSUE[3][60]) ? CBISSUE[3][60] : InstSrc1Ready[3] ;
-            CBISSUE[3][51] <= (BrCsrStop | ~CBISSUE[3][52] | CBISSUE[3][51]) ? CBISSUE[3][51] : InstSrc2Ready[3] ;
-            CBISSUE[4][60] <= (BrCsrStop | ~CBISSUE[4][61] | CBISSUE[4][60]) ? CBISSUE[4][60] : InstSrc1Ready[4] ;
-            CBISSUE[4][51] <= (BrCsrStop | ~CBISSUE[4][52] | CBISSUE[4][51]) ? CBISSUE[4][51] : InstSrc2Ready[4] ;
-            CBISSUE[5][60] <= (BrCsrStop | ~CBISSUE[5][61] | CBISSUE[5][60]) ? CBISSUE[5][60] : InstSrc1Ready[5] ;
-            CBISSUE[5][51] <= (BrCsrStop | ~CBISSUE[5][52] | CBISSUE[5][51]) ? CBISSUE[5][51] : InstSrc2Ready[5] ;
-            CBISSUE[6][60] <= (BrCsrStop | ~CBISSUE[6][61] | CBISSUE[6][60]) ? CBISSUE[6][60] : InstSrc1Ready[6] ;
-            CBISSUE[6][51] <= (BrCsrStop | ~CBISSUE[6][52] | CBISSUE[6][51]) ? CBISSUE[6][51] : InstSrc2Ready[6] ;
-            CBISSUE[7][60] <= (BrCsrStop | ~CBISSUE[7][61] | CBISSUE[7][60]) ? CBISSUE[7][60] : InstSrc1Ready[7] ;
-            CBISSUE[7][51] <= (BrCsrStop | ~CBISSUE[7][52] | CBISSUE[7][51]) ? CBISSUE[7][51] : InstSrc2Ready[7] ;
-            CBISSUE[8][60] <= (BrCsrStop | ~CBISSUE[8][61] | CBISSUE[8][60]) ? CBISSUE[8][60] : InstSrc1Ready[8] ;
-            CBISSUE[8][51] <= (BrCsrStop | ~CBISSUE[8][52] | CBISSUE[8][51]) ? CBISSUE[8][51] : InstSrc2Ready[8] ;
-            CBISSUE[9][60] <= (BrCsrStop | ~CBISSUE[9][61] | CBISSUE[9][60]) ? CBISSUE[9][60] : InstSrc1Ready[9] ;
-            CBISSUE[9][51] <= (BrCsrStop | ~CBISSUE[9][52] | CBISSUE[9][51]) ? CBISSUE[9][51] : InstSrc2Ready[9] ;
-            CBISSUE[10][60] <= (BrCsrStop | ~CBISSUE[10][61] | CBISSUE[10][60]) ? CBISSUE[10][60] : InstSrc1Ready[10] ;
-            CBISSUE[10][51] <= (BrCsrStop | ~CBISSUE[10][52] | CBISSUE[10][51]) ? CBISSUE[10][51] : InstSrc2Ready[10] ;
-            CBISSUE[11][60] <= (BrCsrStop | ~CBISSUE[11][61] | CBISSUE[11][60]) ? CBISSUE[11][60] : InstSrc1Ready[11] ;
-            CBISSUE[11][51] <= (BrCsrStop | ~CBISSUE[11][52] | CBISSUE[11][51]) ? CBISSUE[11][51] : InstSrc2Ready[11] ;
-            CBISSUE[12][60] <= (BrCsrStop | ~CBISSUE[12][61] | CBISSUE[12][60]) ? CBISSUE[12][60] : InstSrc1Ready[12] ;
-            CBISSUE[12][51] <= (BrCsrStop | ~CBISSUE[12][52] | CBISSUE[12][51]) ? CBISSUE[12][51] : InstSrc2Ready[12] ;
-            CBISSUE[13][60] <= (BrCsrStop | ~CBISSUE[13][61] | CBISSUE[13][60]) ? CBISSUE[13][60] : InstSrc1Ready[13] ;
-            CBISSUE[13][51] <= (BrCsrStop | ~CBISSUE[13][52] | CBISSUE[13][51]) ? CBISSUE[13][51] : InstSrc2Ready[13] ;
-            CBISSUE[14][60] <= (BrCsrStop | ~CBISSUE[14][61] | CBISSUE[14][60]) ? CBISSUE[14][60] : InstSrc1Ready[14] ;
-            CBISSUE[14][51] <= (BrCsrStop | ~CBISSUE[14][52] | CBISSUE[14][51]) ? CBISSUE[14][51] : InstSrc2Ready[14] ;
-            CBISSUE[15][60] <= (BrCsrStop | ~CBISSUE[15][61] | CBISSUE[15][60]) ? CBISSUE[15][60] : InstSrc1Ready[15] ;
-            CBISSUE[15][51] <= (BrCsrStop | ~CBISSUE[15][52] | CBISSUE[15][51]) ? CBISSUE[15][51] : InstSrc2Ready[15] ;
+            CBISSUE[0][60] <= (~CBISSUE[0][61] | CBISSUE[0][60]) ? CBISSUE[0][60] : InstSrc1Ready[0] ;
+            CBISSUE[0][51] <= (~CBISSUE[0][52] | CBISSUE[0][51]) ? CBISSUE[0][51] : InstSrc2Ready[0] ;
+            CBISSUE[1][60] <= (~CBISSUE[1][61] | CBISSUE[1][60]) ? CBISSUE[1][60] : InstSrc1Ready[1] ;
+            CBISSUE[1][51] <= (~CBISSUE[1][52] | CBISSUE[1][51]) ? CBISSUE[1][51] : InstSrc2Ready[1] ;
+            CBISSUE[2][60] <= (~CBISSUE[2][61] | CBISSUE[2][60]) ? CBISSUE[2][60] : InstSrc1Ready[2] ;
+            CBISSUE[2][51] <= (~CBISSUE[2][52] | CBISSUE[2][51]) ? CBISSUE[2][51] : InstSrc2Ready[2] ;
+            CBISSUE[3][60] <= (~CBISSUE[3][61] | CBISSUE[3][60]) ? CBISSUE[3][60] : InstSrc1Ready[3] ;
+            CBISSUE[3][51] <= (~CBISSUE[3][52] | CBISSUE[3][51]) ? CBISSUE[3][51] : InstSrc2Ready[3] ;
+            CBISSUE[4][60] <= (~CBISSUE[4][61] | CBISSUE[4][60]) ? CBISSUE[4][60] : InstSrc1Ready[4] ;
+            CBISSUE[4][51] <= (~CBISSUE[4][52] | CBISSUE[4][51]) ? CBISSUE[4][51] : InstSrc2Ready[4] ;
+            CBISSUE[5][60] <= (~CBISSUE[5][61] | CBISSUE[5][60]) ? CBISSUE[5][60] : InstSrc1Ready[5] ;
+            CBISSUE[5][51] <= (~CBISSUE[5][52] | CBISSUE[5][51]) ? CBISSUE[5][51] : InstSrc2Ready[5] ;
+            CBISSUE[6][60] <= (~CBISSUE[6][61] | CBISSUE[6][60]) ? CBISSUE[6][60] : InstSrc1Ready[6] ;
+            CBISSUE[6][51] <= (~CBISSUE[6][52] | CBISSUE[6][51]) ? CBISSUE[6][51] : InstSrc2Ready[6] ;
+            CBISSUE[7][60] <= (~CBISSUE[7][61] | CBISSUE[7][60]) ? CBISSUE[7][60] : InstSrc1Ready[7] ;
+            CBISSUE[7][51] <= (~CBISSUE[7][52] | CBISSUE[7][51]) ? CBISSUE[7][51] : InstSrc2Ready[7] ;
+            CBISSUE[8][60] <= (~CBISSUE[8][61] | CBISSUE[8][60]) ? CBISSUE[8][60] : InstSrc1Ready[8] ;
+            CBISSUE[8][51] <= (~CBISSUE[8][52] | CBISSUE[8][51]) ? CBISSUE[8][51] : InstSrc2Ready[8] ;
+            CBISSUE[9][60] <= (~CBISSUE[9][61] | CBISSUE[9][60]) ? CBISSUE[9][60] : InstSrc1Ready[9] ;
+            CBISSUE[9][51] <= (~CBISSUE[9][52] | CBISSUE[9][51]) ? CBISSUE[9][51] : InstSrc2Ready[9] ;
+            CBISSUE[10][60] <= (~CBISSUE[10][61] | CBISSUE[10][60]) ? CBISSUE[10][60] : InstSrc1Ready[10] ;
+            CBISSUE[10][51] <= (~CBISSUE[10][52] | CBISSUE[10][51]) ? CBISSUE[10][51] : InstSrc2Ready[10] ;
+            CBISSUE[11][60] <= (~CBISSUE[11][61] | CBISSUE[11][60]) ? CBISSUE[11][60] : InstSrc1Ready[11] ;
+            CBISSUE[11][51] <= (~CBISSUE[11][52] | CBISSUE[11][51]) ? CBISSUE[11][51] : InstSrc2Ready[11] ;
+            CBISSUE[12][60] <= (~CBISSUE[12][61] | CBISSUE[12][60]) ? CBISSUE[12][60] : InstSrc1Ready[12] ;
+            CBISSUE[12][51] <= (~CBISSUE[12][52] | CBISSUE[12][51]) ? CBISSUE[12][51] : InstSrc2Ready[12] ;
+            CBISSUE[13][60] <= (~CBISSUE[13][61] | CBISSUE[13][60]) ? CBISSUE[13][60] : InstSrc1Ready[13] ;
+            CBISSUE[13][51] <= (~CBISSUE[13][52] | CBISSUE[13][51]) ? CBISSUE[13][51] : InstSrc2Ready[13] ;
+            CBISSUE[14][60] <= (~CBISSUE[14][61] | CBISSUE[14][60]) ? CBISSUE[14][60] : InstSrc1Ready[14] ;
+            CBISSUE[14][51] <= (~CBISSUE[14][52] | CBISSUE[14][51]) ? CBISSUE[14][51] : InstSrc2Ready[14] ;
+            CBISSUE[15][60] <= (~CBISSUE[15][61] | CBISSUE[15][60]) ? CBISSUE[15][60] : InstSrc1Ready[15] ;
+            CBISSUE[15][51] <= (~CBISSUE[15][52] | CBISSUE[15][51]) ? CBISSUE[15][51] : InstSrc2Ready[15] ;
             CBISSUE[CriqPreOut1] <= U1ReadAble ? WriteDate1 : 101'd0 ;
             CBISSUE[CriqPreOut2] <= U2ReadAble ? WriteDate2 : 101'd0 ;
             CBISSUE[CriqPreOut3] <= U3ReadAble ? WriteDate3 : 101'd0 ;

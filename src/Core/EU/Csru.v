@@ -82,8 +82,6 @@ module Csru (
     input        wire                                     CsruStop        ,
     input        wire                                     CsruFlash       
     
-    
-
 );
 
     reg   [93-1:0] CSRUREGTEMP ;

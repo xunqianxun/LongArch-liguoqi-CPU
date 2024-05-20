@@ -9,6 +9,7 @@ module IssueQueueInt (
     input       wire                                      IsQuIntFlash     ,
     output      wire                                      IsQuIntReq       ,
     //from RAT
+    input       wire        [2:0]                         InIQInstNum      ,
     input       wire                                      In1Src1Able      ,
     input       wire                                      In1Src1Ready     ,
     input       wire        [`ReNameRegBUs]               In1Src1Addr      ,
@@ -128,16 +129,122 @@ module IssueQueueInt (
     output      wire        [5:0]                         Inst4RoBptr      
 );
 
+    reg               StopTemp  ;
+    reg               FlashTemp ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp   <= 1'b0  ;
+            FlashTemp  <= 1'b0  ;
+        end
+        else begin
+            StopTemp   <= IsQuIntStop  ;
+            FlashTemp  <= IsQuIntFlash ;
+        end
+    end
 
     reg [68:0] INTISSUE [0:31] ; // (ROBptr and Age)7 | (valid2 + ready2 + sec2)9 | (valid1 + ready1 + sec1)9 | (validrd + rd)8 | MicOpcode 8 | (validimm1 + Imm 26)27 | {ready | 暂时不用} ;
 
+    reg [2:0]  ReadPtr  ;
+    reg [2:0]  WritePtr ;
+                         
 
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            ReadPtr    <= 3'd0 ;
+        end
+        else begin
+            ReadPtr    <= ReadPtr[1:0] + InIQInstNum ;
+        end
+    end
+
+    wire  Read1Able    = (ReadPtr == 0) & (InIQInstNum !=0) | 
+                         (ReadPtr == 1) & (InIQInstNum ==4) | 
+                         (ReadPtr == 2) & ((InIQInstNum ==3) | (InIQInstNum ==4)) | 
+                         (ReadPtr == 3) & ((InIQInstNum !=0) & (InIQInstNum !=1)) ; 
+
+    wire  Read2Able    = (ReadPtr == 0) & ((InIQInstNum !=0) & (InIQInstNum !=1)) | 
+                         (ReadPtr == 1) & (InIQInstNum !=0) | 
+                         (ReadPtr == 2) & (InIQInstNum ==4) | 
+                         (ReadPtr == 3) & ((InIQInstNum ==3) | (InIQInstNum ==4)) ; 
+
+    wire  Read3Able    = (ReadPtr == 0) & ((InIQInstNum ==3) | (InIQInstNum ==4)) | 
+                         (ReadPtr == 1) & ((InIQInstNum !=0) & (InIQInstNum !=1)) | 
+                         (ReadPtr == 2) & (InIQInstNum !=0) | 
+                         (ReadPtr == 3) & (InIQInstNum ==4) ;
+
+    wire  Read4Able    = (ReadPtr == 0) & (InIQInstNum ==4)  | 
+                         (ReadPtr == 1) & ((InIQInstNum ==3) | (InIQInstNum ==4)) | 
+                         (ReadPtr == 2) & ((InIQInstNum !=0) & (InIQInstNum !=1)) | 
+                         (ReadPtr == 3) & (InIQInstNum !=0) ; 
+
+
+    IntIQ1Criq8#(
+        .CRIQWIDE    ( 5 ),
+        .CRIQDEEP    ( 8 )
+    )u1_IntIQ1Criq8(
+        .Clk         ( Clk         ),
+        .Rest        ( Rest        ),
+        .Rable       ( Rable       ),
+        .Dout        ( Dout        ),
+        .CriqPreOut  ( CriqPreOut  ),
+        .Wable       ( Wable       ),
+        .Din         ( Din         ),
+        .CriqClean   ( CriqClean   ),
+        .CriqFull    ( CriqFull    ),
+        .CriqEmpty   ( CriqEmpty   )
+    );
+    IntIQ1Criq8#(
+        .CRIQWIDE    ( 5 ),
+        .CRIQDEEP    ( 8 )
+    )u2_IntIQ1Criq8(
+        .Clk         ( Clk         ),
+        .Rest        ( Rest        ),
+        .Rable       ( Rable       ),
+        .Dout        ( Dout        ),
+        .CriqPreOut  ( CriqPreOut  ),
+        .Wable       ( Wable       ),
+        .Din         ( Din         ),
+        .CriqClean   ( CriqClean   ),
+        .CriqFull    ( CriqFull    ),
+        .CriqEmpty   ( CriqEmpty   )
+    );
+    IntIQ1Criq8#(
+        .CRIQWIDE    ( 5 ),
+        .CRIQDEEP    ( 8 )
+    )u3_IntIQ1Criq8(
+        .Clk         ( Clk         ),
+        .Rest        ( Rest        ),
+        .Rable       ( Rable       ),
+        .Dout        ( Dout        ),
+        .CriqPreOut  ( CriqPreOut  ),
+        .Wable       ( Wable       ),
+        .Din         ( Din         ),
+        .CriqClean   ( CriqClean   ),
+        .CriqFull    ( CriqFull    ),
+        .CriqEmpty   ( CriqEmpty   )
+    );
+    IntIQ1Criq8#(
+        .CRIQWIDE    ( 5 ),
+        .CRIQDEEP    ( 8 )
+    )u4_IntIQ1Criq8(
+        .Clk         ( Clk         ),
+        .Rest        ( Rest        ),
+        .Rable       ( Rable       ),
+        .Dout        ( Dout        ),
+        .CriqPreOut  ( CriqPreOut  ),
+        .Wable       ( Wable       ),
+        .Din         ( Din         ),
+        .CriqClean   ( CriqClean   ),
+        .CriqFull    ( CriqFull    ),
+        .CriqEmpty   ( CriqEmpty   )
+    );
 
     //criq use allocate enty
     reg [5:0]  ReadPtr  ;
     reg [5:0]  WritePtr ;
 
-    assign IsQuIntReq = ReadPtr    //   这个队列得改 还是得用分离式的
+    assign IsQuIntReq = ReadPtr  ;  //   这个队列得改 还是得用分离式的
 
     reg [4:0]  ALLOCATE [0:32] ;
 

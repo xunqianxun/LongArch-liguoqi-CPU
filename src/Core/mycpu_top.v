@@ -437,6 +437,88 @@ module mycpu_top (
     wire  [`ReNameRegBUs]   BYTToIQ4Sr2Num     ;
     wire                    BYTToIQ4WAble      ;
     wire  [`ReNameRegBUs]   BYTToIQ4WNum       ;
+
+    //for reftable 
+    wire                    PHYToRef1Sr1Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef1Sr1Num       ;
+    wire                    PHYToRef1Sr2Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef1Sr2Num       ;
+    wire                    PHYToRef2Sr1Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef2Sr1Num       ;
+    wire                    PHYToRef2Sr2Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef2Sr2Num       ;
+    wire                    PHYToRef3Sr1Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef3Sr1Num       ;
+    wire                    PHYToRef3Sr2Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef3Sr2Num       ;
+    wire                    PHYToRef4Sr1Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef4Sr1Num       ;
+    wire                    PHYToRef4Sr2Able      ;
+    wire  [`ReNameRegBUs]   PHYToRef4Sr2Num       ;
+
+    wire                    PHYToRef1WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef1Wnum         ;
+    wire                    PHYToRef2WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef2Wnum         ;
+    wire                    PHYToRef3WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef3Wnum         ;
+    wire                    PHYToRef4WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef4Wnum         ;
+    wire                    PHYToRef5WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef5Wnum         ;
+    wire                    PHYToRef6WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef6Wnum         ;
+    wire                    PHYToRef7WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef7Wnum         ;
+    wire                    PHYToRef8WAble        ;
+    wire  [`ReNameRegBUs]   PHYToRef8Wnum         ;
+
+    //for brcsr 
+    wire                    EXCsrToIQReq          ;
+    wire                    EXBrToIQReq           ;
+    wire                    IntToBrCsrWKAlu1      ;
+    wire  [`ReNameRegBUs]   IntToBrCsrWKANum1     ;
+    wire                    IntToBrCsrWKAlu2      ;
+    wire  [`ReNameRegBUs]   IntToBrCsrWKANum2     ;
+    wire                    IntToBrCsrWKMul       ;
+    wire  [`ReNameRegBUs]   IntToBrCsrWKMNum      ;
+    wire                    ByPassDivAble         ;
+    wire  [`ReNameRegBUs]   ByPassDivNum          ;
+    wire                    ByPassSCAble          ;
+    wire  [`ReNameRegBUs]   ByPassSCNum           ;
+    wire                    ByPassLoadAble        ;
+    wire  [`ReNameRegBUs]   ByPassLoadNum         ;
+    wire                    CsrToOtherAble        ;
+    wire  [`ReNameRegBUs]   CsrToOtherAddr        ;
+    wire                    BrToOtherAble         ;
+    wire                    BrToOtherAddr         ;
+    wire  [`MicOperateCode] BrCsrTo1EUMicop       ;
+    wire                    BrCsrTo1EUSr1A        ;
+    wire  [`ReNameRegBUs]   BrCsrTo1EUSr1Num      ;
+    wire                    BrCsrTo1EUSr2A        ;
+    wire  [`ReNameRegBUs]   BrCsrTo1EUSr2Num      ;
+    wire                    BrCsrTo1EUImA         ;
+    wire  [25:0]            BrCsrTO1EUImDate      ;
+    wire                    BrCsrTo1EURdA         ;
+    wire  [`ReNameRegBUs]   BRCsrTo1EURdNum       ;
+    wire                    BrCsrTo1EUMode        ;
+    wire  [`InstAddrBus]    BrCsrTo1EURAddr       ;
+    wire                    BrCstTO1EURobPtr      ;
+    wire  [`MicOperateCode] BrCsrTo2EUMicop       ;
+    wire                    BrCsrTo2EUSr1A        ;
+    wire  [`ReNameRegBUs]   BrCsrTo2EUSr1Num      ;
+    wire                    BrCsrTo2EUSr2A        ;
+    wire  [`ReNameRegBUs]   BrCsrTo2EUSr2Num      ;
+    wire                    BrCsrTo2EUImA         ;
+    wire  [25:0]            BrCsrTO2EUImDate      ;
+    wire                    BrCsrTo2EURdA         ;
+    wire  [`ReNameRegBUs]   BRCsrTo2EURdNum       ;
+    // wire                    BrCsrTo2EUMode        ;
+    // wire  [`InstAddrBus]    BrCsrTo2EURAddr       ;
+    wire                    BrCstTO2EURobPtr      ;
+
+
+
     
 
 
@@ -1125,187 +1207,393 @@ module mycpu_top (
     .Rest            ( Rest            ),
     .RefTableStop    ( RefTableStop    ),
     .RefTableFLash   ( RefTableFLash   ),
-    .Inst1Src1Able   ( Inst1Src1Able   ),
-    .Inst1Src1Addr   ( Inst1Src1Addr   ),
-    .Inst1Src2Able   ( Inst1Src2Able   ),
-    .Inst1Src2Addr   ( Inst1Src2Addr   ),
-    .Inst1RdAble     ( Inst1RdAble     ),
-    .Inst1RdAddr     ( Inst1RdAddr     ),
-    .Inst2Src1Able   ( Inst2Src1Able   ),
-    .Inst2Src1Addr   ( Inst2Src1Addr   ),
-    .Inst2Src2Able   ( Inst2Src2Able   ),
-    .Inst2Src2Addr   ( Inst2Src2Addr   ),
-    .Inst2RdAble     ( Inst2RdAble     ),
-    .Inst2RdAddr     ( Inst2RdAddr     ),
-    .Inst3Src1Able   ( Inst3Src1Able   ),
-    .Inst3Src1Addr   ( Inst3Src1Addr   ),
-    .Inst3Src2Able   ( Inst3Src2Able   ),
-    .Inst3Src2Addr   ( Inst3Src2Addr   ),
-    .Inst3RdAble     ( Inst3RdAble     ),
-    .Inst3RdAddr     ( Inst3RdAddr     ),
-    .Inst4Src1Able   ( Inst4Src1Able   ),
-    .Inst4Src1Addr   ( Inst4Src1Addr   ),
-    .Inst4Src2Able   ( Inst4Src2Able   ),
-    .Inst4Src2Addr   ( Inst4Src2Addr   ),
-    .Inst4RdAble     ( Inst4RdAble     ),
-    .Inst4RdAddr     ( Inst4RdAddr     ),
-    .Lock1Able       ( Lock1Able       ),
-    .Lock1Addr       ( Lock1Addr       ),
-    .Lock2Able       ( Lock2Able       ),
-    .Lock2Addr       ( Lock2Addr       ),
-    .Lock3Able       ( Lock3Able       ),
-    .Lock3Addr       ( Lock3Addr       ),
-    .Lock4Able       ( Lock4Able       ),
-    .Lock4Addr       ( Lock4Addr       ),
-    .Inst1Read1Able  ( Inst1Read1Able  ),
-    .Inst1Read1Addr  ( Inst1Read1Addr  ),
-    .Inst1Read2Able  ( Inst1Read2Able  ),
-    .Inst1Read2Addr  ( Inst1Read2Addr  ),
-    .Inst2Read1Able  ( Inst2Read1Able  ),
-    .Inst2Read1Addr  ( Inst2Read1Addr  ),
-    .Inst2Read2Able  ( Inst2Read2Able  ),
-    .Inst2Read2Addr  ( Inst2Read2Addr  ),
-    .Inst3Read1Able  ( Inst3Read1Able  ),
-    .Inst3Read1Addr  ( Inst3Read1Addr  ),
-    .Inst3Read2Able  ( Inst3Read2Able  ),
-    .Inst3Read2Addr  ( Inst3Read2Addr  ),
-    .Inst4Read1Able  ( Inst4Read1Able  ),
-    .Inst4Read1Addr  ( Inst4Read1Addr  ),
-    .Inst4Read2Able  ( Inst4Read2Able  ),
-    .Inst4Read2Addr  ( Inst4Read2Addr  ),
-    .WritBack1Able   ( WritBack1Able   ),
-    .WritBack1Addr   ( WritBack1Addr   ),
-    .WritBack2Able   ( WritBack2Able   ),
-    .WritBack2Addr   ( WritBack2Addr   ),
-    .WritBack3Able   ( WritBack3Able   ),
-    .WritBack3Addr   ( WritBack3Addr   ),
-    .WritBack4Able   ( WritBack4Able   ),
-    .WritBack4Addr   ( WritBack4Addr   ),
-    .WritBack5Able   ( WritBack5Able   ),
-    .WritBack5Addr   ( WritBack5Addr   ),
-    .WritBack6Able   ( WritBack6Able   ),
-    .WritBack6Addr   ( WritBack6Addr   ),
-    .WritBack7Able   ( WritBack7Able   ),
-    .WritBack7Addr   ( WritBack7Addr   ),
-    .WritBack8Able   ( WritBack8Able   ),
-    .WritBack8Addr   ( WritBack8Addr   ),
-    .WriteNum1       ( WriteNum1       ),
-    .WriteAble1      ( WriteAble1      ),
-    .WriteNum2       ( WriteNum2       ),
-    .WriteAble2      ( WriteAble2      ),
-    .WriteNum3       ( WriteNum3       ),
-    .WriteAble3      ( WriteAble3      ),
-    .WriteNum4       ( WriteNum4       ),
-    .WriteAble4      ( WriteAble4      )
+    .Inst1Src1Able   ( RATToRefUse1    ),
+    .Inst1Src1Addr   ( RATToRefUse1Addr),
+    .Inst1Src2Able   ( RATToRefUse2    ),
+    .Inst1Src2Addr   ( RATToRefUse2Addr),
+    .Inst1RdAble     ( RATToRefUse3    ),
+    .Inst1RdAddr     ( RATToRefUse3Addr),
+    .Inst2Src1Able   ( RATToRefUse4    ),
+    .Inst2Src1Addr   ( RATToRefUse4Addr),
+    .Inst2Src2Able   ( RATToRefUse5    ),
+    .Inst2Src2Addr   ( RATToRefUse5Addr),
+    .Inst2RdAble     ( RATToRefUse6    ),
+    .Inst2RdAddr     ( RATToRefUse6Addr),
+    .Inst3Src1Able   ( RATToRefUse7    ),
+    .Inst3Src1Addr   ( RATToRefUse7Addr),
+    .Inst3Src2Able   ( RATToRefUse8    ),
+    .Inst3Src2Addr   ( RATToRefUse8Addr),
+    .Inst3RdAble     ( RATToRefUse9    ),
+    .Inst3RdAddr     ( RATToRefUse9Addr),
+    .Inst4Src1Able   ( RATToRefUse10   ),
+    .Inst4Src1Addr   ( RATToRefUse10Addr),
+    .Inst4Src2Able   ( RATToRefUse11   ),
+    .Inst4Src2Addr   ( RATToRefUse11Addr),
+    .Inst4RdAble     ( RATToRefUse12   ),
+    .Inst4RdAddr     ( RATToRefUse12Addr),
+    .Lock1Able       ( RATToRefLock1   ),
+    .Lock1Addr       ( RATToRefLock1Addr),
+    .Lock2Able       ( RATToRefLock2   ),
+    .Lock2Addr       ( RATToRefLock2Addr),
+    .Lock3Able       ( RATToRefLock3   ),
+    .Lock3Addr       ( RATToRefLock3Addr),
+    .Lock4Able       ( RATToRefLock4   ),
+    .Lock4Addr       ( RATToRefLock4Addr),
+    .Inst1Read1Able  ( PHYToRef1Sr1Able),
+    .Inst1Read1Addr  ( PHYToRef1Sr1Num ),
+    .Inst1Read2Able  ( PHYToRef1Sr2Able),
+    .Inst1Read2Addr  ( PHYToRef1Sr2Num ),
+    .Inst2Read1Able  ( PHYToRef2Sr1Able),
+    .Inst2Read1Addr  ( PHYToRef2Sr1Num ),
+    .Inst2Read2Able  ( PHYToRef2Sr2Able),
+    .Inst2Read2Addr  ( PHYToRef2Sr2Num ),
+    .Inst3Read1Able  ( PHYToRef3Sr1Able),
+    .Inst3Read1Addr  ( PHYToRef3Sr1Num ),
+    .Inst3Read2Able  ( PHYToRef3Sr2Able),
+    .Inst3Read2Addr  ( PHYToRef3Sr2Num ),
+    .Inst4Read1Able  ( PHYToRef4Sr1Able),
+    .Inst4Read1Addr  ( PHYToRef4Sr1Num ),
+    .Inst4Read2Able  ( PHYToRef4Sr2Able),
+    .Inst4Read2Addr  ( PHYToRef4Sr2Num ),
+    .WritBack1Able   ( PHYToRef1WAble  ),
+    .WritBack1Addr   ( PHYToRef1Wnum   ),
+    .WritBack2Able   ( PHYToRef2WAble  ),
+    .WritBack2Addr   ( PHYToRef2Wnum   ),
+    .WritBack3Able   ( PHYToRef3WAble  ),
+    .WritBack3Addr   ( PHYToRef3Wnum   ),
+    .WritBack4Able   ( PHYToRef4WAble  ),
+    .WritBack4Addr   ( PHYToRef4Wnum   ),
+    .WritBack5Able   ( PHYToRef5WAble  ),
+    .WritBack5Addr   ( PHYToRef5Wnum   ),
+    .WritBack6Able   ( PHYToRef6WAble  ),
+    .WritBack6Addr   ( PHYToRef6Wnum   ),
+    .WritBack7Able   ( PHYToRef7WAble  ),
+    .WritBack7Addr   ( PHYToRef7Wnum   ),
+    .WritBack8Able   ( PHYToRef8WAble  ),
+    .WritBack8Addr   ( PHYToRef8Wnum   ),
+    .WriteNum1       ( RefToFLF1Addr   ),
+    .WriteAble1      ( RefToFLF1Able   ),
+    .WriteNum2       ( RefToFLF2Addr   ),
+    .WriteAble2      ( RefToFLF2Able   ),
+    .WriteNum3       ( RefToFLF3Addr   ),
+    .WriteAble3      ( RefToFLF3Able   ),
+    .WriteNum4       ( RefToFLF4Addr   ),
+    .WriteAble4      ( RefToFLF4Able   )
     );
+
+    reg                   StopTemp  ;
+    reg                   FLashTemp ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp   <= 1'b0 ;
+            FLashTemp  <= 1'b0 ;
+        end
+        else begin
+            StopTemp   <=      ;
+            FLashTemp  <=      ;
+        end
+    end
+
+    reg                   DcdToBrCsr1Able;
+    reg                   DcdToInt1Able  ;
+    reg                   DcdToMem1Able  ;
+    reg                   DcdToBrCsr2Able;
+    reg                   DcdToInt2Able  ;
+    reg                   DcdToMem2Able  ;
+    reg                   DcdToBrCsr3Able;
+    reg                   DcdToInt3Able  ;
+    reg                   DcdToMem3Able  ;
+    reg                   DcdToBrCsr4Able;
+    reg                   DcdToInt4Able  ;
+    reg                   DcdToMem4Able  ;
+    reg [`MicOperateCode] DcdToIQ1MicOp  ;    
+    reg                   DcdToIQ1ImAble ;
+    reg [25:0]            DcdToIQ1ImDate ;
+    reg                   DcdToIQ1Mode   ;
+    reg [`InstAddrBus]    DcdToIQ1RAddr  ;
+    reg                   DcdToIQ2Able   ;
+    reg [`MicOperateCode] DcdToIQ2MicOp  ;    
+    reg                   DcdToIQ2ImAble ;
+    reg [25:0]            DcdToIQ2ImDate ;
+    reg                   DcdToIQ2Mode   ;
+    reg [`InstAddrBus]    DcdToIQ2RAddr  ;
+    reg                   DcdToIQ3Able   ;
+    reg [`MicOperateCode] DcdToIQ3MicOp  ;    
+    reg                   DcdToIQ3ImAble ;
+    reg [25:0]            DcdToIQ3ImDate ;
+    reg                   DcdToIQ3Mode   ;
+    reg [`InstAddrBus]    DcdToIQ3RAddr  ;
+    reg                   DcdToIQ4Able   ;
+    reg [`MicOperateCode] DcdToIQ4MicOp  ;    
+    reg                   DcdToIQ4ImAble ;
+    reg [25:0]            DcdToIQ4ImDate ;
+    reg                   DcdToIQ4Mode   ;
+    reg [`InstAddrBus]    DcdToIQ4RAddr  ;
+
+    wire  BrCsr1Able  = (DcdToRnm1Opcode[7:5] == 4) | (DcdToRnm1Opcode[7:5] == 7) ;
+    wire  Int1Able    = (DcdToRnm1Opcode[7:5] == 1) | (DcdToRnm1Opcode[7:5] == 2) | (DcdToRnm1Opcode[7:5] == 3) ;
+    wire  Mem1Able    = (DcdToRnm1Opcode[7:5] == 0) | (DcdToRnm1Opcode[7:5] == 5) ;
+
+    wire  BrCsr2Able  = (DcdToRnm2Opcode[7:5] == 4) | (DcdToRnm2Opcode[7:5] == 7) ;
+    wire  Int2Able    = (DcdToRnm2Opcode[7:5] == 1) | (DcdToRnm2Opcode[7:5] == 2) | (DcdToRnm2Opcode[7:5] == 3) ;
+    wire  Mem2Able    = (DcdToRnm2Opcode[7:5] == 0) | (DcdToRnm2Opcode[7:5] == 5) ;
+
+    wire  BrCsr3Able  = (DcdToRnm3Opcode[7:5] == 4) | (DcdToRnm3Opcode[7:5] == 7) ;
+    wire  Int3Able    = (DcdToRnm3Opcode[7:5] == 1) | (DcdToRnm3Opcode[7:5] == 2) | (DcdToRnm3Opcode[7:5] == 3) ;
+    wire  Mem3Able    = (DcdToRnm3Opcode[7:5] == 0) | (DcdToRnm3Opcode[7:5] == 5) ;
+
+    wire  BrCsr4Able  = (DcdToRnm4Opcode[7:5] == 4) | (DcdToRnm4Opcode[7:5] == 7) ;
+    wire  Int4Able    = (DcdToRnm4Opcode[7:5] == 1) | (DcdToRnm4Opcode[7:5] == 2) | (DcdToRnm4Opcode[7:5] == 3) ;
+    wire  Mem4Able    = (DcdToRnm4Opcode[7:5] == 0) | (DcdToRnm4Opcode[7:5] == 5) ;
+    
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            DcdToBrCsr1Able  <=  1'b0  ;
+            DcdToInt1Able    <=  1'b0  ;
+            DcdToMem1Able    <=  1'b0  ;
+            DcdToIQ1MicOp    <=  8'b0  ;
+            DcdToIQ1ImAble   <=  1'b0  ;
+            DcdToIQ1ImDate   <=  26'd0 ;
+            DcdToIQ1Mode     <=  1'b0  ;
+            DcdToIQ1RAddr    <=  32'd0 ;
+            DcdToBrCsr2Able  <=  1'b0  ;
+            DcdToInt2Able    <=  1'b0  ;
+            DcdToMem2Able    <=  1'b0  ;
+            DcdToIQ2MicOp    <=  8'b0  ;
+            DcdToIQ2ImAble   <=  1'b0  ;
+            DcdToIQ2ImDate   <=  26'd0 ;
+            DcdToIQ2Mode     <=  1'b0  ;
+            DcdToIQ2RAddr    <=  32'd0 ;
+            DcdToBrCsr3Able  <=  1'b0  ;
+            DcdToInt3Able    <=  1'b0  ;
+            DcdToMem3Able    <=  1'b0  ;
+            DcdToIQ3MicOp    <=  8'b0  ;
+            DcdToIQ3ImAble   <=  1'b0  ;
+            DcdToIQ3ImDate   <=  26'd0 ;
+            DcdToIQ3Mode     <=  1'b0  ;
+            DcdToIQ3RAddr    <=  32'd0 ;
+            DcdToBrCsr4Able  <=  1'b0  ;
+            DcdToInt4Able    <=  1'b0  ;
+            DcdToMem4Able    <=  1'b0  ;
+            DcdToIQ4MicOp    <=  8'b0  ;
+            DcdToIQ4ImAble   <=  1'b0  ;
+            DcdToIQ4ImDate   <=  26'd0 ;
+            DcdToIQ4Mode     <=  1'b0  ;
+            DcdToIQ4RAddr    <=  32'd0 ;
+        end 
+        else if(StopTemp) begin
+            DcdToBrCsr1Able  <=  DcdToBrCsr1Able   ;
+            DcdToInt1Able    <=  DcdToInt1Able     ;
+            DcdToMem1Able    <=  DcdToMem1Able     ;
+            DcdToIQ1MicOp    <=  DcdToIQ1MicOp     ;
+            DcdToIQ1ImAble   <=  DcdToIQ1ImAble    ;
+            DcdToIQ1ImDate   <=  DcdToIQ1ImDate    ;
+            DcdToIQ1Mode     <=  DcdToIQ1Mode      ;
+            DcdToIQ1RAddr    <=  DcdToIQ1RAddr     ;
+            DcdToBrCsr2Able  <=  DcdToBrCsr2Able   ;
+            DcdToInt2Able    <=  DcdToInt2Able     ;
+            DcdToMem2Able    <=  DcdToMem2Able     ;
+            DcdToIQ2MicOp    <=  DcdToIQ2MicOp     ;
+            DcdToIQ2ImAble   <=  DcdToIQ2ImAble    ;
+            DcdToIQ2ImDate   <=  DcdToIQ2ImDate    ;
+            DcdToIQ2Mode     <=  DcdToIQ2Mode      ;
+            DcdToIQ2RAddr    <=  DcdToIQ2RAddr     ;
+            DcdToBrCsr3Able  <=  DcdToBrCsr3Able   ;
+            DcdToInt3Able    <=  DcdToInt3Able     ;
+            DcdToMem3Able    <=  DcdToMem3Able     ;
+            DcdToIQ3MicOp    <=  DcdToIQ3MicOp     ;
+            DcdToIQ3ImAble   <=  DcdToIQ3ImAble    ;
+            DcdToIQ3ImDate   <=  DcdToIQ3ImDate    ;
+            DcdToIQ3Mode     <=  DcdToIQ3Mode      ;
+            DcdToIQ3RAddr    <=  DcdToIQ3RAddr     ;
+            DcdToBrCsr3Able  <=  DcdToBrCsr3Able   ;
+            DcdToInt3Able    <=  DcdToInt3Able     ;
+            DcdToMem3Able    <=  DcdToMem3Able     ;
+            DcdToIQ4MicOp    <=  DcdToIQ4MicOp     ;
+            DcdToIQ4ImAble   <=  DcdToIQ4ImAble    ;
+            DcdToIQ4ImDate   <=  DcdToIQ4ImDate    ;
+            DcdToIQ4Mode     <=  DcdToIQ4Mode      ;
+            DcdToIQ4RAddr    <=  DcdToIQ4RAddr     ;
+        end
+        else if(FlashTemp) begin
+            DcdToBrCsr1Able  <=  1'b0  ;
+            DcdToInt1Able    <=  1'b0  ;
+            DcdToMem1Able    <=  1'b0  ;
+            DcdToIQ1MicOp    <=  8'b0  ;
+            DcdToIQ1ImAble   <=  1'b0  ;
+            DcdToIQ1ImDate   <=  26'd0 ;
+            DcdToIQ1Mode     <=  1'b0  ;
+            DcdToIQ1RAddr    <=  32'd0 ;
+            DcdToBrCsr2Able  <=  1'b0  ;
+            DcdToInt2Able    <=  1'b0  ;
+            DcdToMem2Able    <=  1'b0  ;
+            DcdToIQ2MicOp    <=  8'b0  ;
+            DcdToIQ2ImAble   <=  1'b0  ;
+            DcdToIQ2ImDate   <=  26'd0 ;
+            DcdToIQ2Mode     <=  1'b0  ;
+            DcdToIQ2RAddr    <=  32'd0 ;
+            DcdToBrCsr3Able  <=  1'b0  ;
+            DcdToInt3Able    <=  1'b0  ;
+            DcdToMem3Able    <=  1'b0  ;
+            DcdToIQ3MicOp    <=  8'b0  ;
+            DcdToIQ3ImAble   <=  1'b0  ;
+            DcdToIQ3ImDate   <=  26'd0 ;
+            DcdToIQ3Mode     <=  1'b0  ;
+            DcdToIQ3RAddr    <=  32'd0 ;
+            DcdToBrCsr4Able  <=  1'b0  ;
+            DcdToInt4Able    <=  1'b0  ;
+            DcdToMem4Able    <=  1'b0  ;
+            DcdToIQ4MicOp    <=  8'b0  ;
+            DcdToIQ4ImAble   <=  1'b0  ;
+            DcdToIQ4ImDate   <=  26'd0 ;
+            DcdToIQ4Mode     <=  1'b0  ;
+            DcdToIQ4RAddr    <=  32'd0 ;
+        end
+        else begin
+            DcdToBrCsr1Able  <=  BrCsr1Able       ;
+            DcdToInt1Able    <=  Int1Able         ;
+            DcdToMem1Able    <=  Mem1Able         ;
+            DcdToIQ1MicOp    <=  DcdToRnm1Opcode  ;
+            DcdToIQ1ImAble   <=  DcdToRnm1ImAble  ;
+            DcdToIQ1ImDate   <=  DcdToRnm1ImDate  ;
+            DcdToIQ1Mode     <=  DcdToRnm1Part    ;
+            DcdToIQ1RAddr    <=  DcdToRnm1Naddr   ;
+            DcdToBrCsr2Able  <=  BrCsr2Able       ;
+            DcdToInt2Able    <=  Int2Able         ;
+            DcdToMem2Able    <=  Mem2Able         ;
+            DcdToIQ2MicOp    <=  DcdToRnm2Opcode  ;
+            DcdToIQ2ImAble   <=  DcdToRnm2ImAble  ;
+            DcdToIQ2ImDate   <=  DcdToRnm2ImDate  ;
+            DcdToIQ2Mode     <=  DcdToRnm2Part    ;
+            DcdToIQ2RAddr    <=  DcdToRnm2Naddr   ;
+            DcdToBrCsr3Able  <=  BrCsr3Able       ;
+            DcdToInt3Able    <=  Int3Able         ;
+            DcdToMem3Able    <=  Mem3Able         ;
+            DcdToIQ3MicOp    <=  DcdToRnm3Opcode  ;
+            DcdToIQ3ImAble   <=  DcdToRnm3ImAble  ;
+            DcdToIQ3ImDate   <=  DcdToRnm3ImDate  ;
+            DcdToIQ3Mode     <=  DcdToRnm3Part    ;
+            DcdToIQ3RAddr    <=  DcdToRnm3Naddr   ;
+            DcdToBrCsr4Able  <=  BrCsr4Able       ;
+            DcdToInt3Able    <=  Int4Able         ;
+            DcdToMem3Able    <=  Mem4Able         ;
+            DcdToIQ4MicOp    <=  DcdToRnm4Opcode  ;
+            DcdToIQ4ImAble   <=  DcdToRnm4ImAble  ;
+            DcdToIQ4ImDate   <=  DcdToRnm4ImDate  ;
+            DcdToIQ4Mode     <=  DcdToRnm4Part    ;
+            DcdToIQ4RAddr    <=  DcdToRnm4Naddr   ;
+        end
+    end
 
 
     IssueQueueBrCsr u_IssueQueueBrCsr(
-        .Clk               ( Clk               ),
-        .Rest              ( Rest              ),
-        .BrCsrStop         ( BrCsrStop         ),
-        .BrCsrFlash        ( BrCsrFlash        ),
-        .BrCsrReq          ( BrCsrReq          ),
-        .BIn1Src1Able      ( BIn1Src1Able      ),
-        .BIn1Src1Ready     ( BIn1Src1Ready     ),
-        .BIn1Src1Addr      ( BIn1Src1Addr      ),
-        .BIn1Src2Able      ( BIn1Src2Able      ),
-        .BIn1Src2Ready     ( BIn1Src2Ready     ),
-        .BIn1Src2Addr      ( BIn1Src2Addr      ),
-        .BIn1RdAble        ( BIn1RdAble        ),
-        .BIn1RdAddr        ( BIn1RdAddr        ),
-        .BIn2Src1Able      ( BIn2Src1Able      ),
-        .BIn2Src1Ready     ( BIn2Src1Ready     ),
-        .BIn2Src1Addr      ( BIn2Src1Addr      ),
-        .BIn2Src2Able      ( BIn2Src2Able      ),
-        .BIn2Src2Ready     ( BIn2Src2Ready     ),
-        .BIn2Src2Addr      ( BIn2Src2Addr      ),
-        .BIn2RdAble        ( BIn2RdAble        ),
-        .BIn2RdAddr        ( BIn2RdAddr        ),
-        .BIn3Src1Able      ( BIn3Src1Able      ),
-        .BIn3Src1Ready     ( BIn3Src1Ready     ),
-        .BIn3Src1Addr      ( BIn3Src1Addr      ),
-        .BIn3Src2Able      ( BIn3Src2Able      ),
-        .BIn3Src2Ready     ( BIn3Src2Ready     ),
-        .BIn3Src2Addr      ( BIn3Src2Addr      ),
-        .BIn3RdAble        ( BIn3RdAble        ),
-        .BIn3RdAddr        ( BIn3RdAddr        ),
-        .BIn4Src1Able      ( BIn4Src1Able      ),
-        .BIn4Src1Ready     ( BIn4Src1Ready     ),
-        .BIn4Src1Addr      ( BIn4Src1Addr      ),
-        .BIn4Src2Able      ( BIn4Src2Able      ),
-        .BIn4Src2Ready     ( BIn4Src2Ready     ),
-        .BIn4Src2Addr      ( BIn4Src2Addr      ),
-        .BIn4RdAble        ( BIn4RdAble        ),
-        .BIn4RdAddr        ( BIn4RdAddr        ),
-        .BIn1aAble         ( BIn1aAble         ),
-        .BIn1MicOpcode     ( BIn1MicOpcode     ),
-        .BIn1ImmAble       ( BIn1ImmAble       ),
-        .BIn1ImmDate       ( BIn1ImmDate       ),
-        .BIn1Mode          ( BIn1Mode          ),
-        .BIn1ReDirAddr     ( BIn1ReDirAddr     ),
-        .BIn1RobPtr        ( BIn1RobPtr        ),
-        .BIn2aAble         ( BIn2aAble         ),
-        .BIn2MicOpcode     ( BIn2MicOpcode     ),
-        .BIn2ImmAble       ( BIn2ImmAble       ),
-        .BIn2ImmDate       ( BIn2ImmDate       ),
-        .BIn2Mode          ( BIn2Mode          ),
-        .BIn2ReDirAddr     ( BIn2ReDirAddr     ),
-        .BIn2RobPtr        ( BIn2RobPtr        ),
-        .BIn3aAble         ( BIn3aAble         ),
-        .BIn3MicOpcode     ( BIn3MicOpcode     ),
-        .BIn3ImmAble       ( BIn3ImmAble       ),
-        .BIn3ImmDate       ( BIn3ImmDate       ),
-        .BIn3Mode          ( BIn3Mode          ),
-        .BIn3ReDirAddr     ( BIn3ReDirAddr     ),
-        .BIn3RobPtr        ( BIn3RobPtr        ),
-        .BIn4aAble         ( BIn4aAble         ),
-        .BIn4MicOpcode     ( BIn4MicOpcode     ),
-        .BIn4ImmAble       ( BIn4ImmAble       ),
-        .BIn4ImmDate       ( BIn4ImmDate       ),
-        .BIn4Mode          ( BIn4Mode          ),
-        .BIn4ReDirAddr     ( BIn4ReDirAddr     ),
-        .BIn4RobPtr        ( BIn4RobPtr        ),
-        .CsrReq            ( CsrReq            ),
-        .BrReq             ( BrReq             ),
-        .FromIsQAlu1       ( FromIsQAlu1       ),
-        .FromAlu1Addr      ( FromAlu1Addr      ),
-        .FromIsQAlu2       ( FromIsQAlu2       ),
-        .FromAlu2Addr      ( FromAlu2Addr      ),
-        .FromIsQMul        ( FromIsQMul        ),
-        .FromMulAddr       ( FromMulAddr       ),
-        .ByPassBDiv        ( ByPassBDiv        ),
-        .ByPassBDivAddr    ( ByPassBDivAddr    ),
-        .BypassBSC         ( BypassBSC         ),
-        .BypassBSCAddr     ( BypassBSCAddr     ),
-        .ByPassBLoad       ( ByPassBLoad       ),
-        .ByPassBLoadAddr   ( ByPassBLoadAddr   ),
-        .OutCsrAble        ( OutCsrAble        ),
-        .OutCsrAddr        ( OutCsrAddr        ),
-        .OutBruAble        ( OutBruAble        ),
-        .OutBruAddr        ( OutBruAddr        ),
-        .BInst1MicOperate  ( BInst1MicOperate  ),
-        .BInst1Src1RAble   ( BInst1Src1RAble   ),
-        .BInst1Src1RAddr   ( BInst1Src1RAddr   ),
-        .BInst1Src2RAble   ( BInst1Src2RAble   ),
-        .BInst1Src2RAddr   ( BInst1Src2RAddr   ),
-        .BInst1ImmAble     ( BInst1ImmAble     ),
-        .BInst1ImmDate     ( BInst1ImmDate     ),
-        .BInst1RdAble      ( BInst1RdAble      ),
-        .BInst1RdAddr      ( BInst1RdAddr      ),
-        .BInst1Mode        ( BInst1Mode        ),
-        .BInst1RedieAddr   ( BInst1RedieAddr   ),
-        .BInst1RoBptr      ( BInst1RoBptr      ),
-        .BInst2MicOperate  ( BInst2MicOperate  ),
-        .BInst2Src1RAble   ( BInst2Src1RAble   ),
-        .BInst2Src1RAddr   ( BInst2Src1RAddr   ),
-        .BInst2Src2RAble   ( BInst2Src2RAble   ),
-        .BInst2Src2RAddr   ( BInst2Src2RAddr   ),
-        .BInst2ImmAble     ( BInst2ImmAble     ),
-        .BInst2ImmDate     ( BInst2ImmDate     ),
-        .BInst2RdAble      ( BInst2RdAble      ),
-        .BInst2RdAddr      ( BInst2RdAddr      ),
-        .BInst2RoBptr      ( BInst2RoBptr      )
+    .Clk               ( Clk               ),
+    .Rest              ( Rest              ),
+    .BrCsrStop         ( BrCsrStop         ),
+    .BrCsrFlash        ( BrCsrFlash        ),
+    .BrCsrReq          ( BrCsrReq          ),
+    .BIn1Src1Able      ( BYTToIQ1Sr1Able   ),
+    .BIn1Src1Ready     ( BYTToIQ1Sr1Ready  ),
+    .BIn1Src1Addr      ( BYTToIQ1Sr1Num    ),
+    .BIn1Src2Able      ( BYTToIQ1Sr2Able   ),
+    .BIn1Src2Ready     ( BYTToIQ1Sr2Ready  ),
+    .BIn1Src2Addr      ( BYTToIQ1Sr2Num    ),
+    .BIn1RdAble        ( BYTToIQ1WAble     ),
+    .BIn1RdAddr        ( BYTToIQ1WNum      ),
+    .BIn2Src1Able      ( BYTToIQ2Sr1Able   ),
+    .BIn2Src1Ready     ( BYTToIQ2Sr1Ready  ),
+    .BIn2Src1Addr      ( BYTToIQ2Sr1Num    ),
+    .BIn2Src2Able      ( BYTToIQ2Sr2Able   ),
+    .BIn2Src2Ready     ( BYTToIQ2Sr2Ready  ),
+    .BIn2Src2Addr      ( BYTToIQ2Sr2Num    ),
+    .BIn2RdAble        ( BYTToIQ2WAble     ),
+    .BIn2RdAddr        ( BYTToIQ2WNum      ),
+    .BIn3Src1Able      ( BYTToIQ3Sr1Able   ),
+    .BIn3Src1Ready     ( BYTToIQ3Sr1Ready  ),
+    .BIn3Src1Addr      ( BYTToIQ3Sr1Num    ),
+    .BIn3Src2Able      ( BYTToIQ3Sr2Able   ),
+    .BIn3Src2Ready     ( BYTToIQ3Sr2Ready  ),
+    .BIn3Src2Addr      ( BYTToIQ3Sr2Num    ),
+    .BIn3RdAble        ( BYTToIQ3WAble     ),
+    .BIn3RdAddr        ( BYTToIQ3WNum      ),
+    .BIn4Src1Able      ( BYTToIQ4Sr1Able   ),
+    .BIn4Src1Ready     ( BYTToIQ4Sr1Ready  ),
+    .BIn4Src1Addr      ( BYTToIQ4Sr1Num    ),
+    .BIn4Src2Able      ( BYTToIQ4Sr2Able   ),
+    .BIn4Src2Ready     ( BYTToIQ4Sr2Ready  ),
+    .BIn4Src2Addr      ( BYTToIQ4Sr2Num    ),
+    .BIn4RdAble        ( BYTToIQ4WAble     ),
+    .BIn4RdAddr        ( BYTToIQ4WNum      ),
+    .BIn1aAble         ( DcdToBrCsr1Able   ),
+    .BIn1MicOpcode     ( DcdToIQ1MicOp     ),
+    .BIn1ImmAble       ( DcdToIQ1ImAble    ),
+    .BIn1ImmDate       ( DcdToIQ1ImDate    ),
+    .BIn1Mode          ( DcdToIQ1Mode      ),
+    .BIn1ReDirAddr     ( DcdToIQ1RAddr     ),
+    .BIn1RobPtr        ( BIn1RobPtr        ),
+    .BIn2aAble         ( DcdToBrCsr2Able   ),
+    .BIn2MicOpcode     ( DcdToIQ2MicOp     ),
+    .BIn2ImmAble       ( DcdToIQ2ImAble    ),
+    .BIn2ImmDate       ( DcdToIQ2ImDate    ),
+    .BIn2Mode          ( DcdToIQ2Mode      ),
+    .BIn2ReDirAddr     ( DcdToIQ2RAddr     ),
+    .BIn2RobPtr        ( BIn2RobPtr        ),
+    .BIn3aAble         ( DcdToBrCsr2Able   ),
+    .BIn3MicOpcode     ( DcdToIQ2MicOp     ),
+    .BIn3ImmAble       ( DcdToIQ2ImAble    ),
+    .BIn3ImmDate       ( DcdToIQ2ImDate    ),
+    .BIn3Mode          ( DcdToIQ2Mode      ),
+    .BIn3ReDirAddr     ( DcdToIQ2RAddr     ),
+    .BIn3RobPtr        ( BIn3RobPtr        ),
+    .BIn4aAble         ( DcdToBrCsr4Able   ),
+    .BIn4MicOpcode     ( DcdToIQ4MicOp     ),
+    .BIn4ImmAble       ( DcdToIQ4ImAble    ),
+    .BIn4ImmDate       ( DcdToIQ4ImDate    ),
+    .BIn4Mode          ( DcdToIQ4Mode      ),
+    .BIn4ReDirAddr     ( DcdToIQ4RAddr     ),
+    .BIn4RobPtr        ( BIn4RobPtr        ),
+    .CsrReq            ( EXCsrToIQReq      ),
+    .BrReq             ( EXBrToIQReq       ),
+    .FromIsQAlu1       ( IntToBrCsrWKAlu1  ),
+    .FromAlu1Addr      ( IntToBrCsrWKANum1 ),
+    .FromIsQAlu2       ( IntToBrCsrWKAlu2  ),
+    .FromAlu2Addr      ( IntToBrCsrWKANum2 ),
+    .FromIsQMul        ( IntToBrCsrWKMul   ),
+    .FromMulAddr       ( IntToBrCsrWKMNum  ),
+    .ByPassBDiv        ( ByPassDivAble     ),
+    .ByPassBDivAddr    ( ByPassDivNum      ),
+    .BypassBSC         ( ByPassSCAble      ),
+    .BypassBSCAddr     ( ByPassSCNum       ),
+    .ByPassBLoad       ( ByPassLoadAble    ),
+    .ByPassBLoadAddr   ( ByPassLoadNum     ),
+    .OutCsrAble        ( CsrToOtherAble    ),
+    .OutCsrAddr        ( CsrToOtherAddr    ),
+    .OutBruAble        ( BrToOtherAble     ),
+    .OutBruAddr        ( BrToOtherAddr     ),
+    .BInst1MicOperate  ( BrCsrTo1EUMicop   ),
+    .BInst1Src1RAble   ( BrCsrTo1EUSr1A    ),
+    .BInst1Src1RAddr   ( BrCsrTo1EUSr1Num  ),
+    .BInst1Src2RAble   ( BrCsrTo1EUSr2A    ),
+    .BInst1Src2RAddr   ( BrCsrTo1EUSr2Num  ),
+    .BInst1ImmAble     ( BrCsrTo1EUImA     ),
+    .BInst1ImmDate     ( BrCsrTO1EUImDate  ),
+    .BInst1RdAble      ( BrCsrTo1EURdA     ),
+    .BInst1RdAddr      ( BRCsrTo1EURdNum   ),
+    .BInst1Mode        ( BrCsrTo1EUMode    ),
+    .BInst1RedieAddr   ( BrCsrTo1EURAddr   ),
+    .BInst1RoBptr      ( BrCstTO1EURobPtr  ),
+    .BInst2MicOperate  ( BrCsrTo2EUMicop   ),
+    .BInst2Src1RAble   ( BrCsrTo2EUSr1A    ),
+    .BInst2Src1RAddr   ( BrCsrTo2EUSr1Num  ),
+    .BInst2Src2RAble   ( BrCsrTo2EUSr2A    ),
+    .BInst2Src2RAddr   ( BrCsrTo2EUSr2Num  ),
+    .BInst2ImmAble     ( BrCsrTo2EUImA     ),
+    .BInst2ImmDate     ( BrCsrTO2EUImDate  ),
+    .BInst2RdAble      ( BrCsrTo2EURdA     ),
+    .BInst2RdAddr      ( BRCsrTo2EURdNum   ),
+    .BInst2RoBptr      ( BrCstTO2EURobPtr  )
     );
 
     IssueQueueInt u_IssueQueueInt(

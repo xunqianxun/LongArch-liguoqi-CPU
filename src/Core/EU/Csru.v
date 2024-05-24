@@ -4,24 +4,34 @@
 module Csru (
     input        wire                                     Clk            ,
     input        wire                                     Rest           ,
+
+    input        wire                                     CsruStop       ,
+    input        wire                                     CsruFlash      ,
+
     //input from RS order
     input        wire                                     InInstAble     ,
     input        wire      [`InstAddrBus]                 InstVritualPc  ,
     input        wire      [`MicOperateCode]              CsrMicOpCOde   ,
+    input        wire                                     ArchRegAble0   ,
+    input        wire      [`ReNameRegBUs]                ArchRegNum0    ,
     input        wire      [`DataBus]                     ArchRegDate0   ,
+    input        wire                                     ArchRegAble1   ,
+    input        wire      [`ReNameRegBUs]                ArchRegNum1    ,
+    input        wire                                     ArchRdAble     ,
+    input        wire      [`ReNameRegBUs]                ArchRdAddr     ,
     input        wire      [`DataBus]                     ArchRegDate1   ,
     input        wire      [13:0]                         CsrNum         ,
     input        wire      [5:0]                          InstRobPtr     ,
-    //to 
-    output       wire                                     CsruFree       ,
+    //to  CsrBrIQ
+    output       wire                                     CsrReq         ,
     //write physical regfile
+    output       wire                                     WriteBackAble  ,
     output       wire      [`DataBus]                     WriteBackDate  ,
     output       wire      [`ReNameRegBUs]                WriteBackAddr  , 
     //to ROB
     output       wire                                     ToRobInterrupt  ,//中断选择指令赋予
     output       wire      [6:0]                          ToRobCode       ,
     output       wire                                     ToRobLlbetlKlo  ,
-
     output       wire                                     InstReadyAble   ,
     output       wire      [5:0]                          InstReadyPtr    ,
     output       wire                                     InstReDirectAble,//系统调用
@@ -29,13 +39,18 @@ module Csru (
     output       wire                                     InstReDirectIdle,
     output       wire      [6:0]                          InstReDirectCode,
     output       wire      [`InstAddrBus]                 InstReDirectAddr,
-    // from ROB
+    //from ROB
     input        wire                                     InstRetireAble  ,
     input        wire      [7:0]                          InstRetireCode  ,
     //csr
     input        wire      [`DataBus]                     CrmdData        ,
     input        wire      [`DataBus]                     EraDate         ,
     input        wire      [`DataBus]                     EstatDate       ,
+    input        wire      [9:0]                          AsidDate        ,
+    input        wire      [18:0]                         TlbEhiDate      ,
+    input        wire      [5:0]                          TlbIndex        ,
+    input        wire      [5:0]                          TlbEcode        ,
+    input        wire                                     TlbNe           ,
     //read Csr
     output       wire                                     ReadCsrAble     ,
     output       wire      [13:0]                         ReadCsrAddr     ,
@@ -77,173 +92,166 @@ module Csru (
     output       wire                                     SerchMmuAble    ,
     output       wire      [28:0]                         SerchMmuInfr    ,
     input        wire                                     SerchSuccess    ,
-    input        wire      [13:0]                         SerchIndexDate  ,                                         
-    //from ctrlblock
-    input        wire                                     CsruStop        ,
-    input        wire                                     CsruFlash       
-    
+    input        wire      [13:0]                         SerchIndexDate  ,
+    //bypass other eu
+    input        wire                                     CsrSelfAble     ,
+    input        wire      [`ReNameRegBUs]                CsrSelfAddr     ,
+    input        wire      [`DataBus]                     CsrSelfDate     ,
+    input        wire                                     CsrAlu1Able     ,
+    input        wire      [`ReNameRegBUs]                CsrAlu1Addr     ,
+    input        wire      [`DataBus]                     CsrAlu1Date     ,
+    input        wire                                     CsrAlu2Able     ,
+    input        wire      [`ReNameRegBUs]                CsrAlu2Addr     ,
+    input        wire      [`DataBus]                     CsrAlu2Date     ,
+    input        wire                                     CsrMulAble      ,
+    input        wire      [`ReNameRegBUs]                CsrMulAddr      ,
+    input        wire      [`DataBus]                     CsrMulDate      ,
+    input        wire                                     CsrBruAble      ,
+    input        wire      [`ReNameRegBUs]                CsrBruAddr      ,
+    input        wire      [`DataBus]                     CsrBruDate     
 );
 
-    reg   [93-1:0] CSRUREGTEMP ;
-    reg            CsruUnFree  ;
-    reg            InstAbleReg ;
-    reg   [5:0]    InstPtrReg  ;
-    reg                  ReDirectAbleReg ;
-    reg                  ReDriectEntryReg;
-    reg                  ReDirectIdleReg ;
-    reg   [6:0]          ReDirectCodeReg ;
-    reg   [`InstAddrBus] ReDirectAddrReg ;
+    wire  [`DataBus] ASrc1Date   =  ((ArchRegNum0 == CsrSelfAddr) & CsrSelfAble & ArchRegAble0) ? CsrSelfDate :
+                                    ((ArchRegNum0 == CsrBruAddr ) & CsrBruAble  & ArchRegAble0) ? CsrBruDate  :
+                                    ((ArchRegNum0 == CsrAlu2Addr) & CsrAlu2Able & ArchRegAble0) ? CsrAlu2Date :
+                                    ((ArchRegNum0 == CsrMulAddr ) & CsrMulAble  & ArchRegAble0) ? CsrMulDate  :
+                                    ((ArchRegNum0 == CsrAlu1Addr) & CsrAlu1Able & ArchRegAble0) ? CsrAlu1Date : ArchRegDate0 ;
+    
+    wire  [`DataBus] ASrc2Date   =  ((ArchRegNum1 == CsrSelfAddr) & CsrSelfAble & ArchRegAble1) ? CsrSelfDate :
+                                    ((ArchRegNum1 == CsrBruAddr ) & CsrBruAble  & ArchRegAble1) ? CsrBruDate  :
+                                    ((ArchRegNum1 == CsrAlu2Addr) & CsrAlu2Able & ArchRegAble1) ? CsrAlu2Date :
+                                    ((ArchRegNum1 == CsrMulAddr ) & CsrMulAble  & ArchRegAble1) ? CsrMulDate  :
+                                    ((ArchRegNum1 == CsrAlu1Addr) & CsrAlu1Able & ArchRegAble1) ? CsrAlu1Date : ArchRegDate1 ;
 
-    //wire  [`DataBus]     CrmdData ; 
-    //wire  [`DataBus]     EraDate  ;
-    //wire  [`DataBus]     EstatDate;
+    assign  CsrReq = (CSRUREGTEMP[92] == `AbleValue) | (InstRetireAble) ;
+
+    reg   [100:0] CSRUREGTEMP ;
+    reg   [5:0]    CstToRobPtr ;
+    reg            CsruTrapAble;
+    reg   [6:0]    CsruTrapCode;
+    reg   [`InstAddrBus] CsruTrapAddr ;
+    reg            CsruIdle    ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            CSRUREGTEMP <= 72'd0 ;
-            CsruUnFree  <= `AbleValue  ;
-            InstAbleReg <= `EnableValue;
-            InstPtrReg  <= 6'b0  ;
-            ReDirectAbleReg <= `EnableValue ;
-            ReDriectEntryReg <= `EnableValue ;
-            ReDirectIdleReg <= `EnableValue ;
-            ReDirectCodeReg <= 7'b0  ;
-            ReDirectAddrReg <= `ZeorDate ;
+            CSRUREGTEMP <= 101'd0       ;
+            CsruTrapAble<= `EnableValue;
+            CstToRobPtr <= 6'd0        ;
+            CsruTrapCode<= 7'b0        ;
+            CsruIdle    <= 1'b0        ;
+            CsruTrapAddr<= 32'd0       ;
         end
         else if(CsruStop)begin
-            CSRUREGTEMP <= CSRUREGTEMP ;
-            CsruUnFree  <= `EnableValue ;
-            InstAbleReg <= InstAbleReg ;
-            InstPtrReg <= InstPtrReg ;
-            ReDirectAbleReg <= ReDirectAbleReg ;
-            ReDriectEntryReg <=ReDriectEntryReg;
-            ReDirectIdleReg <= ReDirectIdleReg ;
-            ReDirectCodeReg <= ReDirectCodeReg ;
-            ReDirectAddrReg <= ReDirectAddrReg ;
+            CSRUREGTEMP <= CSRUREGTEMP  ;
+            CsruTrapAble<= CsruTrapAble ;
+            CstToRobPtr <= CstToRobPtr  ;
+            CsruTrapCode<= CsruTrapCode ;
+            CsruIdle    <= CsruIdle     ;
+            CsruTrapAddr<= CsruTrapAddr ;
         end
         else if(CsruFlash) begin
-            CSRUREGTEMP <= 72'd0 ;
-            CsruUnFree  <= `AbleValue  ;
-            InstAbleReg <= `EnableValue;
-            InstPtrReg  <= 6'b0  ;
-            ReDirectAbleReg <= `EnableValue ;
-            ReDriectEntryReg <= `EnableValue ;
-            ReDirectIdleReg <= `EnableValue ;
-            ReDirectCodeReg <= 7'b0  ;
-            ReDirectAddrReg <= `ZeorDate ;
+            CSRUREGTEMP <= 101'd0       ;
+            CsruTrapAble<= `EnableValue;
+            CstToRobPtr <= 6'd0        ;
+            CsruTrapCode<= 7'b0        ;
+            CsruIdle    <= 1'b0        ;
+            CsruTrapAddr<= 32'd0       ;
         end 
         else if(InInstAble) begin
-            CSRUREGTEMP <= {CsrNum, InstRobPtr, CsrMicOpCOde, ArchRegDate0, ArchRegDate1} ;
-            CsruUnFree  <= `EnableValue ;
-            InstAbleReg <= `AbleValue   ;
-            InstPtrReg  <= InstRobPtr   ;
+            CSRUREGTEMP <= {ArchRdAddr, ArchRdAddr, `AbleValue, CsrNum, InstRobPtr, CsrMicOpCOde, ASrc1Date, ASrc2Date} ;
+            CstToRobPtr <= InstRobPtr   ;
             case (CsrMicOpCOde)
                 `InstCsrrd, `InstCsrwr, `InstCsrxchg, `InstCacop, `InstTlbsrchr, `InstTlbsrchw, 
                 `InstTlbrd, `InstTlbwr, `InstTlbfill,`InstInvtlb : begin     
-                            ReDirectAbleReg <= (CrmdData[`PLV] == 2'd0 & CrmdData[`IE]) ? `AbleValue : `EnableValue; 
-                            ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
-                            ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
-                            ReDriectEntryReg <= `EnableValue ;
-                            ReDirectIdleReg <= `EnableValue  ;
+                            CsruTrapAble <= (CrmdData[`PLV] == 2'd0 & CrmdData[`IE]) ? `AbleValue : `EnableValue; 
+                            CsruTrapCode <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
+                            CsruTrapAddr <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
+                            CsruIdle     <= `EnableValue     ;
                         end 
                 `InstEntry : begin
-                            ReDirectAbleReg <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
-                            ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;
-                            ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ;
-                            ReDriectEntryReg <= CrmdData[`IE] ? `AbleValue : `EnableValue          ; 
-                            ReDirectIdleReg <= `EnableValue  ;
+                            CsruTrapAble <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
+                            CsruTrapCode <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;
+                            CsruTrapAddr <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ;
+                            CsruIdle     <= `EnableValue  ;
                         end 
                 `InstIdle : begin
-                            ReDirectAbleReg <= `AbleValue ; 
-                            ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
-                            ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
-                            ReDriectEntryReg <= `EnableValue ;
-                            ReDirectIdleReg <= `AbleValue    ;
+                            CsruTrapAble <= `AbleValue ; 
+                            CsruTrapCode <= (CrmdData[`PLV] == 2'd3) ? 7'b0 : `PPI              ;   
+                            CsruTrapAddr <= (CrmdData[`PLV] == 2'd3) ? `ZeorDate : InstVritualPc; 
+                            CsruIdle     <= `AbleValue    ;
                         end 
                 `InstSyscall : begin
-                            ReDirectAbleReg <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
-                            ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? `SYS : `PPI              ;   
-                            ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ; 
-                            ReDriectEntryReg <= `EnableValue ;
-                            ReDirectIdleReg <= `EnableValue  ;
+                            CsruTrapAble <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
+                            CsruTrapCode <= (CrmdData[`PLV] == 2'd3) ? `SYS : `PPI              ;   
+                            CsruTrapAddr <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ; 
+                            CsruIdle     <= `EnableValue  ;
                         end 
                 `InstBreak
                         : begin
-                            ReDirectAbleReg <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
-                            ReDirectCodeReg <= (CrmdData[`PLV] == 2'd3) ? `BRK : `PPI              ;   
-                            ReDirectAddrReg <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ; 
-                            ReDriectEntryReg <= `EnableValue ;
-                            ReDirectIdleReg <= `EnableValue  ;
+                            CsruTrapAble <= CrmdData[`IE] ? `AbleValue : `EnableValue           ;
+                            CsruTrapCode <= (CrmdData[`PLV] == 2'd3) ? `BRK : `PPI              ;   
+                            CsruTrapAddr <= (CrmdData[`PLV] == 2'd3) ? EraDate : InstVritualPc  ; 
+                            CsruIdle     <= `EnableValue  ;
                         end         
                 default: begin
-                    CSRUREGTEMP <= 72'd0 ;
-                    CsruUnFree  <= `AbleValue  ;
-                    InstAbleReg <= `EnableValue;
-                    InstPtrReg  <= 6'b0  ;
-                    ReDirectAbleReg <= `EnableValue ;
-                    ReDriectEntryReg <= `EnableValue ;
-                    ReDirectIdleReg <= `EnableValue ;
-                    ReDirectCodeReg <= 7'b0  ;
-                    ReDirectAddrReg <= `ZeorDate ;
+                    CsruTrapAble <= `EnableValue           ;
+                    CsruTrapCode <= 7'd0                   ;
+                    CsruTrapAddr <= 32'd0                  ;
+                    CsruIdle     <= `EnableValue           ;
                 end
             endcase
         end
         else if(InstRetireAble &&  (InstRetireCode == CSRUREGTEMP[71:64])) begin
-            CSRUREGTEMP <= 72'd0 ;
-            CsruUnFree  <= `AbleValue  ;
-            InstAbleReg <= `EnableValue;
-            InstPtrReg  <= 6'b0  ;
-            ReDirectAbleReg <= `EnableValue ;
-            ReDriectEntryReg <= `EnableValue ;
-            ReDirectIdleReg <= `EnableValue ;
-            ReDirectCodeReg <= 7'b0  ;
-            ReDirectAddrReg <= `ZeorDate ;
+            CSRUREGTEMP <= 101'd0 ;
+            CstToRobPtr <= 6'd0  ;
+            CsruTrapAble <= `EnableValue           ;
+            CsruTrapCode <= 7'd0                   ;
+            CsruTrapAddr <= 32'd0                  ;
+            CsruIdle     <= `EnableValue           ;
         end
     end
 
     //wire  sysOperate          since syscall and break no operate when after retire
     wire  CsrrdOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrrd))     ;
-    wire  CsrwrOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrwr))    ;
-    //wire  CsrwrwOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrwrw))    ;
-    wire  CsrxchgOperate = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrxchg))  ;
-    //wire  CsrxchgwOperate = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrxchgw))  ;
-    wire  CacopOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCacop))     ;
+    wire  CsrwrOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrwr))     ;
+    wire  CsrxchgOperate  = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrxchg))   ;
     wire  TlbsrchrOperate = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbsrchr))  ;
     wire  TlbsrchwOperate = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbsrchw))  ;
-    wire  TlbrdOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbrd))    ;
-    //wire  TlbrdwOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbrdw))    ;
+    wire  TlbrdOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbrd))     ;
     wire  TlbwrOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbwr))     ;
     wire  TlbfillOperate  = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstTlbfill))   ;
     wire  InvtlbOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstInvtlb))    ;
     wire  ErtnOperate     = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstEntry))     ;
-    //wire  Idle  Idle no operate
 
-    wire [`DataBus] FromCsrIndex ;
-    wire [`DataBus] FromCsrAsid  ;
-    wire [`DataBus] FromCsrTlbehi;
+    //csr read 
+    wire CsrReadAble = (CsrrdOperate | CsrwrOperate | CsrxchgOperate) & ~InstRetireAble  ;
+    wire CsrReadAddr = CSRUREGTEMP[91:78] ;
+    assign ReadCsrAble = CsrReadAble ;
+    assign ReadCsrAddr = CsrReadAddr ;
 
+    //csr witre 
+    wire  CsrWriteAble = (CsrwrOperate | CsrxchgOperate | ErtnOperate | TlbsrchwOperate) & InstRetireAble ;
+    wire  CsrWriteAddr = CSRUREGTEMP[91:78] ;
+    wire  CsrWriteDate = CSRUREGTEMP[63:32] ; //sr2
+    assign WriteCsrAble = CsrWriteAble ;
+    assign WriteCsrAddr = CsrWriteAddr ;
+    assign WriteCsrDate = CsrWriteDate ;
 
-    //csr or tlb read 
-    wire CsrReadAble = CsrrdOperate | CsrwrOperate | CsrxchgOperate  ;
-    wire TlbReadAble = TlbrdOperate ;
-    wire TlbSerch    = TlbsrchrOperate ;
-    wire [63:0] TlbSerchinform = {FromCsrAsid, FromCsrTlbehi};
-    wire [5:0]  TlbReadaddr    = FromCsrIndex[5:0] ;
-    wire [13:0] CsrReadAddr =   CsrrdOperate    ? CSRUREGTEMP[92:79]:
-                                CsrwrOperate    ? CSRUREGTEMP[92:79]:
-                                CsrxchgOperate  ? CSRUREGTEMP[92:79]: 14'd0;
+    //tlb read 
+    wire TlbReadAble        = TlbrdOperate ;
+    wire [5:0]  TlbReadaddr = TlbIndex     ;
+    assign ReadMmuAble = TlbReadAble ;
+    assign ReadMmuAddr = TlbReadaddr ;
 
-    //csr or tlb write 
-    wire CsrWriteAble = CsrwrOperate | CsrxchgOperate | ErtnOperate | TlbsrchwOperate ;
-    wire TlbWriteAble = TlbwrOperate | TlbfillOperate ;
+    //tlb serch 
+    wire TlbSerch              = TlbsrchrOperate ;
+    wire [28:0] TlbSerchinform = {AsidDate, TlbEhiDate};
+    assign SerchMmuAble = TlbSerch ;
+    assign SerchMmuInfr = TlbSerchinform ;
 
-    wire CsrWriteAddr = CsrwrOperate       ? CSRUREGTEMP[92:79]: 
-                        CsrxchgOperate     ? CSRUREGTEMP[92:79]:
-                        ErtnOperate        ? 14'h60            :
-                        TlbsrchwOperate    ? 14'h10            : 14'd0 ;
-
-    wire TlbWriteAddr = TlbwrOperate       ? FromCsrIndex[5:0]  :
-                        TlbfillOperate     ? CsrMicOpCOde[5:0]  : 6'd0 ; //伪随机
-    
+    //tlb write 
+    wire TlbWriteAble = (TlbwrOperate | TlbfillOperate) & InstRetireAble ;
+    wire [5:0] tlbWriteAddr = TlbwrOperate ? TlbIndex : 6'd33 ;
+    wire [] TlbWriteDate = (TlbEcode == 6'h3f) ? 
   
 endmodule

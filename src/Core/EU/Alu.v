@@ -49,7 +49,21 @@ module Alu (
 
 );
 
-    assign AluReq = ~AluStop ;
+    reg             StopTemp     ;
+    //reg             FLashTemp    ;
+
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StopTemp  <= 1'b0 ;
+            //FLashTemp <= 1'b0 ;
+        end
+        else begin
+            StopTemp  <= AluStop  ;
+            //FLashTemp <= AluFlash ;
+        end
+    end
+
+    assign AluReq = ~StopTemp ;
 
     wire  [`DataBus] ASrc1Date   =  ((AluSrc1Addr == AluSelfAddr) & AluSelfAble & AluSrc1Able) ? AluSelfDate :
                                     ((AluSrc1Addr == AluBruAddr ) & AluBruAble  & AluSrc1Able) ? AluBruDate  :
@@ -89,6 +103,14 @@ module Alu (
             RegAluCommitPtr <= 6'd0      ;
             RegAluCommitType <= REDIRNO  ;
         end
+        else if(StopTemp) begin
+            RegAluWBAble <= RegAluWBAble        ;
+            RegAluWBAddr <= RegAluWBAddr        ;
+            RegAluWBDate <= RegAluWBDate        ;
+            RegAluCommitAble <= RegAluCommitAble;
+            RegAluCommitPtr <= RegAluCommitPtr  ;
+            RegAluCommitType <= RegAluCommitType;
+        end
         else begin
             RegAluWBAble <= AluRdAble ;
             RegAluWBAddr <= AluRdAddr ;
@@ -123,11 +145,11 @@ module Alu (
         end
     end
     
-    assign AluWBAble  = ~AluStop ? RegAluWBAble : `EnableValue ;
-    assign AluWBAddr  = ~AluStop ? RegAluWBAddr : 7'd0         ;
-    assign AluWBDate  = ~AluStop ? RegAluWBDate : 32'd0        ;
-    assign AluCommitAble = ~AluStop ? RegAluCommitAble : `EnableValue ;
-    assign AluCommitPtr  = ~AluStop ? RegAluCommitPtr  : 6'd0  ;
-    assign AluCommitType = ~AluStop ? RegAluCommitType : 2'b0  ;
+    assign AluWBAble  = RegAluWBAble  ;
+    assign AluWBAddr  = RegAluWBAddr  ;
+    assign AluWBDate  = RegAluWBDate  ;
+    assign AluCommitAble = RegAluCommitAble ;
+    assign AluCommitPtr  = RegAluCommitPtr  ;
+    assign AluCommitType = RegAluCommitType ;
 
 endmodule

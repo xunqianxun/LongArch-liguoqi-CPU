@@ -4,6 +4,9 @@
 module Mmu (
     input       wire                                     Clk           ,
     input       wire                                     Rest          ,
+
+    input       wire                                     MmuFlash      ,
+    input       wire                                     MmuStop       ,
     //from Csr
     input       wire      [9:0]                          Asid          ,
     input       wire      [`DataBus]                     CsrDmw0Date   ,
@@ -30,18 +33,25 @@ module Mmu (
     output      wire                                     InstTlbTrap    , // //to ROB save ICache excaption when before inst exection finash
     output      wire      [6:0]                          InstTlbTrapType, 
     output      wire      [`InstAddrBus]                 InstPhysicalAddr,
-    //from access memory
-    input       wire                                     MemAccess      ,
-    input       wire                                     LoadOrStore    , //1store 0load
-    input       wire      [31:0]                         MemVritualA    ,
-    output      wire      [1:0]                          MemOperType    ,
-    output      wire                                     MemTlbTrap     ,
-    output      wire      [6:0]                          MemTlbTrapType ,
-    output      wire      [`InstAddrBus]                 MemPhysicalAddr,
-    //from CtrlBlock
-    //input       wire                                     MmuStop        ,
-    input       wire                                     MmuFlash      
+    //from load
+    input       wire                                     LoadAccess      ,
+    //input       wire                                     LoadOrStore    , //1store 0load
+    input       wire      [31:0]                         LoadVritualA    ,
+    output      wire      [1:0]                          LoadOperType    ,
+    output      wire                                     LoadTlbTrap     ,
+    output      wire      [6:0]                          LoadTlbTrapType ,
+    output      wire      [`InstAddrBus]                 LoadPhysicalAddr,
+    //for store
+    input       wire                                     StoreAccess      ,
+    //input       wire                                     LoadOrStore    , //1store 0load
+    input       wire      [31:0]                         StoreVritualA    ,
+    output      wire      [1:0]                          StoreOperType    ,
+    output      wire                                     StoreTlbTrap     ,
+    output      wire      [6:0]                          StoreTlbTrapType ,
+    output      wire      [`InstAddrBus]                 StorePhysicalAddr
 );
+
+
     wire  [18:0]     MmuReadVppn ;
     wire  [9:0]      MmuReadAsid ;
     wire             MmuReadG    ;
@@ -101,6 +111,12 @@ module Mmu (
             InstTlbTrapAbleReg <= `EnableValue ;
             InstMatType        <= 2'd0 ;
         end
+        else if(MmuStop) begin
+            InstPhysicalAddrReg<= InstPhysicalAddrReg ;
+            InstTlbTrapTypeReg <= InstTlbTrapTypeReg ;
+            InstTlbTrapAbleReg <= InstTlbTrapAbleReg ;
+            InstMatType        <= InstMatType ;
+        end
         else if(InstFetch) begin
             InstPhysicalAddrReg <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? InstVritualA : 
                                    ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && DriectDmw0Able) ? Dmw0Physicaladdr : 
@@ -122,71 +138,145 @@ module Mmu (
     assign InstTlbTrap      = InstTlbTrapAbleReg  ;
     assign InstOperType     = InstMatType ;
 
-
-    wire                 MDriectDmw0Able   = (MemVritualA[31:29] == CsrDmw0Date[31:29]);
+    //for load 
+    wire                 LDriectDmw0Able   = (LoadVritualA[31:29] == CsrDmw0Date[31:29]);
     // wire  [1:0]          MDriectDmw0Plv    = {CsrDmw0Date[3],CsrDmw0Date[0]} ;
     // wire  [1:0]          MDriectDmw0Mat    = CsrDmw0Date[5:4] ;
-    wire  [`InstAddrBus] MDmw0Physicaladdr = {CsrDmw1Date[27:25],MemVritualA[28:0]} ;
-    wire                 MDriectDmw1Able   = (MemVritualA[31:29] == CsrDmw1Date[31:29]);
+    wire  [`InstAddrBus] LDmw0Physicaladdr = {CsrDmw1Date[27:25],LoadVritualA[28:0]} ;
+    wire                 LDriectDmw1Able   = (LoadVritualA[31:29] == CsrDmw1Date[31:29]);
     // wire  [1:0]          MDriectDmw1Plv    = {CsrDmw1Date[3],CsrDmw1Date[0]} ;
     // wire  [1:0]          MDriectDmw1Mat    = CsrDmw1Date[5:4] ;
-    wire  [`InstAddrBus] MDmw1Physicaladdr = {CsrDmw1Date[27:25],MemVritualA[28:0]} ;
+    wire  [`InstAddrBus] LDmw1Physicaladdr = {CsrDmw1Date[27:25],LoadVritualA[28:0]} ;
 
 
-    wire  [18:0]   PortMemVppn = MemVritualA[31:13] ;
-    wire           PortMemOdd  = ~MemVritualA[12]   ;
-    wire  [19:0]   PortMemPpn ;
-    wire           PortMemFound;
-    wire           PortMemV   ;
-    wire           PortMemD   ;
-    wire  [1:0]    PortMemMat ;
-    wire  [1:0]    PortMemPlv ;
-    wire  [5:0]    PortMemPs  ;
-    wire  [`InstAddrBus] MmuPhysicalAddr2 = {PortMemPpn, MemVritualA[11:0]} ;
+    wire  [18:0]   PortLoadVppn = LoadVritualA[31:13] ;
+    wire           PortLoadOdd  = ~LoadVritualA[12]   ;
+    wire  [19:0]   PortLoadPpn ;
+    wire           PortLoadFound;
+    wire           PortLoadV   ;
+    wire           PortLoadD   ;
+    wire  [1:0]    PortLoadMat ;
+    wire  [1:0]    PortLoadPlv ;
+    wire  [5:0]    PortLoadPs  ;
+    wire  [`InstAddrBus] MmuPhysicalAddr2 = {PortLoadPpn, LoadVritualA[11:0]} ;
 
-    reg                  MemTlbTrapReg ;
-    reg   [6:0]          MemTlbTrapTypeReg ;
-    reg   [`InstAddrBus] MemPhysicalAddrReg;
-    reg   [1:0]          MemMatType    ;    
+    reg                  LoadTlbTrapReg ;
+    reg   [6:0]          LoadTlbTrapTypeReg ;
+    reg   [`InstAddrBus] LoadPhysicalAddrReg;
+    reg   [1:0]          LoadMatType    ;    
     always @(posedge Clk) begin
         if(!Rest) begin
-            MemTlbTrapReg <= 1'b0 ;
-            MemTlbTrapTypeReg <= 7'd0 ;
-            MemPhysicalAddrReg <= `ZeorDate ;
-            MemMatType <= 2'b0 ;
+            LoadTlbTrapReg <= 1'b0 ;
+            LoadTlbTrapTypeReg <= 7'd0 ;
+            LoadPhysicalAddrReg <= `ZeorDate ;
+            LoadMatType <= 2'b0 ;
         end
         else if(MmuFlash) begin
-            MemTlbTrapReg <= 1'b0 ;
-            MemTlbTrapTypeReg <= 7'd0 ;
-            MemPhysicalAddrReg <= `ZeorDate ;
-            MemMatType <= 2'b0 ;
+            LoadTlbTrapReg <= 1'b0 ;
+            LoadTlbTrapTypeReg <= 7'd0 ;
+            LoadPhysicalAddrReg <= `ZeorDate ;
+            LoadMatType <= 2'b0 ;
         end
-        else if(MemAccess) begin
-            MemPhysicalAddrReg <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? MemVritualA : 
-                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw0Able) ? MDmw0Physicaladdr :
-                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw1Able) ? MDmw1Physicaladdr :
+        else if(MmuStop) begin
+            LoadTlbTrapReg <= LoadTlbTrapReg ;
+            LoadTlbTrapTypeReg <= LoadTlbTrapTypeReg ;
+            LoadPhysicalAddrReg <= LoadPhysicalAddrReg ;
+            LoadMatType <= LoadMatType ;
+        end
+        else if(LoadAccess) begin
+            LoadPhysicalAddrReg <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? LoadVritualA : 
+                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw0Able) ? LDmw0Physicaladdr :
+                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw1Able) ? LDmw1Physicaladdr :
                                   (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? MmuPhysicalAddr2 : `ZeorDate ;
-            {MemTlbTrapReg,MemTlbTrapTypeReg} <= ~PortMemFound ? {`AbleValue, `TLBR} :
-                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw0Able) ? {~((CsrDmw0Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw0Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
-                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw1Able) ? {~((CsrDmw1Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw1Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
-                                                 (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? (~PortMemV ? (LoadOrStore ? {`AbleValue,`PIS} : {`AbleValue,`PIL}):((PortMemPlv == CsrCrmdDate[1:0])?{PortMemD,`PME}:{`AbleValue,`PPI})):{`EnableValue,7'd0};
-            MemMatType <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? CsrCrmdDate[8:7] : 
-                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw0Able) ? CsrDmw0Date[5:4] :
-                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && MDriectDmw1Able) ? CsrDmw1Date[5:4] :
-                          (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? PortMemMat : 2'b01 ;
+            {LoadTlbTrapReg,LoadTlbTrapTypeReg} <= ~PortLoadFound ? {`AbleValue, `TLBR} :
+                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw0Able) ? {~((CsrDmw0Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw0Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
+                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw1Able) ? {~((CsrDmw1Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw1Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
+                                                 (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? (~PortLoadV ? {`AbleValue,`PIL}:((PortLoadPlv == CsrCrmdDate[1:0])?{PortLoadD,`PME}:{`AbleValue,`PPI})):{`EnableValue,7'd0};
+            LoadMatType <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? CsrCrmdDate[8:7] : 
+                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw0Able) ? CsrDmw0Date[5:4] :
+                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && LDriectDmw1Able) ? CsrDmw1Date[5:4] :
+                          (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? PortLoadMat : 2'b01 ;
         end
     end
 
-    assign MemOperType = MemMatType ;
-    assign MemTlbTrap  = MemTlbTrapReg ;
-    assign MemTlbTrapType = MemTlbTrapTypeReg ;
-    assign MemPhysicalAddr = MemPhysicalAddrReg ;
+    assign LoadOperType = LoadMatType ;
+    assign LoadTlbTrap  = LoadTlbTrapReg ;
+    assign LoadTlbTrapType = LoadTlbTrapTypeReg ;
+    assign LoadPhysicalAddr = LoadPhysicalAddrReg ;
+
+
+//for store 
+    wire                 SDriectDmw0Able   = (StoreVritualA[31:29] == CsrDmw0Date[31:29]);
+    // wire  [1:0]          MDriectDmw0Plv    = {CsrDmw0Date[3],CsrDmw0Date[0]} ;
+    // wire  [1:0]          MDriectDmw0Mat    = CsrDmw0Date[5:4] ;
+    wire  [`InstAddrBus] SDmw0Physicaladdr = {CsrDmw1Date[27:25],StoreVritualA[28:0]} ;
+    wire                 SDriectDmw1Able   = (StoreVritualA[31:29] == CsrDmw1Date[31:29]);
+    // wire  [1:0]          MDriectDmw1Plv    = {CsrDmw1Date[3],CsrDmw1Date[0]} ;
+    // wire  [1:0]          MDriectDmw1Mat    = CsrDmw1Date[5:4] ;
+    wire  [`InstAddrBus] SDmw1Physicaladdr = {CsrDmw1Date[27:25],StoreVritualA[28:0]} ;
+
+
+    wire  [18:0]   PortStoreVppn = LoadVritualA[31:13] ;
+    wire           PortStoreOdd  = ~LoadVritualA[12]   ;
+    wire  [19:0]   PortStorePpn ;
+    wire           PortStoreFound;
+    wire           PortStoreV   ;
+    wire           PortStoreD   ;
+    wire  [1:0]    PortStoreMat ;
+    wire  [1:0]    PortStorePlv ;
+    wire  [5:0]    PortStorePs  ;
+    wire  [`InstAddrBus] MmuPhysicalAddr3 = {PortStorePpn, StoreVritualA[11:0]} ;
+
+    reg                  StoreTlbTrapReg ;
+    reg   [6:0]          StoreTlbTrapTypeReg ;
+    reg   [`InstAddrBus] StorePhysicalAddrReg;
+    reg   [1:0]          StoreMatType    ;    
+    always @(posedge Clk) begin
+        if(!Rest) begin
+            StoreTlbTrapReg <= 1'b0 ;
+            StoreTlbTrapTypeReg <= 7'd0 ;
+            StorePhysicalAddrReg <= `ZeorDate ;
+            StoreMatType <= 2'b0 ;
+        end
+        else if(MmuFlash) begin
+            StoreTlbTrapReg <= 1'b0 ;
+            StoreTlbTrapTypeReg <= 7'd0 ;
+            StorePhysicalAddrReg <= `ZeorDate ;
+            StoreMatType <= 2'b0 ;
+        end
+        else if(MmuStop) begin
+            StoreTlbTrapReg <= StoreTlbTrapReg ;
+            StoreTlbTrapTypeReg <= StoreTlbTrapTypeReg ;
+            StorePhysicalAddrReg <= StorePhysicalAddrReg ;
+            StoreMatType <= StoreMatType ;
+        end
+        else if(StoreAccess) begin
+            StorePhysicalAddrReg <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? StoreVritualA : 
+                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw0Able) ? SDmw0Physicaladdr :
+                                  ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw1Able) ? SDmw1Physicaladdr :
+                                  (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? MmuPhysicalAddr3 : `ZeorDate ;
+            {StoreTlbTrapReg,StoreTlbTrapTypeReg} <= ~PortStoreFound ? {`AbleValue, `TLBR} :
+                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw0Able) ? {~((CsrDmw0Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw0Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
+                                                 ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw1Able) ? {~((CsrDmw1Date[0] & (CsrCrmdDate[1:0] == 0)) || ~(CsrDmw1Date[3] & (CsrCrmdDate[1:0] == 3))), `PPI}:
+                                                 (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? (~PortStoreV ? {`AbleValue,`PIL}:((PortStorePlv == CsrCrmdDate[1:0])?{PortStoreD,`PME}:{`AbleValue,`PPI})):{`EnableValue,7'd0};
+            StoreMatType <= (CsrCrmdDate[3] && ~CsrCrmdDate[4]) ? CsrCrmdDate[8:7] : 
+                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw0Able) ? CsrDmw0Date[5:4] :
+                          ((~CsrCrmdDate[3] && CsrCrmdDate[4]) && SDriectDmw1Able) ? CsrDmw1Date[5:4] :
+                          (~CsrCrmdDate[3] && CsrCrmdDate[4]) ? PortStoreMat : 2'b01 ;
+        end
+    end
+    
+    assign StoreOperType = StoreMatType ;
+    assign StoreTlbTrap  = StoreTlbTrapReg ;
+    assign StoreTlbTrapType = StoreTlbTrapTypeReg ;
+    assign StorePhysicalAddr = StorePhysicalAddrReg ;
+
 
     wire               SerchAble ;
     wire  [5:0]        SerchIndex;
 
     reg               SerchAbleReg ;
-    reg  [5:0]        SerchIndexReg;
+    reg   [5:0]       SerchIndexReg;
     always @(posedge Clk) begin
         if(!Rest) begin
             SerchAbleReg <= `EnableValue ;
@@ -195,6 +285,10 @@ module Mmu (
         else if(MmuFlash) begin
             SerchAbleReg <= `EnableValue ;
             SerchIndexReg <= 6'd0 ;
+        end
+        else if(MmuStop) begin
+            SerchAbleReg <= SerchAbleReg ;
+            SerchIndexReg <= SerchIndexReg ;
         end
         else if(CsrSerchTlbAble) begin
             SerchAbleReg <=  SerchAble ;
@@ -238,17 +332,28 @@ module Mmu (
         .S0D        ( PortInstD        ),
         .S0Mat      ( PortInstMat      ),
         .S0Plv      ( PortInstPlv      ),
-        .S1Vppn     ( PortMemVppn      ),
-        .S1OddPage  ( PortMemOdd       ),
+        .S1Vppn     ( PortLoadVppn     ),
+        .S1OddPage  ( PortLoadOdd      ),
         .S1Asid     ( Asid             ),
-        .S1Fund     ( PortMemFound     ),
+        .S1Fund     ( PortLoadFound    ),
         //.S1Index    ( S1Index    ),
-        .S1Ps       ( PortMemPs        ),
-        .S1Ppn      ( PortMemPpn       ),
-        .S1V        ( PortMemV         ),
-        .S1D        ( PortMemD         ),
-        .S1Mat      ( PortMemMat       ),
-        .S1Plv      ( PortMemPlv       ),
+        .S1Ps       ( PortLoadPs        ),
+        .S1Ppn      ( PortLoadPpn       ),
+        .S1V        ( PortLoadV         ),
+        .S1D        ( PortLoadD         ),
+        .S1Mat      ( PortLoadMat       ),
+        .S1Plv      ( PortLoadPlv       ),
+        .S2Vppn     ( PortStoreVppn     ),
+        .S2OddPage  ( PortStoreOdd      ),
+        .S2Asid     ( Asid              ),
+        .S2Fund     ( PortStoreFound    ),
+        //.S2Index    ( S1Index    ),
+        .S2Ps       ( PortStorePs        ),
+        .S2Ppn      ( PortStorePpn       ),
+        .S2V        ( PortStoreV         ),
+        .S2D        ( PortStoreD         ),
+        .S2Mat      ( PortStoreMat       ),
+        .S2Plv      ( PortStorePlv       ),
         .CsrSerchInfrom (CsrSerchInfrom),
         .CsrSerchSucces (SerchAble     ),
         .csrSerchDate   (SerchIndex    ),
@@ -292,11 +397,6 @@ module Mmu (
     );
 
     
-
-
-
-
-
     
 endmodule 
  

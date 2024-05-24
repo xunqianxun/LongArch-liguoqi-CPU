@@ -9,7 +9,7 @@ module IntIQ2Criq8 #(
     input         wire                            Rest          ,
 
     input         wire                            Rable         ,
-    output        wire       [CRIQWIDE-1:0]       Dout          , //23 wide
+    //output        wire       [CRIQWIDE-1:0]       Dout          , //23 wide
 
     output        wire       [CRIQWIDE-1:0]       CriqPreOut    ,
 
@@ -18,7 +18,7 @@ module IntIQ2Criq8 #(
 
     input         wire                            CriqClean     ,
 
-    output        wire                            CriqFull      ,
+    //output        wire                            CriqFull      ,
     output        wire                            CriqEmpty     
 );
 
@@ -59,15 +59,15 @@ module IntIQ2Criq8 #(
         end
     end
 
-    reg  [CRIQWIDE-1:0]  CriqOutReg  ;
+    //reg  [CRIQWIDE-1:0]  CriqOutReg  ;
     always @(posedge Clk) begin
         if(!Rest) begin
             Criqtril   <= 4'd0 ;
-            CriqOutReg <= {CRIQWIDE{1'b0}};
+            //CriqOutReg <= {CRIQWIDE{1'b0}};
         end 
         else begin
             if(Rable) begin
-                CriqOutReg <= CRIQREG[Criqtril] ;
+                //CriqOutReg <= CRIQREG[Criqtril] ;
                 Criqtril <= (Criqtril == CRIQDEEP) ? 4'd0 : Criqtril + 1 ;
             end
             if(CriqClean)
@@ -75,8 +75,8 @@ module IntIQ2Criq8 #(
         end
     end
 
-    assign Dout       = CriqOutReg              ;
-    assign CriqFull   = (((Criqfront - Criqtril) == 1) || ((Criqtril == 0) && (Criqfront == CRIQDEEP))) ;
+    //assign Dout       = CriqOutReg              ;
+    //assign CriqFull   = (((Criqfront - Criqtril) == 1) || ((Criqtril == 0) && (Criqfront == CRIQDEEP))) ;
     assign CriqEmpty  = (Criqtril == Criqfront) ;
     assign CriqPreOut = CRIQREG[Criqtril]       ;  
 

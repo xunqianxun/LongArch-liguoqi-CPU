@@ -98,185 +98,100 @@ module PhysicalRegFile (
     output         wire      [`DataBus]                 Read41Date           ,
     input          wire                                 Read42Able           ,
     input          wire      [`ReNameRegBUs]            Read42Addr           ,
-    output         wire      [`DataBus]                 Read42Date           
+    output         wire      [`DataBus]                 Read42Date           ,
+    input          wire                                 Read51Able           ,
+    input          wire      [`ReNameRegBUs]            Read51Addr           ,
+    output         wire      [`DataBus]                 Read51Date           ,
+    input          wire                                 Read52Able           ,
+    input          wire      [`ReNameRegBUs]            Read52Addr           ,
+    output         wire      [`DataBus]                 Read52Date           ,
+    input          wire                                 Read61Able           ,
+    input          wire      [`ReNameRegBUs]            Read61Addr           ,
+    output         wire      [`DataBus]                 Read61Date           ,
+    input          wire                                 Read62Able           ,
+    input          wire      [`ReNameRegBUs]            Read62Addr           ,
+    output         wire      [`DataBus]                 Read62Date           ,
+    input          wire                                 Read71Able           ,
+    input          wire      [`ReNameRegBUs]            Read71Addr           ,
+    output         wire      [`DataBus]                 Read71Date           ,
+    input          wire                                 Read72Able           ,
+    input          wire      [`ReNameRegBUs]            Read72Addr           ,
+    output         wire      [`DataBus]                 Read72Date           ,
+    input          wire                                 Read81Able           ,
+    input          wire      [`ReNameRegBUs]            Read81Addr           ,
+    output         wire      [`DataBus]                 Read81Date           ,
+    input          wire                                 Read82Able           ,
+    input          wire      [`ReNameRegBUs]            Read82Addr           ,
+    output         wire      [`DataBus]                 Read82Date           
 );
 
     reg  [`DataBus] PhysicalReg [0:127]  ;
-    //integer i ;
+    integer i ;
+    integer j ;
+    integer k ;
+    integer l ;
     always @(posedge Clk) begin
         if(!Rest) begin
-            //for (i =0 ;i< 128 ;i=i+1 )
-                // PhysicalReg[i] <= `ZeorDate ;
-            PhysicalReg[0] <= `ZeorDate ;
-            PhysicalReg[1] <= `ZeorDate ;
-            PhysicalReg[2] <= `ZeorDate ;
-            PhysicalReg[3] <= `ZeorDate ;
-            PhysicalReg[4] <= `ZeorDate ;
-            PhysicalReg[5] <= `ZeorDate ;
-            PhysicalReg[6] <= `ZeorDate ;
-            PhysicalReg[7] <= `ZeorDate ;
-            PhysicalReg[8] <= `ZeorDate ;
-            PhysicalReg[9] <= `ZeorDate ;
-            PhysicalReg[10] <= `ZeorDate ;
-            PhysicalReg[11] <= `ZeorDate ;
-            PhysicalReg[12] <= `ZeorDate ;
-            PhysicalReg[13] <= `ZeorDate ;
-            PhysicalReg[14] <= `ZeorDate ;
-            PhysicalReg[15] <= `ZeorDate ;
-            PhysicalReg[16] <= `ZeorDate ;
-            PhysicalReg[17] <= `ZeorDate ;
-            PhysicalReg[18] <= `ZeorDate ;
-            PhysicalReg[19] <= `ZeorDate ;
-            PhysicalReg[20] <= `ZeorDate ;
-            PhysicalReg[21] <= `ZeorDate ;
-            PhysicalReg[22] <= `ZeorDate ;
-            PhysicalReg[23] <= `ZeorDate ;
-            PhysicalReg[24] <= `ZeorDate ;
-            PhysicalReg[25] <= `ZeorDate ;
-            PhysicalReg[26] <= `ZeorDate ;
-            PhysicalReg[27] <= `ZeorDate ;
-            PhysicalReg[28] <= `ZeorDate ;
-            PhysicalReg[29] <= `ZeorDate ;
-            PhysicalReg[30] <= `ZeorDate ;
-            PhysicalReg[31] <= `ZeorDate ;
-            PhysicalReg[32] <= `ZeorDate ;
-            PhysicalReg[33] <= `ZeorDate ;
-            PhysicalReg[34] <= `ZeorDate ;
-            PhysicalReg[35] <= `ZeorDate ;
-            PhysicalReg[36] <= `ZeorDate ;
-            PhysicalReg[37] <= `ZeorDate ;
-            PhysicalReg[38] <= `ZeorDate ;
-            PhysicalReg[38] <= `ZeorDate ;
-            PhysicalReg[40] <= `ZeorDate ;
-            PhysicalReg[41] <= `ZeorDate ;
-            PhysicalReg[42] <= `ZeorDate ;
-            PhysicalReg[43] <= `ZeorDate ;
-            PhysicalReg[44] <= `ZeorDate ;
-            PhysicalReg[45] <= `ZeorDate ;
-            PhysicalReg[46] <= `ZeorDate ;
-            PhysicalReg[47] <= `ZeorDate ;
-            PhysicalReg[48] <= `ZeorDate ;
-            PhysicalReg[49] <= `ZeorDate ;
-            PhysicalReg[50] <= `ZeorDate ;
-            PhysicalReg[51] <= `ZeorDate ;
-            PhysicalReg[52] <= `ZeorDate ;
-            PhysicalReg[53] <= `ZeorDate ;
-            PhysicalReg[54] <= `ZeorDate ;
-            PhysicalReg[55] <= `ZeorDate ;
-            PhysicalReg[56] <= `ZeorDate ;
-            PhysicalReg[57] <= `ZeorDate ;
-            PhysicalReg[58] <= `ZeorDate ;
-            PhysicalReg[59] <= `ZeorDate ;
-            PhysicalReg[60] <= `ZeorDate ;
-            PhysicalReg[61] <= `ZeorDate ;
-            PhysicalReg[62] <= `ZeorDate ;
-            PhysicalReg[63] <= `ZeorDate ;
-            PhysicalReg[64] <= `ZeorDate ;
-            PhysicalReg[65] <= `ZeorDate ;
-            PhysicalReg[66] <= `ZeorDate ;
-            PhysicalReg[67] <= `ZeorDate ;
-            PhysicalReg[68] <= `ZeorDate ;
-            PhysicalReg[69] <= `ZeorDate ;
-            PhysicalReg[70] <= `ZeorDate ;
-            PhysicalReg[71] <= `ZeorDate ;
-            PhysicalReg[72] <= `ZeorDate ;
-            PhysicalReg[73] <= `ZeorDate ;
-            PhysicalReg[74] <= `ZeorDate ;
-            PhysicalReg[75] <= `ZeorDate ;
-            PhysicalReg[76] <= `ZeorDate ;
-            PhysicalReg[77] <= `ZeorDate ;
-            PhysicalReg[78] <= `ZeorDate ;
-            PhysicalReg[79] <= `ZeorDate ;
-            PhysicalReg[80] <= `ZeorDate ;
-            PhysicalReg[81] <= `ZeorDate ;
-            PhysicalReg[82] <= `ZeorDate ;
-            PhysicalReg[83] <= `ZeorDate ;
-            PhysicalReg[84] <= `ZeorDate ;
-            PhysicalReg[85] <= `ZeorDate ;
-            PhysicalReg[86] <= `ZeorDate ;
-            PhysicalReg[87] <= `ZeorDate ;
-            PhysicalReg[88] <= `ZeorDate ;
-            PhysicalReg[89] <= `ZeorDate ;
-            PhysicalReg[90] <= `ZeorDate ;
-            PhysicalReg[91] <= `ZeorDate ;
-            PhysicalReg[92] <= `ZeorDate ;
-            PhysicalReg[93] <= `ZeorDate ;
-            PhysicalReg[94] <= `ZeorDate ;
-            PhysicalReg[95] <= `ZeorDate ;
-            PhysicalReg[96] <= `ZeorDate ;
-            PhysicalReg[97] <= `ZeorDate ;
-            PhysicalReg[98] <= `ZeorDate ;
-            PhysicalReg[99] <= `ZeorDate ;
-            PhysicalReg[100] <= `ZeorDate ;
-            PhysicalReg[102] <= `ZeorDate ;
-            PhysicalReg[102] <= `ZeorDate ;
-            PhysicalReg[103] <= `ZeorDate ;
-            PhysicalReg[104] <= `ZeorDate ;
-            PhysicalReg[105] <= `ZeorDate ;
-            PhysicalReg[106] <= `ZeorDate ;
-            PhysicalReg[107] <= `ZeorDate ;
-            PhysicalReg[108] <= `ZeorDate ;
-            PhysicalReg[109] <= `ZeorDate ;
-            PhysicalReg[110] <= `ZeorDate ;
-            PhysicalReg[111] <= `ZeorDate ;
-            PhysicalReg[112] <= `ZeorDate ;
-            PhysicalReg[113] <= `ZeorDate ;
-            PhysicalReg[114] <= `ZeorDate ;
-            PhysicalReg[115] <= `ZeorDate ;
-            PhysicalReg[116] <= `ZeorDate ;
-            PhysicalReg[117] <= `ZeorDate ;
-            PhysicalReg[118] <= `ZeorDate ;
-            PhysicalReg[119] <= `ZeorDate ;
-            PhysicalReg[120] <= `ZeorDate ;
-            PhysicalReg[121] <= `ZeorDate ;
-            PhysicalReg[122] <= `ZeorDate ;
-            PhysicalReg[123] <= `ZeorDate ;
-            PhysicalReg[124] <= `ZeorDate ;
-            PhysicalReg[125] <= `ZeorDate ;
-            PhysicalReg[126] <= `ZeorDate ;
-            PhysicalReg[127] <= `ZeorDate ;
+            for (i =0 ;i< 32 ;i=i+1 )
+                 PhysicalReg[i] <= `ZeorDate ;
+            for (j =0 ;j< 32 ;j=j+1 )
+                 PhysicalReg[j+32] <= `ZeorDate ;
+            for (k =0 ;k< 32 ;k=k+1 )
+                 PhysicalReg[k+64] <= `ZeorDate ;
+            for (l =0 ;l< 32 ;l=l+1 )
+                 PhysicalReg[l+96] <= `ZeorDate ;
+        end
+        else if(PhysicalStop) begin
+            for (i =0 ;i< 32 ;i=i+1 )
+                 PhysicalReg[i] <=  PhysicalReg[i] ;
+            for (j =0 ;j< 32 ;j=j+1 )
+                 PhysicalReg[j+32] <= PhysicalReg[j+32] ;
+            for (k =0 ;k< 32 ;k=k+1 )
+                 PhysicalReg[k+64] <= PhysicalReg[k+64] ;
+            for (l =0 ;l< 32 ;l=l+1 )
+                 PhysicalReg[l+96] <= PhysicalReg[l+96] ;
         end
         else begin
-            PhysicalReg[0] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are1MapPregNum] : PhysicalReg[0] ;
-            PhysicalReg[1] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are2MapPregNum] : PhysicalReg[1] ;
-            PhysicalReg[2] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are3MapPregNum] : PhysicalReg[2] ;
-            PhysicalReg[3] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are4MapPregNum] : PhysicalReg[3] ;
-            PhysicalReg[4] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are5MapPregNum] : PhysicalReg[4] ;
-            PhysicalReg[5] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are6MapPregNum] : PhysicalReg[5] ;
-            PhysicalReg[6] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are7MapPregNum] : PhysicalReg[6] ;
-            PhysicalReg[7] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are8MapPregNum] : PhysicalReg[7] ;
-            PhysicalReg[8] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are9MapPregNum] : PhysicalReg[8] ;
-            PhysicalReg[9] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are10MapPregNum] : PhysicalReg[9] ;
-            PhysicalReg[10] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are11MapPregNum] : PhysicalReg[10] ;
-            PhysicalReg[11] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are12MapPregNum] : PhysicalReg[11] ;
-            PhysicalReg[12] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are13MapPregNum] : PhysicalReg[12] ;
-            PhysicalReg[13] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are14MapPregNum] : PhysicalReg[13] ;
-            PhysicalReg[14] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are15MapPregNum] : PhysicalReg[14] ;
-            PhysicalReg[15] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are16MapPregNum] : PhysicalReg[15] ;
-            PhysicalReg[16] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are17MapPregNum] : PhysicalReg[16] ;
-            PhysicalReg[17] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are18MapPregNum] : PhysicalReg[17] ;
-            PhysicalReg[18] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are19MapPregNum] : PhysicalReg[18] ;
-            PhysicalReg[19] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are20MapPregNum] : PhysicalReg[19] ;
-            PhysicalReg[20] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are21MapPregNum] : PhysicalReg[20] ;
-            PhysicalReg[21] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are22MapPregNum] : PhysicalReg[21] ;
-            PhysicalReg[22] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are23MapPregNum] : PhysicalReg[22] ;
-            PhysicalReg[23] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are24MapPregNum] : PhysicalReg[23] ;
-            PhysicalReg[24] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are25MapPregNum] : PhysicalReg[24] ;
-            PhysicalReg[25] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are26MapPregNum] : PhysicalReg[25] ;
-            PhysicalReg[26] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are27MapPregNum] : PhysicalReg[26] ;
-            PhysicalReg[27] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are28MapPregNum] : PhysicalReg[27] ;
-            PhysicalReg[28] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are29MapPregNum] : PhysicalReg[28] ;
-            PhysicalReg[29] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are30MapPregNum] : PhysicalReg[29] ;
-            PhysicalReg[30] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are31MapPregNum] : PhysicalReg[30] ;
-            PhysicalReg[31] <= (ReloadPhy & ~PhysicalStop) ? PhysicalReg[Are32MapPregNum] : PhysicalReg[31] ;
-            PhysicalReg[WriteBackAlu1Addr] <= (WriteBackAlu1 & ~PhysicalStop) ? WriteBackAlu1Date : PhysicalReg[WriteBackAlu1Addr] ;
-            PhysicalReg[WriteBackAlu2Addr] <= (WriteBackAlu2 & ~PhysicalStop) ? WriteBackAlu2Date : PhysicalReg[WriteBackAlu2Addr] ;
-            PhysicalReg[WriteBackDivAddr ] <= (WriteBackDiv  & ~PhysicalStop) ? WriteBackDivDate  : PhysicalReg[WriteBackDivAddr ] ;
-            PhysicalReg[WriteBackMulAddr ] <= (WriteBackMul  & ~PhysicalStop) ? WriteBackMulDate  : PhysicalReg[WriteBackMulAddr ] ;
-            PhysicalReg[WriteBackCsruAddr] <= (WriteBackCsru & ~PhysicalStop) ? WriteBackCsruDate : PhysicalReg[WriteBackCsruAddr] ;
-            PhysicalReg[WriteBackBruAddr ] <= (WriteBackBru  & ~PhysicalStop) ? WriteBackBruDate  : PhysicalReg[WriteBackBruAddr ] ;
-            PhysicalReg[WriteBackLsuAddr ] <= (WriteBackLsu  & ~PhysicalStop) ? WriteBackLsuDate  : PhysicalReg[WriteBackLsuAddr ] ;
-            PhysicalReg[WriteBackROBAddr ] <= (WriteBackROB  & ~PhysicalStop) ? WriteBackROBDate  : PhysicalReg[WriteBackROBAddr ] ;
+            PhysicalReg[0] <= (ReloadPhy ) ? PhysicalReg[Are1MapPregNum] : PhysicalReg[0] ;
+            PhysicalReg[1] <= (ReloadPhy ) ? PhysicalReg[Are2MapPregNum] : PhysicalReg[1] ;
+            PhysicalReg[2] <= (ReloadPhy ) ? PhysicalReg[Are3MapPregNum] : PhysicalReg[2] ;
+            PhysicalReg[3] <= (ReloadPhy ) ? PhysicalReg[Are4MapPregNum] : PhysicalReg[3] ;
+            PhysicalReg[4] <= (ReloadPhy ) ? PhysicalReg[Are5MapPregNum] : PhysicalReg[4] ;
+            PhysicalReg[5] <= (ReloadPhy ) ? PhysicalReg[Are6MapPregNum] : PhysicalReg[5] ;
+            PhysicalReg[6] <= (ReloadPhy ) ? PhysicalReg[Are7MapPregNum] : PhysicalReg[6] ;
+            PhysicalReg[7] <= (ReloadPhy ) ? PhysicalReg[Are8MapPregNum] : PhysicalReg[7] ;
+            PhysicalReg[8] <= (ReloadPhy ) ? PhysicalReg[Are9MapPregNum] : PhysicalReg[8] ;
+            PhysicalReg[9] <= (ReloadPhy ) ? PhysicalReg[Are10MapPregNum] : PhysicalReg[9] ;
+            PhysicalReg[10] <= (ReloadPhy ) ? PhysicalReg[Are11MapPregNum] : PhysicalReg[10] ;
+            PhysicalReg[11] <= (ReloadPhy ) ? PhysicalReg[Are12MapPregNum] : PhysicalReg[11] ;
+            PhysicalReg[12] <= (ReloadPhy ) ? PhysicalReg[Are13MapPregNum] : PhysicalReg[12] ;
+            PhysicalReg[13] <= (ReloadPhy ) ? PhysicalReg[Are14MapPregNum] : PhysicalReg[13] ;
+            PhysicalReg[14] <= (ReloadPhy ) ? PhysicalReg[Are15MapPregNum] : PhysicalReg[14] ;
+            PhysicalReg[15] <= (ReloadPhy ) ? PhysicalReg[Are16MapPregNum] : PhysicalReg[15] ;
+            PhysicalReg[16] <= (ReloadPhy ) ? PhysicalReg[Are17MapPregNum] : PhysicalReg[16] ;
+            PhysicalReg[17] <= (ReloadPhy ) ? PhysicalReg[Are18MapPregNum] : PhysicalReg[17] ;
+            PhysicalReg[18] <= (ReloadPhy ) ? PhysicalReg[Are19MapPregNum] : PhysicalReg[18] ;
+            PhysicalReg[19] <= (ReloadPhy ) ? PhysicalReg[Are20MapPregNum] : PhysicalReg[19] ;
+            PhysicalReg[20] <= (ReloadPhy ) ? PhysicalReg[Are21MapPregNum] : PhysicalReg[20] ;
+            PhysicalReg[21] <= (ReloadPhy ) ? PhysicalReg[Are22MapPregNum] : PhysicalReg[21] ;
+            PhysicalReg[22] <= (ReloadPhy ) ? PhysicalReg[Are23MapPregNum] : PhysicalReg[22] ;
+            PhysicalReg[23] <= (ReloadPhy ) ? PhysicalReg[Are24MapPregNum] : PhysicalReg[23] ;
+            PhysicalReg[24] <= (ReloadPhy ) ? PhysicalReg[Are25MapPregNum] : PhysicalReg[24] ;
+            PhysicalReg[25] <= (ReloadPhy ) ? PhysicalReg[Are26MapPregNum] : PhysicalReg[25] ;
+            PhysicalReg[26] <= (ReloadPhy ) ? PhysicalReg[Are27MapPregNum] : PhysicalReg[26] ;
+            PhysicalReg[27] <= (ReloadPhy ) ? PhysicalReg[Are28MapPregNum] : PhysicalReg[27] ;
+            PhysicalReg[28] <= (ReloadPhy ) ? PhysicalReg[Are29MapPregNum] : PhysicalReg[28] ;
+            PhysicalReg[29] <= (ReloadPhy ) ? PhysicalReg[Are30MapPregNum] : PhysicalReg[29] ;
+            PhysicalReg[30] <= (ReloadPhy ) ? PhysicalReg[Are31MapPregNum] : PhysicalReg[30] ;
+            PhysicalReg[31] <= (ReloadPhy ) ? PhysicalReg[Are32MapPregNum] : PhysicalReg[31] ;
+            PhysicalReg[WriteBackAlu1Addr] <= (WriteBackAlu1 ) ? WriteBackAlu1Date : PhysicalReg[WriteBackAlu1Addr] ;
+            PhysicalReg[WriteBackAlu2Addr] <= (WriteBackAlu2 ) ? WriteBackAlu2Date : PhysicalReg[WriteBackAlu2Addr] ;
+            PhysicalReg[WriteBackDivAddr ] <= (WriteBackDiv  ) ? WriteBackDivDate  : PhysicalReg[WriteBackDivAddr ] ;
+            PhysicalReg[WriteBackMulAddr ] <= (WriteBackMul  ) ? WriteBackMulDate  : PhysicalReg[WriteBackMulAddr ] ;
+            PhysicalReg[WriteBackCsruAddr] <= (WriteBackCsru ) ? WriteBackCsruDate : PhysicalReg[WriteBackCsruAddr] ;
+            PhysicalReg[WriteBackBruAddr ] <= (WriteBackBru  ) ? WriteBackBruDate  : PhysicalReg[WriteBackBruAddr ] ;
+            PhysicalReg[WriteBackLsuAddr ] <= (WriteBackLsu  ) ? WriteBackLsuDate  : PhysicalReg[WriteBackLsuAddr ] ;
+            PhysicalReg[WriteBackROBAddr ] <= (WriteBackROB  ) ? WriteBackROBDate  : PhysicalReg[WriteBackROBAddr ] ;
 
         end
     end 
@@ -289,6 +204,13 @@ module PhysicalRegFile (
     assign Read32Date = Read32Able ? PhysicalReg[Read32Addr] : `ZeorDate ;
     assign Read41Date = Read41Able ? PhysicalReg[Read41Addr] : `ZeorDate ;
     assign Read42Date = Read42Able ? PhysicalReg[Read42Addr] : `ZeorDate ;
-    
+    assign Read51Date = Read51Able ? PhysicalReg[Read51Addr] : `ZeorDate ;
+    assign Read52Date = Read52Able ? PhysicalReg[Read52Addr] : `ZeorDate ;
+    assign Read61Date = Read61Able ? PhysicalReg[Read61Addr] : `ZeorDate ;
+    assign Read62Date = Read62Able ? PhysicalReg[Read62Addr] : `ZeorDate ;
+    assign Read71Date = Read71Able ? PhysicalReg[Read71Addr] : `ZeorDate ;
+    assign Read72Date = Read72Able ? PhysicalReg[Read72Addr] : `ZeorDate ;
+    assign Read81Date = Read81Able ? PhysicalReg[Read81Addr] : `ZeorDate ;
+    assign Read82Date = Read82Able ? PhysicalReg[Read82Addr] : `ZeorDate ;
     
 endmodule

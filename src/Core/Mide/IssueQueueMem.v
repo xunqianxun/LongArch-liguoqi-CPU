@@ -13,6 +13,7 @@ module IssueQueueMem (
     input        wire                                     MemQFlash         ,
     output       wire                                     MemReq            ,
     //from RAT
+    input       wire                                      InIQMemNum        ,
     input       wire                                      MIn1Src1Able      ,
     input       wire                                      MIn1Src1Ready     ,
     input       wire        [`ReNameRegBUs]               MIn1Src1Addr      ,

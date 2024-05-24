@@ -13,6 +13,7 @@ module IssueQueueBrCsr (
     input       wire                                      BrCsrFlash        ,
     output      wire                                      BrCsrReq          ,
     //from RAT
+    input       wire        [2:0]                         BInIQInstNum      ,
     input       wire                                      BIn1Src1Able      ,
     input       wire                                      BIn1Src1Ready     ,
     input       wire        [`ReNameRegBUs]               BIn1Src1Addr      ,
@@ -139,17 +140,17 @@ module IssueQueueBrCsr (
     reg  [2:0]  CBWritePtr ;
     reg  [2:0]  CBReadPtr  ;
 
-    wire [2:0]  ReadNum = BIn1aAble & BIn2aAble & BIn3aAble & BIn4aAble ? 3'd4 :
-                          BIn1aAble & BIn2aAble & BIn3aAble & ~BIn4aAble ? 3'd3 :
-                          BIn1aAble & BIn2aAble & ~BIn3aAble & ~BIn4aAble ? 3'd2 :
-                          BIn1aAble & ~BIn2aAble & ~BIn3aAble & ~BIn4aAble ? 3'd1 : 3'd0 ;
+    // wire [2:0]  ReadNum = BIn1aAble & BIn2aAble & BIn3aAble & BIn4aAble ? 3'd4 :
+    //                       BIn1aAble & BIn2aAble & BIn3aAble & ~BIn4aAble ? 3'd3 :
+    //                       BIn1aAble & BIn2aAble & ~BIn3aAble & ~BIn4aAble ? 3'd2 :
+    //                       BIn1aAble & ~BIn2aAble & ~BIn3aAble & ~BIn4aAble ? 3'd1 : 3'd0 ;
                                                 
     always @(posedge Clk) begin
         if(!Rest) begin
             CBReadPtr <= 3'd0 ;
         end        
         else begin
-            CBReadPtr <= CBReadPtr[1:0] + ReadNum ;
+            CBReadPtr <= CBReadPtr[1:0] + BInIQInstNum ;
         end 
     end 
 
@@ -348,11 +349,11 @@ module IssueQueueBrCsr (
     )u_BrCsrIQ1Criq4(
         .Clk         ( Clk             ),
         .Rest        ( Rest            ),
-        .Rable       ( U1ReadAble      ),
+        .Rable       ( U1ReadAble & ~StopTemp ),
         .CriqPreOut  ( CriqPreOut1     ),
-        .Wable       ( WriteCriq1Able  ),
+        .Wable       ( WriteCriq1Able & ~StopTemp  ),
         .Din         ( WriteCriq1Addr  ),
-        .CriqClean   ( BrCsrFlash      ),
+        .CriqClean   ( FLashTemp      ),
         .CriqEmpty   ( CriqEmpty1      )
     );
 
@@ -362,11 +363,11 @@ module IssueQueueBrCsr (
     )u_BrCsrIQ2Criq4(
         .Clk         ( Clk             ),
         .Rest        ( Rest            ),
-        .Rable       ( U2ReadAble      ),
+        .Rable       ( U2ReadAble & ~StopTemp      ),
         .CriqPreOut  ( CriqPreOut2     ),
-        .Wable       ( WriteCriq2Able  ),
+        .Wable       ( WriteCriq2Able & ~StopTemp  ),
         .Din         ( WriteCriq2Addr  ),
-        .CriqClean   ( BrCsrFlash      ),
+        .CriqClean   ( FLashTemp      ),
         .CriqEmpty   ( CriqEmpty2      )
     );
 
@@ -376,11 +377,11 @@ module IssueQueueBrCsr (
     )u_BrCsrIQ3Criq4(
         .Clk         ( Clk            ),
         .Rest        ( Rest           ),
-        .Rable       ( U3ReadAble     ),
+        .Rable       ( U3ReadAble & ~StopTemp     ),
         .CriqPreOut  ( CriqPreOut3    ),
-        .Wable       ( WriteCriq3Able ),
+        .Wable       ( WriteCriq3Able & ~StopTemp ),
         .Din         ( WriteCriq3Addr ),
-        .CriqClean   ( BrCsrFlash     ),
+        .CriqClean   ( FLashTemp     ),
         .CriqEmpty   ( CriqEmpty3     )
     );
 
@@ -390,11 +391,11 @@ module IssueQueueBrCsr (
     )u_BrCsrIQ4Criq4(
         .Clk         ( Clk            ),
         .Rest        ( Rest           ),
-        .Rable       ( U4ReadAble     ),
+        .Rable       ( U4ReadAble & ~StopTemp     ),
         .CriqPreOut  ( CriqPreOut4    ),
-        .Wable       ( WriteCriq4Able ),
+        .Wable       ( WriteCriq4Able & ~StopTemp ),
         .Din         ( WriteCriq4Addr ),
-        .CriqClean   ( BrCsrFlash     ),
+        .CriqClean   ( FLashTemp     ),
         .CriqEmpty   ( CriqEmpty4     )
     );
 

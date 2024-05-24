@@ -7,7 +7,6 @@ module RefTable (
     //from 
     input       wire                                    RefTableStop     ,
     input       wire                                    RefTableFLash    ,
-    //input       wire                                    RefReq           ,
     //from RAT 
     input       wire                                    Inst1Src1Able    ,
     input       wire      [`ReNameRegBUs]               Inst1Src1Addr    ,

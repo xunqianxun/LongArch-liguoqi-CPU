@@ -1,6 +1,6 @@
 <mxfile host="65bd71144e">
     <diagram id="yQtgvB0GavaPX3tY9K_d" name="Page-1">
-        <mxGraphModel dx="2946" dy="2102" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="0">
+        <mxGraphModel dx="1898" dy="1601" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="850" pageHeight="1100" background="#ffffff" math="0" shadow="0">
             <root>
                 <mxCell id="0"/>
                 <mxCell id="1" parent="0"/>
@@ -657,12 +657,6 @@
                         <mxPoint x="1440" y="1160" as="sourcePoint"/>
                     </mxGeometry>
                 </mxCell>
-                <mxCell id="215" style="edgeStyle=none;html=1;strokeColor=#000000;fontSize=21;fontColor=#050505;startArrow=none;startFill=0;endArrow=none;endFill=0;strokeWidth=3;dashed=1;" parent="1" edge="1">
-                    <mxGeometry relative="1" as="geometry">
-                        <mxPoint x="-560.0000000000002" y="1310" as="targetPoint"/>
-                        <mxPoint x="1440" y="1310" as="sourcePoint"/>
-                    </mxGeometry>
-                </mxCell>
                 <mxCell id="216" style="edgeStyle=none;html=1;strokeColor=#000000;fontSize=21;fontColor=#050505;startArrow=none;startFill=0;endArrow=none;endFill=0;strokeWidth=3;dashed=1;" parent="1" edge="1">
                     <mxGeometry relative="1" as="geometry">
                         <mxPoint x="-560.0000000000002" y="360" as="targetPoint"/>
@@ -706,7 +700,7 @@
                     <mxGeometry x="-480" y="1220" width="200" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="228" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;&lt;b style=&quot;font-size: 21px;&quot;&gt;Exe&lt;/b&gt;&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;fontColor=#050505;strokeWidth=0;" parent="1" vertex="1">
-                    <mxGeometry x="-415" y="1400" width="60" height="40" as="geometry"/>
+                    <mxGeometry x="-425" y="1400" width="60" height="40" as="geometry"/>
                 </mxCell>
                 <mxCell id="229" value="&lt;span style=&quot;font-size: 21px;&quot;&gt;&lt;b style=&quot;font-size: 21px;&quot;&gt;Access Memory&lt;/b&gt;&lt;/span&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;fontSize=21;fontColor=#050505;strokeWidth=0;" parent="1" vertex="1">
                     <mxGeometry x="-475" y="1600" width="180" height="40" as="geometry"/>
@@ -870,6 +864,9 @@
                 </mxCell>
                 <mxCell id="293" value="&lt;b style=&quot;color: rgb(0, 0, 0); font-size: 21px;&quot;&gt;StoreBUffer&lt;/b&gt;" style="whiteSpace=wrap;html=1;fillColor=#f9f7ed;strokeColor=#36393d;fontSize=21;" parent="1" vertex="1">
                     <mxGeometry x="120" y="1565" width="80" height="110" as="geometry"/>
+                </mxCell>
+                <mxCell id="297" value="&lt;font size=&quot;1&quot; color=&quot;#030303&quot;&gt;&lt;b style=&quot;font-size: 17px;&quot;&gt;AND&lt;/b&gt;&lt;/font&gt;" style="text;html=1;align=center;verticalAlign=middle;resizable=0;points=[];autosize=1;strokeColor=none;fillColor=none;" vertex="1" parent="1">
+                    <mxGeometry x="-425" y="1310" width="60" height="30" as="geometry"/>
                 </mxCell>
             </root>
         </mxGraphModel>

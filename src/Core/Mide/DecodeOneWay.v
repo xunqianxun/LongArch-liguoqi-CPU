@@ -204,6 +204,7 @@ module DecodeOneWay (
                         Inst1Ori      |
                         Inst1Xori     |
                         Inst1Cacop    |
+                        Inst1Csrxchg  |
                         Inst1Invtlb   |
                         Inst1Llw      |
                         Inst1Scw      |
@@ -247,6 +248,8 @@ module DecodeOneWay (
                         Inst1Bge      |
                         Inst1Bltu     |
                         Inst1Bgeu     |
+                        Inst1Csrwr    | //csrwr指令的rd旧值
+                        Inst1Csrxchg  | 
                         Inst1Invtlb   ;
 
     wire Inst1Imm12  =  Inst1Slti     |
@@ -300,7 +303,7 @@ module DecodeOneWay (
                                Inst1Imm26 ? Inst1Imm26D :26'd0 ;
     wire [4:0] Inst1RdAddr   = Inst1Bl ? 5'd1 : Inst1Rd  ;
     wire [4:0] Inst1Src1Addr = Inst1rj ;
-    wire [4:0] Inst1Src2addr = (Inst1Beq | Inst1Bne | Inst1Blt | Inst1Bge | Inst1Bltu | Inst1Bgeu ) ? Inst1Rd : Inst1rk ; 
+    wire [4:0] Inst1Src2addr = (Inst1Beq | Inst1Bne | Inst1Blt | Inst1Bge | Inst1Bltu | Inst1Bgeu | Inst1Csrwr | Inst1Csrxchg) ? Inst1Rd : Inst1rk ; 
 
     reg [`MicOperateCode] Inst1OpcodeReg ;
     reg                   Inst1SinumAReg ;

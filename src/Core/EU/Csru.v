@@ -29,28 +29,28 @@ module Csru (
     output       wire      [`DataBus]                     WriteBackDate  ,
     output       wire      [`ReNameRegBUs]                WriteBackAddr  , 
     //to ROB
-    output       wire                                     ToRobInterrupt  ,//中断选择指令赋予
+    output       wire                                     ToRobInterrupt  ,
     output       wire      [6:0]                          ToRobCode       ,
-    output       wire                                     ToRobLlbetlKlo  ,
-    output       wire                                     InstReadyAble   ,
-    output       wire      [5:0]                          InstReadyPtr    ,
-    output       wire                                     InstReDirectAble,//系统调用
-    output       wire                                     InstReDriectEntry,
-    output       wire                                     InstReDirectIdle,
-    output       wire      [6:0]                          InstReDirectCode,
-    output       wire      [`InstAddrBus]                 InstReDirectAddr,
+    output       wire      [`InstAddrBus]                 ToRobAddr       ,
+    output       wire                                     ToRobReady      ,
+    output       wire      [5:0]                          ToRobPtr        ,
+    output       wire                                     ToRobIdle       ,      
     //from ROB
     input        wire                                     InstRetireAble  ,
     input        wire      [7:0]                          InstRetireCode  ,
     //csr
-    input        wire      [`DataBus]                     CrmdData        ,
+    input        wire      [2:0]                          CrmdData        ,
+    input        wire      [2:0]                          PrmdDate        ,
     input        wire      [`DataBus]                     EraDate         ,
-    input        wire      [`DataBus]                     EstatDate       ,
     input        wire      [9:0]                          AsidDate        ,
     input        wire      [18:0]                         TlbEhiDate      ,
     input        wire      [5:0]                          TlbIndex        ,
+    input        wire      [5:0]                          TlbPs           ,
+    input        wire      [`DataBus]                     TlbElo0         ,
+    input        wire      [`DataBus]                     TlbElo1         ,
     input        wire      [5:0]                          TlbEcode        ,
     input        wire                                     TlbNe           ,
+    input        wire                                     LlbCtlDate      ,
     //read Csr
     output       wire                                     ReadCsrAble     ,
     output       wire      [13:0]                         ReadCsrAddr     ,
@@ -60,29 +60,23 @@ module Csru (
     output       wire      [13:0]                         WriteCsrAddr    ,
     output       wire      [`DataBus]                     WriteCsrDate    ,
     //direct use csr
-    input        wire      [`DataBus]                     IndexDate       ,
-    output       wire                                     WIndexAble      ,
-    output       wire      [`DataBus]                     WIndexMask      ,
-    output       wire      [`DataBus]                     WIndexDate      ,
-    input        wire      [`DataBus]                     TlbehiDate      ,
-    output       wire                                     WEhiTLBAble     ,
-    output       wire      [`DataBus]                     WEhiTLBMask     ,
-    output       wire      [`DataBus]                     WEhiTLBDate     ,
-    input        wire      [`DataBus]                     Elo0TLBDate     ,
-    output       wire                                     WElo0TLBAble    ,
-    output       wire      [`DataBus]                     WElo0TLBMask    ,
-    output       wire      [`DataBus]                     WElo0TLBDate    ,
-    input        wire      [`DataBus]                     Elo1TLBDate     ,
-    output       wire                                     WElo1TLBAble    ,
-    output       wire      [`DataBus]                     WElo1TLBMask    ,
-    output       wire      [`DataBus]                     WElo1TLBDate    ,
-    input        wire      [`DataBus]                     AsidTLBDate     ,
-    output       wire                                     WAsidTLBAble    ,
-    output       wire      [`DataBus]                     WAsidTLBMask    ,
-    output       wire      [`DataBus]                     WAsidTLBDate    ,
+    output       wire                                     TlbIndexWAble   ,
+    output       wire      [`DataBus]                     TlbIndexWMask   ,
+    output       wire      [`DataBus]                     TlbIndexWDate   ,
+    output       wire                                     TlbEhiWAble     ,
+    output       wire      [`DataBus]                     TlbEhiWDate     ,
+    output       wire                                     TlbElo0WAble    ,
+    output       wire      [`DataBus]                     TlbElo0WDate    ,
+    output       wire                                     TlbElo1WAble    ,
+    output       wire      [`DataBus]                     TlbElo1WDate    ,
+    output       wire                                     CrmdWAble       ,
+    output       wire      [`DataBus]                     CrmdWMask       ,
+    output       wire      [`DataBus]                     CrmdWDate       ,
+    output       wire                                     LlCtrlAble      ,
     //read MMU
     output       wire                                     ReadMmuAble     ,
     output       wire      [5:0]                          ReadMmuAddr     ,
+    input        wire                                     ReadSUccess     ,
     input        wire      [89-1:0]                       ReadMmuDate     ,
     //write MMU 
     output       wire                                     WriteMmuAble    ,
@@ -92,7 +86,12 @@ module Csru (
     output       wire                                     SerchMmuAble    ,
     output       wire      [28:0]                         SerchMmuInfr    ,
     input        wire                                     SerchSuccess    ,
-    input        wire      [13:0]                         SerchIndexDate  ,
+    input        wire      [5:0]                          SerchIndexDate  ,
+    //invtlb Mmu
+    output       wire                                     CsrInvEn        ,
+    output       wire      [ 4:0]                         CsrInvOp        ,
+    output       wire      [ 9:0]                         CsrInvAsid      ,
+    output       wire      [18:0]                         CsrInvVppn      , 
     //bypass other eu
     input        wire                                     CsrSelfAble     ,
     input        wire      [`ReNameRegBUs]                CsrSelfAddr     ,
@@ -158,7 +157,7 @@ module Csru (
             CsruTrapAddr<= 32'd0       ;
         end 
         else if(InInstAble) begin
-            CSRUREGTEMP <= {ArchRdAddr, ArchRdAddr, `AbleValue, CsrNum, InstRobPtr, CsrMicOpCOde, ASrc1Date, ASrc2Date} ;
+            CSRUREGTEMP <= {ArchRdAble, ArchRdAddr, `AbleValue, CsrNum, InstRobPtr, CsrMicOpCOde, ASrc1Date, ASrc2Date} ;
             CstToRobPtr <= InstRobPtr   ;
             case (CsrMicOpCOde)
                 `InstCsrrd, `InstCsrwr, `InstCsrxchg, `InstCacop, `InstTlbsrchr, `InstTlbsrchw, 
@@ -211,6 +210,13 @@ module Csru (
         end
     end
 
+    assign ToRobReady = CSRUREGTEMP[92]    ;
+    assign ToRobPtr   = CSRUREGTEMP[77:72] ;
+    assign ToRobInterrupt = CsruTrapAble   ; 
+    assign ToRobCode  = CsruTrapCode       ;
+    assign ToRobAddr  = CsruTrapAddr       ;
+    assign ToRobIdle  = CsruIdle           ;
+
     //wire  sysOperate          since syscall and break no operate when after retire
     wire  CsrrdOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrrd))     ;
     wire  CsrwrOperate    = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstCsrwr))     ;
@@ -223,16 +229,23 @@ module Csru (
     wire  InvtlbOperate   = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstInvtlb))    ;
     wire  ErtnOperate     = (InstRetireAble & (CSRUREGTEMP[71:64] == `InstEntry))     ;
 
+
+    assign WriteBackAble = (CsrrdOperate | CsrwrOperate | CsrxchgOperate) & InstRetireAble ;
+    assign WriteBackDate = ReadCsrDate ;
+    assign WriteBackAddr = CSRUREGTEMP[99:93] ;
+
+
+
     //csr read 
-    wire CsrReadAble = (CsrrdOperate | CsrwrOperate | CsrxchgOperate) & ~InstRetireAble  ;
-    wire CsrReadAddr = CSRUREGTEMP[91:78] ;
+    wire CsrReadAble = (CsrrdOperate | CsrwrOperate | CsrxchgOperate) & InstRetireAble  ;
+    wire [13:0] CsrReadAddr = CSRUREGTEMP[91:78] ;
     assign ReadCsrAble = CsrReadAble ;
     assign ReadCsrAddr = CsrReadAddr ;
 
     //csr witre 
     wire  CsrWriteAble = (CsrwrOperate | CsrxchgOperate | ErtnOperate | TlbsrchwOperate) & InstRetireAble ;
-    wire  CsrWriteAddr = CSRUREGTEMP[91:78] ;
-    wire  CsrWriteDate = CSRUREGTEMP[63:32] ; //sr2
+    wire [13:0]     CsrWriteAddr = CSRUREGTEMP[91:78] ;
+    wire [`DataBus] CsrWriteDate = CsrxchgOperate ? (CSRUREGTEMP[63:32] & CSRUREGTEMP[31:0]) : CSRUREGTEMP[63:32] ; //sr2
     assign WriteCsrAble = CsrWriteAble ;
     assign WriteCsrAddr = CsrWriteAddr ;
     assign WriteCsrDate = CsrWriteDate ;
@@ -251,7 +264,63 @@ module Csru (
 
     //tlb write 
     wire TlbWriteAble = (TlbwrOperate | TlbfillOperate) & InstRetireAble ;
-    wire [5:0] tlbWriteAddr = TlbwrOperate ? TlbIndex : 6'd33 ;
-    wire [] TlbWriteDate = (TlbEcode == 6'h3f) ? 
+    wire [5:0]  tlbWriteAddr = TlbwrOperate ? TlbIndex : 6'd33 ;
+    wire [88:0] TlbWriteDate = (TlbEcode == 6'h3f) ? {TlbEhiDate,TlbElo0,TlbElo1,TlbPs} : (TlbNe ? 89'd0 : {TlbEhiDate,TlbElo0,TlbElo1,TlbPs} );
   
+    assign WriteMmuAble = TlbWriteAble ;
+    assign WriteMmuAddr = tlbWriteAddr ;
+    assign WriteMmuDate = TlbWriteDate ;
+
+    //csr write 
+    wire CsrTlbIndexWAble = (TlbsrchrOperate | TlbrdOperate) & InstRetireAble;
+    wire [`DataBus] CsrTlbIndexWMask = TlbsrchrOperate ?  (SerchSuccess ? {1'b1,25'd0,6'b111111} : {1'b1,31'd0}) : 
+                                       TlbrdOperate    ?   {1'b1,1'b0,6'b111111,24'd0} : 32'd0       ;
+    wire [`DataBus] CsrTlbIndexWDate = SerchSuccess ? (ReadSUccess ? {1'b0,25'd0,SerchIndexDate} : {1'b1,25'd0,6'd0 }) : 
+                                       TlbrdOperate ? (ReadSUccess ? {1'b0,1'b0,ReadMmuDate[5:0],24'd0} : {1'b1,31'd0}) : 32'd0   ;
+
+    assign TlbIndexWAble = CsrTlbIndexWAble ;
+    assign TlbIndexWMask = CsrTlbIndexWMask ;
+    assign TlbIndexWDate = CsrTlbIndexWDate ;
+
+    wire CsrTlbEhiWAble = (TlbsrchrOperate | TlbrdOperate) & InstRetireAble;
+    wire [`DataBus] CsrTlbEhiWDate = ReadSUccess ?  {ReadMmuDate[88:70],13'd0} : 32'd0 ;
+
+    assign TlbEhiWAble = CsrTlbEhiWAble ;
+    assign TlbEhiWDate =  CsrTlbEhiWDate ;
+
+    wire CsrTlbElo0WAble = (TlbsrchrOperate | TlbrdOperate) & InstRetireAble; 
+    wire [`DataBus] CsrTlbElo0WDate = ReadSUccess ? ReadMmuDate[69:38] : 32'd0 ;
+
+    assign TlbElo0WAble = CsrTlbElo0WAble ;
+    assign TlbElo0WDate = CsrTlbElo0WDate ;
+
+    wire CsrTlbElo1WAble = (TlbsrchrOperate | TlbrdOperate) & InstRetireAble; 
+    wire [`DataBus] CsrTlbElo1WDate = ReadSUccess ? ReadMmuDate[37:6] : 32'd0  ;
+
+    assign TlbElo1WAble = CsrTlbElo1WAble ;
+    assign TlbElo1WDate = CsrTlbElo1WDate ;
+
+    wire CsrCrmdWAble = ErtnOperate & InstRetireAble ;
+    wire [`DataBus] CsrCrmdWMask = {23'd0,6'd0,3'b111} ;
+    wire [`DataBus] CsrCrmdWDate = {29'd0,PrmdDate} ;
+
+    assign CrmdWAble = CsrCrmdWAble ;
+    assign CrmdWMask = CsrCrmdWMask ;
+    assign CrmdWDate = CsrCrmdWDate ;
+
+    wire CsrLlbctlWAble = LlbCtlDate & ErtnOperate & InstRetireAble ;
+
+    assign LlCtrlAble = CsrLlbctlWAble ;
+
+    wire InvAble = InvtlbOperate & InstRetireAble ;
+    wire [4:0] InvOp   = CSRUREGTEMP[82:78] ; 
+    wire [9:0] InvAsid = ReadMmuDate[47:38] ;
+    wire [18:0]InvVppn = ReadMmuDate[37:19] ;
+
+    assign CsrInvEn = InvAble ;
+    assign CsrInvOp = InvOp   ;
+    assign CsrInvAsid  = InvAsid ;
+    assign CsrInvVppn  = InvVppn ;
+
+
 endmodule

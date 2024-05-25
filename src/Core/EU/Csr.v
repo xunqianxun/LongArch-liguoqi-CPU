@@ -2,58 +2,60 @@
 `include "../define.v"
 
 module Csr (
-    input        wire                                       Clk             ,
-    input        wire                                       Rest            ,
+    input        wire                                     Clk             ,
+    input        wire                                     Rest            ,
 
     //interrupt from ROB
-    input        wire                                       Interrupt       , //此处中断包括所有例外包括entry返回
-    input        wire      [`InstAddrBus]                   InterruptPc     ,
-    input        wire      [`InstAddrBus]                   InterruptAddr   , //例如一条访存指令发生重填，pc就是这条指令地址addr就是他访存的虚地址
-    input        wire      [6:0]                            InterruptType   ,   
-    input        wire                                       TrapEntry       ,
+    input        wire                                     Interrupt       , //此处中断包括所有例外包括entry返回
+    input        wire      [`InstAddrBus]                 InterruptPc     ,
+    input        wire      [`InstAddrBus]                 InterruptAddr   , //例如一条访存指令发生重填，pc就是这条指令地址addr就是他访存的虚地址
+    input        wire      [6:0]                          InterruptType   ,   
+    input        wire                                     TrapEntry       ,
     //from soc
-    input        wire      [7:0]                            SocInterrupt    ,
+    input        wire      [7:0]                          SocInterrupt    ,
     //to ROB                                
-    output       wire                                       EndowInterrupt  ,
-    output       wire      [6:0]                            EndowCode       ,
-    output       wire                                       LlbetlKlo       ,
+    output       wire                                     EndowInterrupt  ,
+    output       wire      [6:0]                          EndowCode       ,
+    output       wire                                     LlbetlKlo       ,
     //to mmu   
-    output       wire      [9:0]                            CsrAsidDate     ,
-    output       wire      [`DataBus]                       CsrDmw0Date     ,
-    output       wire      [`DataBus]                       CsrDmw1Date     ,
+    output       wire      [9:0]                          CsrAsidDate     ,
+    output       wire      [`DataBus]                     CsrDmw0Date     ,
+    output       wire      [`DataBus]                     CsrDmw1Date     ,
     //write csr
-    input        wire                                       WEn             ,
-    input        wire      [13:0]                           WAddr           ,
-    input        wire      [`DataBus]                       WDate           ,  
+    input        wire                                     WEn             ,
+    input        wire      [13:0]                         WAddr           ,
+    input        wire      [`DataBus]                     WDate           ,  
     //read csr 
-    input        wire                                       REn             ,
-    input        wire      [13:0]                           RAddr           ,
-    output       wire      [`DataBus]                       RDate           ,
-    //csr operate tlb use To csr
-    output       wire      [`DataBus]                       CsrIndex        ,
-    input        wire                                       InCsrIndexAble  ,
-    input        wire      [`DataBus]                       InCsrIndexMask  ,
-    input        wire      [`DataBus]                       InCsrIndexDate  ,
-    output       wire      [`DataBus]                       CsrEhiTLB       ,
-    input        wire                                       InCsrEhiTLBAble ,
-    input        wire      [`DataBus]                       InCsrEhiTLBMask ,
-    input        wire      [`DataBus]                       InCsrEhiTLBDate ,
-    output       wire      [`DataBus]                       CsrElo0TLB      ,
-    input        wire                                       InCsrElo0TLBAble,
-    input        wire      [`DataBus]                       InCsrElo0TLBMask,
-    input        wire      [`DataBus]                       InCsrElo0TLBDate,
-    output       wire      [`DataBus]                       CsrElo1TLB      ,
-    input        wire                                       InCsrElo1TLBAble,
-    input        wire      [`DataBus]                       InCsrElo1TLBMask,
-    input        wire      [`DataBus]                       InCsrElo1TLBDate,
-    output       wire      [`DataBus]                       CsrAsidTLB      ,
-    input        wire                                       InCsrAsidTLBAble,
-    input        wire      [`DataBus]                       InCsrAsidTLBMask,
-    input        wire      [`DataBus]                       InCsrAsidTLBDate,
-
-    output       wire      [`DataBus]                       CsrCrmdDate     ,
-    output       wire      [`DataBus]                       CsrEraDate      ,
-    output       wire      [`DataBus]                       CsrEstatDate    
+    input        wire                                     REn             ,
+    input        wire      [13:0]                         RAddr           ,
+    output       wire      [`DataBus]                     RDate           ,
+    //direct write
+    input        wire                                     InTlbIndexWAble ,
+    input        wire      [`DataBus]                     InTlbIndexWMask ,
+    input        wire      [`DataBus]                     InTlbIndexWDate ,
+    input        wire                                     InTlbEhiWAble   ,
+    input        wire      [`DataBus]                     InTlbEhiWDate   ,
+    input        wire                                     InTlbElo0WAble  ,
+    input        wire      [`DataBus]                     InTlbElo0WDate  ,
+    input        wire                                     InTlbElo1WAble  ,
+    input        wire      [`DataBus]                     InTlbElo1WDate  ,
+    input        wire                                     InCrmdWAble     ,
+    input        wire      [`DataBus]                     InCrmdWMask     ,
+    input        wire      [`DataBus]                     InCrmdWDate     ,
+    input        wire                                     InLlCtrlAble    ,
+    //csr date to csru 
+    output       wire      [2:0]                          OutCrmdData     ,
+    output       wire      [2:0]                          OutPrmdDate     ,
+    output       wire      [`DataBus]                     OutEraDate      ,
+    output       wire      [9:0]                          OutAsidDate     ,
+    output       wire      [18:0]                         OutTlbEhiDate   ,
+    output       wire      [5:0]                          OutTlbIndex     ,
+    output       wire      [5:0]                          OutTlbPs        ,
+    output       wire      [`DataBus]                     OutTlbElo0      ,
+    output       wire      [`DataBus]                     OutTlbElo1      ,
+    output       wire      [5:0]                          OutTlbEcode     ,
+    output       wire                                     OutTlbNe        ,
+    output       wire                                     OutLlbCtlDate 
 );
 
     localparam CRMD  = 14'h0;
@@ -180,6 +182,9 @@ module Csr (
             CsrCrmd[`DATF] <= WDate[`DATF];
             CsrCrmd[`DATM] <= WDate[`DATM];
             CsrCrmd[`SAVE] <= WDate[`SAVE];
+        end
+        else if(InCrmdWAble) begin
+            CsrCrmd <= (InCrmdWMask & InCrmdWDate) | (~InCrmdWMask & CsrCrmd) ;
         end
     end 
 
@@ -326,10 +331,12 @@ module Csr (
                 CsrLlbctl <= WDate ;
             if((WriteLlbctlEna) && (WDate[1] ==1))
                 CsrLlbctl <= `ZeorDate ;
-            if(TrapEntry)
+            if(InLlCtrlAble)
                 CsrLlbctl[2] <= 1'b0 ;
         end
     end
+
+    assign LlbetlKlo = CsrLlbctl[`KLO]  ; 
 
     always @(posedge Clk) begin
         if(!Rest) begin
@@ -349,8 +356,8 @@ module Csr (
                 CsrTlbidx[30]     <= WDate[30]    ;
                 CsrTlbidx[`NE]    <= WDate[`NE]   ;
             end 
-            if(InCsrIndexAble) 
-                CsrTlbidx <= (~InCsrIndexMask &  CsrTlbidx) | InCsrIndexDate ;
+            if(InTlbIndexWAble) 
+                CsrTlbidx <= (InTlbIndexWMask &  InTlbIndexWDate) | (~InTlbIndexWMask & CsrTlbidx) ;
         end
     end
 
@@ -360,8 +367,8 @@ module Csr (
         else begin
             if(WriteTlbehiENa) 
                 CsrTlbehi <= WDate ;
-            if(InCsrEhiTLBAble)
-                CsrTlbehi <= (~InCsrEhiTLBMask & CsrTlbehi) | InCsrEhiTLBDate ;
+            if(InTlbEhiWAble)
+                CsrTlbehi <= InTlbEhiWDate;
             if((InterruptType == `TLBR) || 
               (InterruptType == `PIL)   ||
               (InterruptType == `PIS)   ||
@@ -378,8 +385,8 @@ module Csr (
         else begin
             if(WriteTlbelo0Ena)
                 CsrTlbelo0 <= WDate ;
-            if(InCsrElo0TLBAble)
-                CsrTlbelo0 <= (~InCsrElo0TLBMask & CsrTlbelo0) | InCsrElo0TLBDate ;
+            if(InTlbElo0WAble)
+                CsrTlbelo0 <= InTlbElo0WDate ;
         end
     end
 
@@ -389,8 +396,8 @@ module Csr (
         else begin
             if(WriteTlbelo1Ena)
                 CsrTlbelo1 <= WDate ;
-            if(InCsrElo1TLBAble)
-                CsrTlbelo1 <= (~InCsrElo1TLBMask & CsrTlbelo1) | InCsrElo1TLBDate ;
+            if(InTlbElo1WAble)
+                CsrTlbelo1 <= InTlbElo1WDate ;
         end
     end
 
@@ -400,8 +407,6 @@ module Csr (
         else begin
             if(WriteAsidEna) 
                 CsrAsid <= WDate ;
-            if(InCsrAsidTLBAble)
-                CsrAsid <= (~InCsrAsidTLBMask & CsrAsid) | InCsrAsidTLBDate ;
         end
     end
 
@@ -549,13 +554,18 @@ module Csr (
     assign CsrDmw0Date = CsrDmw0 ;
     assign CsrDmw1Date = CsrDmw1 ;
 
-    assign CsrIndex    = CsrTlbidx ;
-    assign CsrEhiTLB   = CsrTlbehi ;
-    assign CsrElo0TLB  = CsrTlbelo0;
-    assign CsrElo1TLB  = CsrTlbelo1;
-    assign CsrAsidTLB  = CsrAsid   ;
-    assign CsrCrmdDate = CsrCrmd   ;
-    assign CsrEraDate  = CsrEra    ;
-    assign CsrEstatDate = CsrEstat ;
+    assign OutCrmdData  = CsrCrmd[2:0] ;
+    assign OutPrmdDate  = CsrPrmd[2:0] ;
+    assign OutEraDate   = CsrEra       ;
+    assign OutAsidDate  = CsrAsid[9:0] ;
+    assign OutTlbEhiDate= CsrTlbehi[31:13];
+    assign OutTlbIndex  = CsrTlbidx[5:0] ;
+    assign OutTlbPs     = CsrTlbidx[29:24];
+    assign OutTlbElo0   = CsrTlbelo0     ;
+    assign OutTlbElo1   = CsrTlbelo1     ;
+    assign OutTlbEcode  = CsrEstat[21:16];
+    assign OutTlbNe     = CsrTlbidx[31]  ;
+    assign OutLlbCtlDate= CsrLlbctl[3]   ;
+
 
 endmodule

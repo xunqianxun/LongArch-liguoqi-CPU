@@ -100,6 +100,7 @@
 `define InstScw        8'b00111010 
 `define InstDbar       8'b00111011 
 `define InstIbar       8'b00111100 
+`define InstPreld      8'b00111101
 
 //time read inst
 `define InstRdcntvlw   8'b00111101 

@@ -4,28 +4,64 @@
 module Div #(
     parameter WIDTH_DIV = 32 
 ) (
-    input      wire                                  Clk          ,
-    input      wire                                  Rest         ,
+    input         wire                               Clk           ,
+    input         wire                               Rest          , 
+ 
+    input         wire                               DivStop       ,
+    input         wire                               DivFlash      ,
+ 
+    output        wire                               DivReq        ,
+    //from issuequeueint 
+    input         wire                               DivInstAble   ,
+    input         wire   [`MicOperateCode]           DivMicopcode  ,
+    input         wire                               DivSrc1Able   ,
+    input         wire   [`ReNameRegBUs]             DivSrc1Addr   ,
+    input         wire   [`DataBus]                  DivSrc1Date   ,
+    input         wire                               DivSrc2Able   , //对于跳转指令的rd会被解码为src2
+    input         wire   [`ReNameRegBUs]             DivSrc2Addr   ,
+    input         wire   [`DataBus]                  DivSrc2Date   ,
+    input         wire                               DivRdAble     ,
+    input         wire   [`ReNameRegBUs]             DivRdAddr     ,
+    input         wire   [5:0]                       DivROBPtr     , 
 
-    input      wire       [`MicOperateCode]          DivMicopcode ,
-    input      wire                                  DivAbleValue ,
-    input      wire       [WIDTH_DIV-1:0]            Divisior     ,
-    input      wire       [WIDTH_DIV-1:0]            Dividend     ,
-    input      wire       [`ArchRegBUs]              DivWriteBack ,
-
-    output     wire       [WIDTH_DIV-1:0]            WriteBackData,
-    output     wire       [`ArchRegBUs]              WriteBackAddr,
-    output     wire                                  WriteAble    ,
-    output     wire                                  DivIqReq      
+    input         wire                               DivBruAble     ,
+    input         wire   [`ReNameRegBUs]             DivBruAddr     ,
+    input         wire   [`DataBus]                  DivBruDate     ,
+    input         wire                               DivAlu2Able    ,
+    input         wire   [`ReNameRegBUs]             DivAlu2Addr    ,
+    input         wire   [`DataBus]                  DivAlu2Date    ,
+    input         wire                               DivMulAble     ,
+    input         wire   [`ReNameRegBUs]             DivMulAddr     ,
+    input         wire   [`DataBus]                  DivMulDate     , 
+    input         wire                               DivCsrAble     ,
+    input         wire   [`ReNameRegBUs]             DivCsrAddr     ,
+    input         wire   [`DataBus]                  DivCsrDate     , 
+    //to physical
+    output        wire                               DivWBAble      ,
+    output        wire   [`ReNameRegBUs]             DivWBAddr      ,
+    output        wire   [`DataBus]                  DivWBDate      ,
+    //to ROB
+    output        wire                               DivCommitAble  ,
+    output        wire   [5:0]                       DivCommitPtr   
 
 );
+
+    wire  [`DataBus] DSrc1Date   =  ((DivSrc1Addr == DivBruAddr ) & DivBruAble  & DivSrc1Able) ? DivBruDate  :
+                                    ((DivSrc1Addr == DivAlu2Addr) & DivAlu2Able & DivSrc1Able) ? DivAlu2Date :
+                                    ((DivSrc1Addr == DivMulAddr ) & DivMulAble  & DivSrc1Able) ? DivMulDate  :
+                                    ((DivSrc1Addr == DivCsrAddr ) & DivCsrAble  & DivSrc1Able) ? DivCsrDate  : DivSrc1Date ;
+    
+    wire  [`DataBus] DSrc2Date   =  ((DivSrc2Addr == DivBruAddr ) & DivBruAble  & DivSrc2Able) ? DivBruDate  :
+                                    ((DivSrc2Addr == DivAlu2Addr) & DivAlu2Able & DivSrc2Able) ? DivAlu2Date :
+                                    ((DivSrc2Addr == DivMulAddr ) & DivMulAble  & DivSrc2Able) ? DivMulDate  :
+                                    ((DivSrc2Addr == DivCsrAddr ) & DivCsrAble  & DivSrc2Able) ? DivCsrDate  : DivSrc2Date ;
     
     wire     [WIDTH_DIV-1:0]    UnsignDivisior  ;
     wire     [WIDTH_DIV-1:0]    UnsignDivdend   ;
     wire                        DivsignValue    ;
-    assign DivsignValue   = Divisior[31] ^ Dividend[31];
-    assign UnsignDivisior = (Divisior[31])? ~Divisior+1 : Divisior ;
-    assign UnsignDivdend  = (Dividend[31])? ~Dividend+1 : Dividend ;
+    assign DivsignValue   = DSrc2Date[31] ^ DSrc1Date[31];
+    assign UnsignDivisior = (DSrc1Date[31])? ~DSrc1Date+1 : DSrc1Date ;
+    assign UnsignDivdend  = (DSrc2Date[31])? ~DSrc2Date+1 : DSrc2Date ;
 
     wire                        Code1Selct      ;
     wire                        Code2Selct      ;
@@ -52,17 +88,7 @@ module Div #(
     wire   [2:0]                 Code6ShiftSrc  ;
     wire   [2:0]                 Code7ShiftSrc  ;
     wire   [2:0]                 Code8ShiftSrc  ;
-
-    // wire                         Asign1         ;
-    // assign Asign1 = ~UnsignDivisior[31] & ~UnsignDivisior[30];
-    // wire                         Asign2         ;
-    // assign Asign2 = Asign1 & ~UnsignDivisior[29]             ;
-    // wire                         Asign3         ;
-    // assign Asign3 = Asign2 & ~UnsignDivisior[28]             ;
-    // assign Code1ShiftSrc  = ~nsignDivisior[31] ? 3'd1     :
-    //                         Asign1             ? 3'd2     :
-    //                         Asign2             ? 3'd3     : 
-    //                         Asign3             ? 3'd4     :3'd0 ;    
+   
     assign Code1ShiftSrc = ~UnsignDivisior[31] &  UnsignDivisior[30] ? 3'd1 :
                            ~UnsignDivisior[31] & ~UnsignDivisior[30] &  UnsignDivisior[29]  ? 3'd2 :
                            ~UnsignDivisior[31] & ~UnsignDivisior[30] & ~UnsignDivisior[29] &  UnsignDivisior[28] ? 3'd3 :
@@ -109,7 +135,7 @@ module Div #(
     wire   [WIDTH_DIV-1:0]  DivisiorTemp; //没有符号扩展因为在选取数据时已经是无符号，这样可以减少lead zero counter 和select quotient的电路复杂性
     wire   [WIDTH_DIV+2:0]  DividendTemp;
     wire   [5:0]            IterationsDub;
-    assign DivisiorTemp = Divisior <<ShiftCode ;
+    assign DivisiorTemp = DSrc1Date <<ShiftCode ;
     assign DividendTemp = ShiftCode[0] ? {3'b0,UnsignDivdend} : {2'b0,UnsignDivdend,1'b0};
     assign IterationsDub= ShiftCode[0] ? ShiftCode+1 : ShiftCode ;
     
@@ -126,10 +152,11 @@ module Div #(
     reg    [WIDTH_DIV-1:0]  DivisiorData;
     reg                     DivSignReg  ;
     reg    [`MicOperateCode]DivOpcodeReg;
-    reg    [`ArchRegBUs]    DivDataAddr ;
+    reg    [`ReNameRegBUs]  DivDataAddr ;
     reg    [2:0]            DivState    ;
     reg    [5:0]            Iteration   ;
     reg    [WIDTH_DIV-1:0]  DivsiorTemp ;
+    reg    [5:0]            DivRobPtrTemp ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
@@ -137,31 +164,56 @@ module Div #(
             DivisiorData <= `ZeorDate;
             DivSignReg   <= 1'b0     ;
             DivOpcodeReg <= 8'd0     ;
-            DivDataAddr  <= 5'd0     ;
+            DivDataAddr  <= 7'd0     ;
             DivState     <= `DivIdle ;
             Iteration    <= 6'd0     ;
             DivsiorTemp  <= `ZeorDate;
+            DivRobPtrTemp<= 6'd0     ;
         end 
+        else if(DivStop) begin
+            DivedRegdata <= DivedRegdata  ;
+            DivisiorData <= DivisiorData  ;
+            DivSignReg   <= DivSignReg    ;
+            DivOpcodeReg <= DivOpcodeReg  ;
+            DivDataAddr  <= DivDataAddr   ;
+            DivState     <= DivState      ;
+            Iteration    <= Iteration     ;
+            DivsiorTemp  <= DivsiorTemp   ;
+            DivRobPtrTemp<= DivRobPtrTemp ;
+        end
+        else if(DivFlash) begin
+            DivedRegdata <=  35'd0   ;
+            DivisiorData <= `ZeorDate;
+            DivSignReg   <= 1'b0     ;
+            DivOpcodeReg <= 8'd0     ;
+            DivDataAddr  <= 7'd0     ;
+            DivState     <= `DivIdle ;
+            Iteration    <= 6'd0     ;
+            DivsiorTemp  <= `ZeorDate;
+            DivRobPtrTemp<= 6'd0     ;
+        end
         else begin
                 case (DivState) 
-                    `DivIdle: begin if(DivAbleValue) begin //还缺少一种除零的情况，后续添加
+                    `DivIdle: begin if(DivInstAble) begin //还缺少一种除零的情况，后续添加
                                     DivedRegdata <=  DividendTemp; 
                                     DivisiorData <=  DivisiorTemp;
                                     DivSignReg   <=  DivsignValue;
                                     DivOpcodeReg <=  DivMicopcode;
-                                    DivDataAddr  <=  DivWriteBack; 
+                                    DivDataAddr  <=  DivRdAddr   ; 
                                     DivState     <=  `DivItir    ; 
                                     Iteration    <=  IterationsDub;
-                                    DivsiorTemp  <=  UnsignDivisior;end 
+                                    DivsiorTemp  <=  UnsignDivisior;
+                                    DivRobPtrTemp<=  DivROBPtr     ;end 
                               else begin
                                     DivedRegdata <=  35'd0   ;
                                     DivisiorData <= `ZeorDate;
                                     DivSignReg   <= 1'b0     ;
                                     DivOpcodeReg <= 8'd0     ;
-                                    DivDataAddr  <= 5'd0     ;
+                                    DivDataAddr  <= 7'd0     ;
                                     DivState     <= `DivIdle ;
                                     Iteration    <= 6'd0     ;
-                                    DivsiorTemp  <= `ZeorDate;end
+                                    DivsiorTemp  <= `ZeorDate;
+                                    DivRobPtrTemp<= 6'd0     ;end
                     end 
                     `DivItir: begin  if(Iteration > 0)begin 
                                     DivedRegdata <=  DivDataNext ; 
@@ -171,7 +223,8 @@ module Div #(
                                     DivDataAddr  <=  DivDataAddr ; 
                                     DivState     <=  `DivItir    ; 
                                     Iteration    <=  Iteration-2 ;
-                                    DivsiorTemp  <=  DivsiorTemp ;end 
+                                    DivsiorTemp  <=  DivsiorTemp ;
+                                    DivRobPtrTemp<=  DivRobPtrTemp;end 
                                 else begin
                                     DivedRegdata <=  DivedRegdata;
                                     DivisiorData <=  DivisiorData;
@@ -180,7 +233,8 @@ module Div #(
                                     DivDataAddr  <=  DivDataAddr ; 
                                     DivState     <=  `DivOut     ; 
                                     Iteration    <=  Iteration   ;
-                                    DivsiorTemp  <=  DivsiorTemp ;end 
+                                    DivsiorTemp  <=  DivsiorTemp ;
+                                    DivRobPtrTemp<=  DivRobPtrTemp;end 
                     end 
                     `DivOut : begin
                                     DivedRegdata <=  DivedRegdata;
@@ -190,16 +244,18 @@ module Div #(
                                     DivDataAddr  <=  DivDataAddr ; 
                                     DivState     <=  `DivIdle    ; 
                                     Iteration    <=  Iteration   ;
-                                    DivsiorTemp  <=  DivsiorTemp ;end  
+                                    DivsiorTemp  <=  DivsiorTemp ;
+                                    DivRobPtrTemp<=  DivRobPtrTemp;end  
                     default : begin
                                     DivedRegdata <=  35'd0   ;
                                     DivisiorData <= `ZeorDate;
                                     DivSignReg   <= 1'b0     ;
                                     DivOpcodeReg <= 8'd0     ;
-                                    DivDataAddr  <= 5'd0     ;
+                                    DivDataAddr  <= 7'd0     ;
                                     DivState     <= `DivIdle ;
                                     Iteration    <= 6'd0     ;
-                                    DivsiorTemp  <= `ZeorDate;end
+                                    DivsiorTemp  <= `ZeorDate;
+                                    DivRobPtrTemp<= 6'd0     ;end
                 endcase
         end
     end
@@ -227,6 +283,9 @@ module Div #(
     OneFlyConversion OFC (
         .Clk           (Clk         ),
         .Rest          (Rest        ),
+
+        .OfcStop       (DivStop     ),
+        .OfcFlash      (DivFlash    ),
     
         .SelectQuite   (SelectIn    ),
         .FlyConverStart(OFCAble     ),
@@ -239,11 +298,12 @@ module Div #(
     assign ReminderTemp = DivedRegdata[WIDTH_DIV+2]? DivedRegdata+{2'b0,DivsiorTemp} : DivedRegdata;
     assign QuotitentTemp= DivedRegdata[WIDTH_DIV+2]? QuotientOut-1 : QuotientOut;
     assign QuotitentSign= DivSignReg ? ~QuotitentTemp + 1 : QuotitentTemp ;
-    assign DivIqReq = (Iteration == 2);
-    assign {WriteAble,WriteBackAddr,WriteBackData} = ((DivState == `DivOut) & ((DivOpcodeReg == `InstDivw) | (DivOpcodeReg == `InstDivwu)))? {`AbleValue,DivDataAddr,QuotitentSign} :
-                                                     ((DivState == `DivOut) & ((DivOpcodeReg == `InstModw) | (DivOpcodeReg == `InstModwu)))? {`AbleValue,DivDataAddr,ReminderTemp[31:0] } : {`EnableValue,5'b0,`ZeorDate};
+    assign DivReq = ((DivState == `DivOut) | (DivState == `DivIdle)) & ~DivInstAble;
+    assign {DivWBAble,DivWBAddr,DivWBDate} = ((DivState == `DivOut) & ((DivOpcodeReg == `InstDivw) | (DivOpcodeReg == `InstDivwu)))? {`AbleValue,DivDataAddr,QuotitentSign} :
+                                                     ((DivState == `DivOut) & ((DivOpcodeReg == `InstModw) | (DivOpcodeReg == `InstModwu)))? {`AbleValue,DivDataAddr,ReminderTemp[31:0] } : {`EnableValue,7'b0,`ZeorDate};
 
-    
+    assign {DivCommitAble, DivCommitPtr} = (DivState == `DivOut) ? {`AbleValue,DivRobPtrTemp} : {`EnableValue,6'd0};
+
 endmodule
 
 
@@ -349,6 +409,9 @@ endmodule
 module OneFlyConversion (
     input        wire                                        Clk           ,
     input        wire                                        Rest          ,
+
+    input        wire                                        OfcStop       ,
+    input        wire                                        OfcFlash      ,
   
     input        wire      [2:0]                             SelectQuite   ,
     input        wire                                        FlyConverStart,
@@ -358,25 +421,20 @@ module OneFlyConversion (
     reg  [`DataBus] QuotiRegPreSub  ;
     reg  [`DataBus] QuotiReg        ;
 
-    // wire [`DataBus] QuotiTempPreSub ;
-    // wire [`DataBus] QuotiTemp       ;
-    // assign QuotiTempPreSub =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b01}       :
-    //                           (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b00}       :
-    //                           (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiRegPreSub,2'b11} :
-    //                           (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b10} :
-    //                           (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b01} : `ZeorDate;
-
-    // assign QuotiTemp       =  (FlyConverStart & (SelectQuite == `PosiQuit2))? {QuotiReg,2'b10}       :
-    //                           (FlyConverStart & (SelectQuite == `PosiQuit1))? {QuotiReg,2'b01}       :
-    //                           (FlyConverStart & (SelectQuite == `ZeroQuit0))? {QuotiReg,2'b00}       :
-    //                           (FlyConverStart & (SelectQuite == `NegiQuit1))? {QuotiRegPreSub,2'b11} :
-    //                           (FlyConverStart & (SelectQuite == `NegiQuit2))? {QuotiRegPreSub,2'b10} : `ZeorDate;
 
     always @(posedge Clk) begin
         if(!Rest)begin
             QuotiRegPreSub <= `ZeorDate ;
             QuotiReg       <= `ZeorDate ;
         end 
+        else if(OfcStop) begin
+            QuotiRegPreSub <= QuotiRegPreSub ;
+            QuotiReg       <= QuotiReg       ;
+        end
+        else if(OfcFlash) begin
+            QuotiRegPreSub <= `ZeorDate ;
+            QuotiReg       <= `ZeorDate ;
+        end
         else begin
             if(FlyConverStart) begin
                 case (SelectQuite)

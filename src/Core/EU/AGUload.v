@@ -8,6 +8,11 @@ module AGUload (
     input      wire                               AGULoadStop    ,
     input      wire                               AGULoadFlash   ,
 
+    //read rob get pc 
+    output     wire                               ReadPcAble     ,
+    output     wire      [5:0]                    ReadPcRob      ,
+    input      wire      [`InstAddrBus]           RobInstPc      ,
+
     input      wire                               LoadInstAble   ,
     input      wire      [`MicOperateCode]        LoadMicOPercode,
     input      wire                               LoadRegAble0   ,
@@ -42,9 +47,10 @@ module AGUload (
     input      wire      [1:0]                    ToOperType     ,
     input      wire                               ToTlbTrap      ,
     input      wire      [6:0]                    ToTlbTrapType  ,
-    input      wire      [`InstAddrBus]           ToPhysicalAddr ,                              
+    input      wire      [`InstAddrBus]           ToPhysicalAddr ,
     //to load buffer
     output     wire                               ToLBAble       ,
+    output     wire      [`InstAddrBus]           ToLBPc         ,
     output     wire      [`MicOperateCode]        ToLBMicOp      ,
     output     wire      [1:0]                    ToLBMAT        ,   
     output     wire      [`InstAddrBus]           ToLBPAddr      ,
@@ -52,7 +58,7 @@ module AGUload (
     output     wire      [6:0]                    ToLBTrapCode   ,
     output     wire                               ToLBWbAble     ,
     output     wire      [`ReNameRegBUs]          ToLBWbAddr     ,
-    output     wire      [5:0]                    ToLBRobPtr                            
+    output     wire      [5:0]                    ToLBRobPtr 
 );
 
 
@@ -76,13 +82,15 @@ module AGUload (
     reg                   ToLBWbAbleTemp  ;
     reg [`ReNameRegBUs]   ToLBWbAddrTemp  ;
     reg [5:0]             ToLBRobPtrTemp  ;
+    reg [`InstAddrBus]    ToLBPcTemp      ;
     always @(posedge Clk) begin
         if(!Rest) begin
             ToLBAbleTemp    <= 1'b0  ;
             ToLBMicOpTemp   <= 8'b0  ;
             ToLBWbAbleTemp  <= 1'b0  ;
             ToLBWbAddrTemp  <= 7'b0  ;
-            ToLBRobPtrTemp  <= 6'b0  ; 
+            ToLBRobPtrTemp  <= 6'b0  ;
+            ToLBPcTemp      <= 32'd0 ; 
         end
         else if(AGULoadStop) begin
             ToLBAbleTemp    <= ToLBAbleTemp   ;
@@ -90,6 +98,7 @@ module AGUload (
             ToLBWbAbleTemp  <= ToLBWbAbleTemp ;
             ToLBWbAddrTemp  <= ToLBWbAddrTemp ;
             ToLBRobPtrTemp  <= ToLBRobPtrTemp ; 
+            ToLBPcTemp      <= ToLBPcTemp     ;
         end
         else if(AGULoadFlash)begin
             ToLBAbleTemp    <= 1'b0  ;
@@ -97,6 +106,7 @@ module AGUload (
             ToLBWbAbleTemp  <= 1'b0  ;
             ToLBWbAddrTemp  <= 7'b0  ;
             ToLBRobPtrTemp  <= 6'b0  ;
+            ToLBPcTemp      <= 32'd0 ;
         end
         else begin
             ToLBAbleTemp    <= LoadInstAble     ;
@@ -104,6 +114,7 @@ module AGUload (
             ToLBWbAbleTemp  <= LoadWbAble       ;
             ToLBWbAddrTemp  <= LoadWbAddr       ;
             ToLBRobPtrTemp  <= LoadInstRobPtr   ;
+            ToLBPcTemp      <= RobInstPc        ;
         end
     end
     
@@ -117,6 +128,10 @@ module AGUload (
     assign ToLBWbAble  = ToLBWbAbleTemp ;
     assign ToLBWbAddr  = ToLBWbAddrTemp ;
     assign ToLBRobPtr  = ToLBRobPtrTemp ;
+    assign ToLBPc      = ToLBPcTemp     ;
+
+    assign ReadPcAble = LoadInstAble ;
+    assign ReadPcRob  = LoadInstRobPtr ;
 
         
 endmodule

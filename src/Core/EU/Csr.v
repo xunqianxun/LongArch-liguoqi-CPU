@@ -17,6 +17,8 @@ module Csr (
     output       wire                                     EndowInterrupt  ,
     output       wire      [6:0]                          EndowCode       ,
     output       wire                                     LlbetlKlo       ,
+    output       wire      [25:0]                         CsrTlbEntryDate ,
+    output       wire      [25:0]                         CsrEntryDate    ,
     //to mmu   
     output       wire      [9:0]                          CsrAsidDate     ,
     output       wire      [`DataBus]                     CsrDmw0Date     ,
@@ -283,6 +285,8 @@ module Csr (
             CsrEentry <= WDate ;
     end
 
+    assign CsrEntryDate = CsrEentry[31:6] ;
+
     always @(posedge Clk) begin
         if(!Rest)
             CsrCpuid <= `ZeorDate ;
@@ -430,6 +434,8 @@ module Csr (
         else if(WriteTlbrentryEna)
             CsrTlbrentry <= {WDate[31:6],6'd0} ;
     end
+
+    assign CsrTlbEntryDate = CsrTlbrentry[31:6] ;
         
     always @(posedge Clk) begin
         if(!Rest) 

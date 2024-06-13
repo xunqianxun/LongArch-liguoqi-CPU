@@ -124,7 +124,7 @@ module Csru (
 
     assign  CsrReq = (CSRUREGTEMP[92] == `AbleValue) | (InstRetireAble) ;
 
-    reg   [100:0] CSRUREGTEMP ;
+    reg   [100:0]  CSRUREGTEMP ;
     reg   [5:0]    CstToRobPtr ;
     reg            CsruTrapAble;
     reg   [6:0]    CsruTrapCode;

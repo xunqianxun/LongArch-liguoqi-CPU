@@ -12,7 +12,6 @@ module FTQ (
     //from ROB 
     input       wire                           ROBBranch    ,
     input       wire                           ROBBranchYN  ,//right = 1 fault = 0 
-    input       wire                           ROBBranchMo  ,//jump = 1 unjump = 0
     input       wire       [`InstAddrBus]      ROBBranchPc  ,
     //from PreDecode  
     input       wire                           PredictAble  ,
@@ -114,27 +113,27 @@ module FTQ (
     wire [2:0] NewNum  ;
     wire [2:0] NewDate ;
     wire       NewAble ;
-    assign {NewAble,NewNum,NewDate}= {7{(reOutDate[23:21] == 0)}} & ({7{Num1CntAble}}&{1'b1,3'd1,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num2CntAble}}&{1'b1,3'd2,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num3CntAble}}&{1'b1,3'd3,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num4CntAble}}&{1'b1,3'd4,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num5CntAble}}&{1'b1,3'd5,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) | 
-                                     {7{(reOutDate[23:21] == 1)}} & ({7{Num2CntAble}}&{1'b1,3'd2,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num3CntAble}}&{1'b1,3'd3,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num4CntAble}}&{1'b1,3'd4,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num5CntAble}}&{1'b1,3'd5,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) | 
-                                     {7{(reOutDate[23:21] == 2)}} & ({7{Num3CntAble}}&{1'b1,3'd3,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num4CntAble}}&{1'b1,3'd4,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num5CntAble}}&{1'b1,3'd5,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) | 
-                                     {7{(reOutDate[23:21] == 3)}} & ({7{Num4CntAble}}&{1'b1,3'd4,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num5CntAble}}&{1'b1,3'd5,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) | 
-                                     {7{(reOutDate[23:21] == 4)}} & ({7{Num5CntAble}}&{1'b1,3'd5,(ROBBranchMo ? 3'b100 : 3'b000)} | 
-                                                                     {7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) | 
-                                     {7{(reOutDate[23:21] == 5)}} & ({7{Num6CntAble}}&{1'b1,3'd6,(ROBBranchMo ? 3'b100 : 3'b000)} ) ;
+    assign {NewAble,NewNum,NewDate}= {7{(reOutDate[23:21] == 0)}} & ({7{Num1CntAble}}&{1'b1,3'd1,((reOutDate[20:18] < 3'b100) ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num2CntAble}}&{1'b1,3'd2,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num3CntAble}}&{1'b1,3'd3,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num4CntAble}}&{1'b1,3'd4,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num5CntAble}}&{1'b1,3'd5,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) | 
+                                     {7{(reOutDate[23:21] == 1)}} & ({7{Num2CntAble}}&{1'b1,3'd2,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num3CntAble}}&{1'b1,3'd3,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num4CntAble}}&{1'b1,3'd4,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num5CntAble}}&{1'b1,3'd5,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) | 
+                                     {7{(reOutDate[23:21] == 2)}} & ({7{Num3CntAble}}&{1'b1,3'd3,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num4CntAble}}&{1'b1,3'd4,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num5CntAble}}&{1'b1,3'd5,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) | 
+                                     {7{(reOutDate[23:21] == 3)}} & ({7{Num4CntAble}}&{1'b1,3'd4,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num5CntAble}}&{1'b1,3'd5,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) | 
+                                     {7{(reOutDate[23:21] == 4)}} & ({7{Num5CntAble}}&{1'b1,3'd5,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} | 
+                                                                     {7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) | 
+                                     {7{(reOutDate[23:21] == 5)}} & ({7{Num6CntAble}}&{1'b1,3'd6,((reOutDate[20:18] < 3'b100)  ? 3'b100 : 3'b000)} ) ;
 
     assign OutDateAble = ROBBranch   ;
     assign OutUpDatePc = ROBBranchPc ;

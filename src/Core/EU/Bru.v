@@ -49,7 +49,7 @@ module Bru (
     //to ROB
     output        wire                                   BruCommitAble    ,
     output        wire   [5:0]                           BruCommitPtr     ,
-    output        wire   [1:0]                           BruReDirType     ,
+    output        wire                                   BruReDirAble     ,
     output        wire   [`InstAddrBus]                  BruReDirPc          
 );
 
@@ -67,10 +67,10 @@ module Bru (
                                         ((BruSrc2Addr == BruMulAddr ) & BruMulAble  & BruSrc2Able) ? BruMulDate  :
                                         ((BruSrc2Addr == BruCsrAddr ) & BruCsrAble  & BruSrc2Able) ? BruCsrDate  : BruSrc2Date ;
 
-    localparam REDIRNO     = 2'b00;
+    // localparam REDIRNO     = 2'b00;
     // localparam REDIRNOJUMP = 2'b01;
     // localparam REDIRJUMP   = 2'b10;
-    localparam REDIRJUMPOA = 2'b11; //jump other address
+    // localparam REDIRJUMPOA = 2'b11; //jump other address
 
     reg                 RegBWriteBackAble ;
     reg [`ReNameRegBUs] RegBWriteBackAddr ;
@@ -78,7 +78,7 @@ module Bru (
 
     reg                 RegBruCommitAble  ;
     reg [5:0]           RegBruCommitPtr   ;
-    reg [1:0]           RegBruReDirType   ;
+    reg                 RegBruReDirType   ;
     reg [`InstAddrBus]  RegBruReDirPc     ;
 
     always @(posedge Clk) begin
@@ -88,7 +88,7 @@ module Bru (
            RegBWriteBackDate <= 32'd0        ;
            RegBruCommitAble  <= `EnableValue ;
            RegBruCommitPtr   <= 6'b0         ;
-           RegBruReDirType   <= REDIRNO      ;
+           RegBruReDirType   <= `EnableValue      ;
            RegBruReDirPc     <= 32'b0        ;
         end
         else if(BruFlash) begin
@@ -97,7 +97,7 @@ module Bru (
            RegBWriteBackDate <= 32'd0        ;
            RegBruCommitAble  <= `EnableValue ;
            RegBruCommitPtr   <= 6'b0         ;
-           RegBruReDirType   <= REDIRNO      ;
+           RegBruReDirType   <= `EnableValue      ;
            RegBruReDirPc     <= 32'b0        ; 
         end
         else begin
@@ -109,13 +109,13 @@ module Bru (
                     if(Src1Date == Src2Date) begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
@@ -123,13 +123,13 @@ module Bru (
                     if(Src1Date != Src2Date) begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
@@ -137,13 +137,13 @@ module Bru (
                     if(Src1Date < Src2Date) begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin  
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
@@ -151,13 +151,13 @@ module Bru (
                     if(Src1Date >= Src2Date) begin  
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
@@ -165,13 +165,13 @@ module Bru (
                     if($unsigned(Src1Date) < $unsigned(Src2Date)) begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
@@ -179,39 +179,39 @@ module Bru (
                     if($unsigned(Src1Date) >= $unsigned(Src2Date)) begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin 
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  ~BruMode ? REDIRNO : REDIRJUMPOA ;
+                        RegBruReDirType   <=  ~BruMode ? `EnableValue : `AbleValue ;
                         RegBruReDirPc     <=  BruInstPc + 32'd4 ;
                     end 
                 end
                 `InstB : begin
                         RegBWriteBackDate <= 32'd0        ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  REDIRNO     ;
+                        RegBruReDirType   <= `EnableValue     ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ; ;
                 end
                 `InstBl : begin
                         RegBWriteBackDate <=  BruInstPc + 32'd4 ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  REDIRNO     ;
+                        RegBruReDirType   <= `EnableValue     ;
                         RegBruReDirPc     <=  BruInstPc + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ; ;
                 end
                  `InstJirl : begin
                     if((Src2Date + {{4{BruImmDate[25]}}, BruImmDate,2'b0}) == BruReDirDate) begin
                         RegBWriteBackDate <= BruInstPc + 32'd4 ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  REDIRNO     ;
+                        RegBruReDirType   <= `EnableValue     ;
                         RegBruReDirPc     <=  Src2Date + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end 
                     else begin
                         RegBWriteBackDate <= BruInstPc + 32'd4 ; 
                         RegBruCommitAble  <= `AbleValue   ; 
-                        RegBruReDirType   <=  REDIRJUMPOA ;
+                        RegBruReDirType   <=  `AbleValue  ;
                         RegBruReDirPc     <=  Src2Date + {{4{BruImmDate[25]}}, BruImmDate,2'b0} ;
                     end
                  end
@@ -220,20 +220,20 @@ module Bru (
                     RegBWriteBackDate <= 32'd0        ;
                     RegBruCommitAble  <= `EnableValue ;
                     RegBruCommitPtr   <= 6'b0         ;
-                    RegBruReDirType   <= REDIRNO      ;
+                    RegBruReDirType   <= `EnableValue ;
                     RegBruReDirPc     <= 32'b0        ; 
                 end
             endcase
         end
     end
  
-    assign BWriteBackAble = ~BruStop ? RegBWriteBackAble : `EnableValue ;
-    assign BWriteBackAddr = ~BruStop ? RegBWriteBackAddr : 7'b0         ;
-    assign BWriteBackDate = ~BruStop ? RegBWriteBackDate : `ZeorDate    ;
-    assign BruCommitAble  = ~BruStop ? RegBruCommitAble  : `EnableValue ;
-    assign BruCommitPtr   = ~BruStop ? RegBruCommitPtr   : 6'b0         ;
-    assign BruReDirType   = ~BruStop ? RegBruReDirType   : REDIRNO      ;
-    assign BruReDirPc     = ~BruStop ? RegBruReDirPc     : 32'd0        ;
+    assign BWriteBackAble =  RegBWriteBackAble  ;
+    assign BWriteBackAddr =  RegBWriteBackAddr  ;
+    assign BWriteBackDate =  RegBWriteBackDate  ;
+    assign BruCommitAble  =  RegBruCommitAble   ;
+    assign BruCommitPtr   =  RegBruCommitPtr    ;
+    assign BruReDirAble   =  RegBruReDirType    ;
+    assign BruReDirPc     =  RegBruReDirPc      ;
  
     
 endmodule

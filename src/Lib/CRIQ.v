@@ -10,7 +10,7 @@ module CRIQ #(
     input         wire                            Rest          ,
 
     input         wire                            Rable         ,
-    output        wire       [CRIQWIDE-1:0]       Dout          , //23 wide
+    //output        wire       [CRIQWIDE-1:0]       Dout          , //23 wide
 
     output        wire       [CRIQWIDE-1:0]       CriqPreOut    ,
 
@@ -47,23 +47,23 @@ module CRIQ #(
         end
     end
 
-    reg  [CRIQWIDE-1:0]  CriqOutReg  ;
+    //reg  [CRIQWIDE-1:0]  CriqOutReg  ;
     always @(posedge Clk) begin
         if(!Rest) begin
             Criqtril <= {PTRWIDE{1'b0}} ;
-            CriqOutReg <= {CRIQWIDE{1'b0}};
+            //CriqOutReg <= {CRIQWIDE{1'b0}};
         end 
         else begin
             if(Rable) begin
-                CriqOutReg <= CRIQREG[Criqtril] ;
-                Criqtril <= Criqtril - 1 ;
+                //CriqOutReg <= CRIQREG[Criqtril] ;
+                Criqtril <= (Criqtril == CRIQDEEP) ? 0 : Criqtril + 1 ;
             end
             if(CriqClean)
                 Criqtril <= 0 ;
         end
     end
 
-    assign Dout       = CriqOutReg              ;
+    //assign Dout       = CriqOutReg              ;
     assign CriqFull   = (((Criqtril - Criqfront) == 1) || ((Criqtril == 0) && (Criqfront == CRIQDEEP))) ;
     assign CriqEmpty  = (Criqtril == Criqfront) ;
     assign CriqPreOut = CRIQREG[Criqtril]       ; 

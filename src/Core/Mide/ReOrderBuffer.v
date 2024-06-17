@@ -11,6 +11,7 @@ module ReOrderBuffer (
     input         wire                               IcacheYc       ,
     input         wire       [6:0]                   IcacheYcCode   ,
     input         wire       [`InstAddrBus]          IcacheYcVPc    ,
+    input         wire       [`InstAddrBus]          IcacheYcAddr   ,
     //from rename 为了简化，此处decode写入的一定的是四条指令
     input         wire                               InInst1Able    ,
     input         wire       [`InstAddrBus]          InInsr1Pc      ,
@@ -177,22 +178,27 @@ module ReOrderBuffer (
     wire                   ROBEmpty       ;
     reg    [7:0]           IcacheYCTemp   ;
     reg    [`InstAddrBus]  IcacheYcVPcTemp;
+    reg    [`InstAddrBus]  IcacheYcAddrTemp ;
     always @(posedge Clk) begin
         if(!Rest) begin
             IcacheYCTemp <= 8'b0 ;
             IcacheYcVPcTemp <= 32'd0 ;
+            IcacheYcAddrTemp <= 32'd0 ;
         end
         else if(ROBStop) begin
             IcacheYCTemp <= IcacheYCTemp ;
             IcacheYcVPcTemp <= IcacheYcVPcTemp ;
+            IcacheYcAddrTemp <= IcacheYcAddrTemp ;
         end
         else if(ROBFlash) begin
             IcacheYCTemp <= 8'b0     ;
             IcacheYcVPcTemp <= 32'd0 ;
+            IcacheYcAddrTemp <= 32'd0 ;
         end
         else if(IcacheYc) begin
             IcacheYCTemp <= {`AbleValue,IcacheYcCode} ;
             IcacheYcVPcTemp <= IcacheYcVPc            ;
+            IcacheYcAddrTemp <= IcacheYcAddr          ;
         end
     end
 
@@ -243,6 +249,11 @@ module ReOrderBuffer (
     wire Inst3IsSysCall   = (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) ;
     wire Inst4IsSysCall   = (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
 
+    wire Inst1IsEnty   = (ROBENTY[CheckInst1Ptr][101:93] == `InstSyscall) ;
+    wire Inst2IsEnty    = (ROBENTY[CheckInst2Ptr][101:93] == `InstSyscall) ;
+    wire Inst3IsEnty    = (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) ;
+    wire Inst4IsEnty    = (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
+
     wire Inst1Redirect = ROBENTY[CheckInst1Ptr][43] ;
     wire Inst2Redirect = ROBENTY[CheckInst2Ptr][43] ;
     wire Inst3Redirect = ROBENTY[CheckInst3Ptr][43] ;
@@ -273,10 +284,10 @@ module ReOrderBuffer (
                          LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) |     
                          LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
 
-    wire   CommitSysCall = LastComit1 & (ROBENTY[CheckInst1Ptr][101:93] == `InstSyscall) |    
-                           LastComit2 & (ROBENTY[CheckInst2Ptr][101:93] == `InstSyscall) | 
-                           LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) | 
-                           LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
+    // wire   CommitSysCall = LastComit1 & (ROBENTY[CheckInst1Ptr][101:93] == `InstSyscall) |    
+    //                        LastComit2 & (ROBENTY[CheckInst2Ptr][101:93] == `InstSyscall) | 
+    //                        LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) | 
+    //                        LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
  
     wire   U1ReadAble  ;
     wire   U2ReadAble  ;
@@ -290,17 +301,41 @@ module ReOrderBuffer (
 
     assign ROBEmpty =  U1Emptysign | U2Emptysign | U3Emptysign | U4Emptysign ;
 
-    assign Interrupt = (FinalRetir1 & (Inst1Trap | Inst1IsSysCall | (ROBEmpty&IcacheYCTemp[7]))) | 
-                       (FinalRetir2 & (Inst2Trap | Inst2IsSysCall | (ROBEmpty&IcacheYCTemp[7]))) | 
-                       (FinalRetir3 & (Inst3Trap | Inst3IsSysCall | (ROBEmpty&IcacheYCTemp[7]))) | 
-                       (FinalRetir4 & (Inst4Trap | Inst4IsSysCall | (ROBEmpty&IcacheYCTemp[7]))) ;
+    assign Interrupt = (FinalRetir1 & (ExtInterrupt | Inst1Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]))) | 
+                       (FinalRetir2 & (ExtInterrupt | Inst2Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]))) | 
+                       (FinalRetir3 & (ExtInterrupt | Inst3Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]))) | 
+                       (FinalRetir4 & (ExtInterrupt | Inst4Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]))) ;
 
-    assign InterruptPc = {32{(FinalRetir1 & (Inst1Trap | Inst1IsSysCall | (ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst1Ptr][76:45] |
-                         {32{(FinalRetir2 & (Inst2Trap | Inst2IsSysCall | (ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst2Ptr][76:45] |
-                         {32{(FinalRetir3 & (Inst3Trap | Inst3IsSysCall | (ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst3Ptr][76:45] |
-                         {32{(FinalRetir4 & (Inst4Trap | Inst4IsSysCall | (ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst4Ptr][76:45] ;
+    assign InterruptPc = {32{(FinalRetir1 & (ExtInterrupt | Inst1Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst1Ptr][76:45] |
+                         {32{(FinalRetir2 & (ExtInterrupt | Inst2Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst2Ptr][76:45] |
+                         {32{(FinalRetir3 & (ExtInterrupt | Inst3Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst3Ptr][76:45] |
+                         {32{(FinalRetir4 & (ExtInterrupt | Inst4Trap | (~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])))}} & ROBENTY[CheckInst4Ptr][76:45] ;
 
-    assign InterruptAddr = 
+    assign InterruptAddr =  {32{FinalRetir1 & ((~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]) & (IcacheYCTemp[6:0] == `ADEF))}} & IcacheYcAddrTemp | 
+                            {32{FinalRetir1 & ((Inst1Trap) | ((~ExtInterrupt & ROBEmpty&IcacheYCTemp[7]) & ~(IcacheYCTemp[6:0] == `ADEF)))}} & ROBENTY[CheckInst1Ptr][42:11] | 
+                            {32{FinalRetir2 & (Inst2Trap)}} & ROBENTY[CheckInst2Ptr][42:11] | 
+                            {32{FinalRetir3 & (Inst3Trap)}} & ROBENTY[CheckInst3Ptr][42:11] |
+                            {32{FinalRetir4 & (Inst4Trap)}} & ROBENTY[CheckInst4Ptr][42:11] ;
+
+    assign InterruptType = {7{FinalRetir1}} & ({7{ExtInterrupt}}                               & 6'd0                         |
+                                               {7{Inst1Trap}}                                  & ROBENTY[CheckInst1Ptr][10:4] |
+                                               {7{Inst1IsSysCall}}                             & 6'd10                        |
+                                               {7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |)|
+                           {7{FinalRetir2}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
+                                               {7{Inst2Trap}}                                  & ROBENTY[CheckInst2Ptr][10:4] |
+                                               {7{Inst2IsSysCall}}                             & 6'd10                        |
+                                               //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
+                                                                                                                               )|
+                           {7{FinalRetir3}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
+                                               {7{Inst3Trap}}                                  & ROBENTY[CheckInst3Ptr][10:4] |
+                                               {7{Inst3IsSysCall}}                             & 6'd10                        |
+                                               //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
+                                                                                                                               )|
+                           {7{FinalRetir4}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
+                                               {7{Inst4Trap}}                                  & ROBENTY[CheckInst4Ptr][10:4] |
+                                               {7{Inst4IsSysCall}}                             & 6'd10                        |
+                                               //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
+                                                                                                                               )| ;
 
     wire Wu1_CRIQable = InInst1Able ;
     wire [5:0] CriqPreOut1          ;

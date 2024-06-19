@@ -105,7 +105,10 @@ module StoreBuffer (
                        (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
                        (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
 
-    wire LLbCtrl     = (STOREBUFFER[ReTirSPtr4][78:41] == LLSCAddrIn) & LLSCAble ;
+    wire LLbCtrl     = ((STOREBUFFER[ReTirSPtr1][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr2][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr3][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr4][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble ;
     assign LLSCClean = LLbCtrl ;
     assign LLCtrlEnA = LLbCtrl ;
     

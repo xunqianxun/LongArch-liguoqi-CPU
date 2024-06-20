@@ -250,6 +250,15 @@ module ReOrderBuffer (
     wire Inst3StoreYN  = (ROBENTY[CheckInst3Ptr][101:98] == 4'b1011) ;
     wire Inst4StoreYN  = (ROBENTY[CheckInst4Ptr][101:98] == 4'b1011) ;
 
+    wire Inst1IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst1Ptr][98:95] == 3'b111)   ;
+    wire Inst2IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst2Ptr][98:95] == 3'b111)   ;
+    wire Inst3IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst3Ptr][98:95] == 3'b111)   ;
+    wire Inst4IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst4Ptr][98:95] == 3'b111)   ;
+
+    wire Inst1Br        = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) ;
+    wire Inst2Br        = (ROBENTY[CheckInst2Ptr][101:99] == 3'b111) ;
+    wire Inst3Br        = (ROBENTY[CheckInst3Ptr][101:99] == 3'b111) ;
+    wire Inst4Br        = (ROBENTY[CheckInst4Ptr][101:99] == 3'b111) ;
 
     // wire Inst1IsIdle   = (ROBENTY[CheckInst1Ptr][101:93] == `InstIdle) ;
     // wire Inst2IsIdle   = (ROBENTY[CheckInst2Ptr][101:93] == `InstIdle) ;
@@ -266,10 +275,11 @@ module ReOrderBuffer (
     wire Inst3IsEnty    = (ROBENTY[CheckInst3Ptr][101:93] == `InstEntry) ;
     wire Inst4IsEnty    = (ROBENTY[CheckInst4Ptr][101:93] == `InstEntry) ;
 
-    wire Inst1Redirect = ROBENTY[CheckInst1Ptr][43] ;
-    wire Inst2Redirect = ROBENTY[CheckInst2Ptr][43] ;
-    wire Inst3Redirect = ROBENTY[CheckInst3Ptr][43] ;
-    wire Inst4Redirect = ROBENTY[CheckInst4Ptr][43] ;
+
+    // wire Inst1Redirect = ROBENTY[CheckInst1Ptr][43] ;
+    // wire Inst2Redirect = ROBENTY[CheckInst2Ptr][43] ;
+    // wire Inst3Redirect = ROBENTY[CheckInst3Ptr][43] ;
+    // wire Inst4Redirect = ROBENTY[CheckInst4Ptr][43] ;
 
     wire Inst1Trap     = ROBENTY[CheckInst1Ptr][10] ;
     wire Inst2Trap     = ROBENTY[CheckInst2Ptr][10] ;
@@ -277,9 +287,9 @@ module ReOrderBuffer (
     wire Inst4Trap     = ROBENTY[CheckInst4Ptr][10] ;
     
     wire FinalRetir1 = ~ExtInterrupt & Inst1CanRetir  ;
-    wire FInalRetir2 = FinalRetir1 & ~Inst1KernalYN & ~Inst1Redirect ;
-    wire FInalRetir3 = FInalRetir2 & ~Inst2KernalYN & ~Inst2Redirect ;
-    wire FInalRetir4 = FInalRetir3 & ~Inst3KernalYN & ~Inst3Redirect ;
+    wire FinalRetir2 = FinalRetir1 & ~Inst1KernalYN & ~Inst1Br ;
+    wire FinalRetir3 = FinalRetir2 & ~Inst2KernalYN & ~Inst2Br ;
+    wire FinalRetir4 = FinalRetir3 & ~Inst3KernalYN & ~Inst3Br ;
 
     wire LastComit1  = FinalRetir1 & ~FinalRetir2 & ~FinalRetir3 & ~FinalRetir4 ;
     wire LastComit2  = FinalRetir1 &  FinalRetir2 & ~FinalRetir3 & ~FinalRetir4 ;
@@ -296,10 +306,6 @@ module ReOrderBuffer (
                          LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) |     
                          LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
 
-    // wire   CommitSysCall = LastComit1 & (ROBENTY[CheckInst1Ptr][101:93] == `InstSyscall) |    
-    //                        LastComit2 & (ROBENTY[CheckInst2Ptr][101:93] == `InstSyscall) | 
-    //                        LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) | 
-    //                        LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
  
     wire   U1ReadAble  ;
     wire   U2ReadAble  ;
@@ -364,15 +370,36 @@ module ReOrderBuffer (
                             {8{(FinalRetir3 & Inst3KernalYN)}} & ROBENTY[CheckInst3Ptr][101:93] | 
                             {8{(FinalRetir4 & Inst4KernalYN)}} & ROBENTY[CheckInst4Ptr][101:93] ;
                         
-    assign {RetirLAble1,ReTirLPtr1,RetirLAble2,ReTirLPtr2,RetirLAble3,ReTirLPtr3,RetirLAble4,ReTirLPtr4} = 
-                {16{( (FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN))}} & 
-                {`AbleValue,ROBENTY[CheckInst1Ptr][2:0],`EnableValue,3'd0,`EnableValue,3'd0,`EnableValue,3'd0} | 
-                {16{(~(FinalRetir1 & Inst1LoadYN) &  (FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN))}} & 
-                {`AbleValue,ROBENTY[CheckInst2Ptr][2:0],`EnableValue,3'd0,`EnableValue,3'd0,`EnableValue,3'd0} | 
-                {16{( (FinalRetir1 & Inst1LoadYN) &  (FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN))}} & 
-                {`AbleValue,ROBENTY[CheckInst1Ptr][2:0],`AbleValue,ROBENTY[CheckInst2Ptr][2:0],`EnableValue,3'd0,`EnableValue,3'd0} | 
-                {16{((FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN) & ~(FinalRetir1 & Inst1LoadYN))}} & 
-                {`AbleValue,ROBENTY[CheckInst1Ptr][2:0],`EnableValue,3'd0,`EnableValue,3'd0,`EnableValue,3'd0} | 
+
+    assign RetirLAble1 = FinalRetir1 & Inst1LoadYN ; 
+    assign ReTirLPtr1  = {3{(FinalRetir1 & Inst1LoadYN)}} & ROBENTY[CheckInst1Ptr][2:0] ;
+    assign RetirLAble2 = FinalRetir2 & Inst2LoadYN ; 
+    assign ReTirLPtr2  = {3{(FinalRetir2 & Inst2LoadYN)}} & ROBENTY[CheckInst2Ptr][2:0] ;
+    assign RetirLAble3 = FinalRetir3 & Inst3LoadYN ; 
+    assign ReTirLPtr3  = {3{(FinalRetir3 & Inst3LoadYN)}} & ROBENTY[CheckInst3Ptr][2:0] ;
+    assign RetirLAble4 = FinalRetir4 & Inst4LoadYN ; 
+    assign ReTirLPtr4  = {3{(FinalRetir4 & Inst4LoadYN)}} & ROBENTY[CheckInst4Ptr][2:0] ; 
+
+    assign RetirSAble1 = FinalRetir1 & Inst1StoreYN ;
+    assign ReTirSPtr1  = {3{(FinalRetir1 & Inst1StoreYN)}} & ROBENTY[CheckInst1Ptr][2:0] ;
+    assign RetirSAble2 = FinalRetir2 & Inst1StoreYN ;
+    assign ReTirSPtr2  = {3{(FinalRetir2 & Inst2StoreYN)}} & ROBENTY[CheckInst2Ptr][2:0] ;
+    assign RetirSAble3 = FinalRetir3 & Inst1StoreYN ;
+    assign ReTirSPtr3  = {3{(FinalRetir3 & Inst3StoreYN)}} & ROBENTY[CheckInst3Ptr][2:0] ;
+    assign RetirSAble4 = FinalRetir4 & Inst1StoreYN ;
+    assign ReTirSPtr4  = {3{(FinalRetir4 & Inst4StoreYN)}} & ROBENTY[CheckInst4Ptr][2:0] ;
+
+    assign RobToFTQAble = (FinalRetir1 & Inst1IsBranch) | (FinalRetir2 & Inst2IsBranch) | (FinalRetir3 & Inst3IsBranch) | (FinalRetir4 & Inst4IsBranch) ;
+    assign RobToFTQYN   = (FinalRetir1 & Inst1IsBranch & ROBENTY[CheckInst1Ptr][43]) | 
+                          (FinalRetir2 & Inst2IsBranch & ROBENTY[CheckInst2Ptr][43]) | 
+                          (FinalRetir3 & Inst3IsBranch & ROBENTY[CheckInst3Ptr][43]) | 
+                          (FinalRetir4 & Inst4IsBranch & ROBENTY[CheckInst4Ptr][43]); 
+    assign RobToFTQPc   = {32{(FinalRetir1 & Inst1IsBranch)}} & ROBENTY[CheckInst1Ptr][76:45] | 
+                          {32{(FinalRetir2 & Inst2IsBranch)}} & ROBENTY[CheckInst2Ptr][76:45] | 
+                          {32{(FinalRetir3 & Inst3IsBranch)}} & ROBENTY[CheckInst3Ptr][76:45] | 
+                          {32{(FinalRetir4 & Inst4IsBranch)}} & ROBENTY[CheckInst4Ptr][76:45] ;
+
+
 
 
     wire Wu1_CRIQable = InInst1Able ;

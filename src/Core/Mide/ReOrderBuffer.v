@@ -285,6 +285,11 @@ module ReOrderBuffer (
     wire Inst2Trap     = ROBENTY[CheckInst2Ptr][10] ;
     wire Inst3Trap     = ROBENTY[CheckInst3Ptr][10] ;
     wire Inst4Trap     = ROBENTY[CheckInst4Ptr][10] ;
+
+    wire Inst1BrFault   = ROBENTY[CheckInst1Ptr][43] ; //able mean preduct fault 
+    wire Inst2BrFault   = ROBENTY[CheckInst2Ptr][43] ;
+    wire Inst3BrFault   = ROBENTY[CheckInst3Ptr][43] ;
+    wire Inst4BrFault   = ROBENTY[CheckInst4Ptr][43] ;
     
     wire FinalRetir1 = ~ExtInterrupt & Inst1CanRetir  ;
     wire FinalRetir2 = FinalRetir1 & ~Inst1KernalYN & ~Inst1Br ;
@@ -400,7 +405,20 @@ module ReOrderBuffer (
                           {32{(FinalRetir4 & Inst4IsBranch)}} & ROBENTY[CheckInst4Ptr][76:45] ;
 
 
+    assign RobReDirectAble = FinalRetir1 & Inst1BrFault | 
+                             FinalRetir2 & Inst2BrFault | 
+                             FinalRetir3 & Inst3BrFault | 
+                             FinalRetir4 & Inst4BrFault | Interrupt ;
 
+    assign RobReDirectAddr = {32{(FinalRetir1 & Inst1BrFault)}} & ROBENTY[CheckInst1Ptr][42:11]  | 
+                             {32{(FinalRetir2 & Inst2BrFault)}} & ROBENTY[CheckInst2Ptr][42:11]  | 
+                             {32{(FinalRetir3 & Inst3BrFault)}} & ROBENTY[CheckInst3Ptr][42:11]  | 
+                             {32{(FinalRetir4 & Inst4BrFault)}} & ROBENTY[CheckInst4Ptr][42:11]  | 
+                             {32{((InterruptType == 6'b111111) & Interrupt)}} & {InTlbEntryDate,7'd0} |
+                             {32{((InterruptType != 6'b111111) & Interrupt)}} & {InEntryDate,7'd0}    ;
+
+    assign    Inst1Map      = FinalRetir1  ;
+    assign    Inst1ArchReg  = ROBENTY[CheckInst1Ptr][42:11]
 
     wire Wu1_CRIQable = InInst1Able ;
     wire [5:0] CriqPreOut1          ;

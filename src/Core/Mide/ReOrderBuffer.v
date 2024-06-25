@@ -1,5 +1,6 @@
 `timescale 1ps/1ps
 `include "../define.v"
+`include "../../Lib/CRIQ.v"
 
 module ReOrderBuffer (
     input         wire                               Clk            ,
@@ -75,7 +76,7 @@ module ReOrderBuffer (
     input         wire                               BruComeAble    ,
     input         wire       [5:0]                   BruCoomePtr    ,
     input         wire                               BruComeYN      ,
-    input         wire       [1:0]                   BruCReDirType  ,
+    input         wire                               BruCReDirType  ,
     input         wire       [`InstAddrBus]          BruCReDirPc    ,
     //div
     input         wire                               DivComeAble    ,
@@ -250,10 +251,10 @@ module ReOrderBuffer (
     wire Inst3StoreYN  = (ROBENTY[CheckInst3Ptr][101:98] == 4'b1011) ;
     wire Inst4StoreYN  = (ROBENTY[CheckInst4Ptr][101:98] == 4'b1011) ;
 
-    wire Inst1IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst1Ptr][98:95] == 3'b111)   ;
-    wire Inst2IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst2Ptr][98:95] == 3'b111)   ;
-    wire Inst3IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst3Ptr][98:95] == 3'b111)   ;
-    wire Inst4IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst4Ptr][98:95] == 3'b111)   ;
+    wire Inst1IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst1Ptr][98:96] != 3'b000)   ;
+    wire Inst2IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst2Ptr][98:96] != 3'b000)   ;
+    wire Inst3IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst3Ptr][98:96] != 3'b000)   ;
+    wire Inst4IsBranch  = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) & (ROBENTY[CheckInst4Ptr][98:96] != 3'b000)   ;
 
     wire Inst1Br        = (ROBENTY[CheckInst1Ptr][101:99] == 3'b111) ;
     wire Inst2Br        = (ROBENTY[CheckInst2Ptr][101:99] == 3'b111) ;
@@ -265,15 +266,15 @@ module ReOrderBuffer (
     // wire Inst3IsIdle   = (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) ;
     // wire Inst4IsIdle   = (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
 
-    wire Inst1IsSysCall   = (ROBENTY[CheckInst1Ptr][101:93] == `InstSyscall) ;
-    wire Inst2IsSysCall   = (ROBENTY[CheckInst2Ptr][101:93] == `InstSyscall) ;
-    wire Inst3IsSysCall   = (ROBENTY[CheckInst3Ptr][101:93] == `InstSyscall) ;
-    wire Inst4IsSysCall   = (ROBENTY[CheckInst4Ptr][101:93] == `InstSyscall) ;
+    wire Inst1IsSysCall   = (ROBENTY[CheckInst1Ptr][101:94] == `InstSyscall) ;
+    wire Inst2IsSysCall   = (ROBENTY[CheckInst2Ptr][101:94] == `InstSyscall) ;
+    wire Inst3IsSysCall   = (ROBENTY[CheckInst3Ptr][101:94] == `InstSyscall) ;
+    wire Inst4IsSysCall   = (ROBENTY[CheckInst4Ptr][101:94] == `InstSyscall) ;
 
-    wire Inst1IsEnty    = (ROBENTY[CheckInst1Ptr][101:93] == `InstEntry) ;
-    wire Inst2IsEnty    = (ROBENTY[CheckInst2Ptr][101:93] == `InstEntry) ;
-    wire Inst3IsEnty    = (ROBENTY[CheckInst3Ptr][101:93] == `InstEntry) ;
-    wire Inst4IsEnty    = (ROBENTY[CheckInst4Ptr][101:93] == `InstEntry) ;
+    wire Inst1IsEnty    = (ROBENTY[CheckInst1Ptr][101:94] == `InstEntry) ;
+    wire Inst2IsEnty    = (ROBENTY[CheckInst2Ptr][101:94] == `InstEntry) ;
+    wire Inst3IsEnty    = (ROBENTY[CheckInst3Ptr][101:94] == `InstEntry) ;
+    wire Inst4IsEnty    = (ROBENTY[CheckInst4Ptr][101:94] == `InstEntry) ;
 
 
     // wire Inst1Redirect = ROBENTY[CheckInst1Ptr][43] ;
@@ -306,10 +307,10 @@ module ReOrderBuffer (
                         {3{(LastComit3)}} & 3'd3 |
                         {3{(LastComit4)}} & 3'd4 ;
 
-    wire   CommitIdle =  LastComit1 & (ROBENTY[CheckInst1Ptr][101:93] == `InstIdle) |   
-                         LastComit2 & (ROBENTY[CheckInst2Ptr][101:93] == `InstIdle) |    
-                         LastComit3 & (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) |     
-                         LastComit4 & (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
+    wire   CommitIdle =  LastComit1 & (ROBENTY[CheckInst1Ptr][101:94] == `InstIdle) |   
+                         LastComit2 & (ROBENTY[CheckInst2Ptr][101:94] == `InstIdle) |    
+                         LastComit3 & (ROBENTY[CheckInst3Ptr][101:94] == `InstIdle) |     
+                         LastComit4 & (ROBENTY[CheckInst4Ptr][101:94] == `InstIdle) ;
 
  
     wire   U1ReadAble  ;
@@ -340,23 +341,23 @@ module ReOrderBuffer (
                             {32{FinalRetir3 & (Inst3Trap)}} & ROBENTY[CheckInst3Ptr][42:11] |
                             {32{FinalRetir4 & (Inst4Trap)}} & ROBENTY[CheckInst4Ptr][42:11] ;
 
-    assign InterruptType = {7{FinalRetir1}} & ({7{ExtInterrupt}}                               & 6'd0                         |
+    assign InterruptType = {7{FinalRetir1}} & ({7{ExtInterrupt}}                               & 7'd0                         |
                                                {7{Inst1Trap}}                                  & ROBENTY[CheckInst1Ptr][10:4] |
-                                               {7{Inst1IsSysCall}}                             & 6'd10                        |
+                                               {7{Inst1IsSysCall}}                             & 7'd10                        |
                                                {7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            )|
                            {7{FinalRetir2}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
                                                {7{Inst2Trap}}                                  & ROBENTY[CheckInst2Ptr][10:4] |
-                                               {7{Inst2IsSysCall}}                             & 6'd10                        
+                                               {7{Inst2IsSysCall}}                             & 7'd10                        
                                                //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
                                                                                                                               )|
                            {7{FinalRetir3}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
                                                {7{Inst3Trap}}                                  & ROBENTY[CheckInst3Ptr][10:4] |
-                                               {7{Inst3IsSysCall}}                             & 6'd10                        
+                                               {7{Inst3IsSysCall}}                             & 7'd10                        
                                                //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
                                                                                                                               )|
                            {7{FinalRetir4}} & (//{7{ExtInterrupt}}                               & 6'd0                         |
                                                {7{Inst4Trap}}                                  & ROBENTY[CheckInst4Ptr][10:4] |
-                                               {7{Inst4IsSysCall}}                             & 6'd10                        
+                                               {7{Inst4IsSysCall}}                             & 7'd10                        
                                                //{7{(~ExtInterrupt & ROBEmpty&IcacheYCTemp[7])}} & IcacheYCTemp[6:0]            |
                                                                                                                               ) ;
 
@@ -370,10 +371,10 @@ module ReOrderBuffer (
                            (FinalRetir2 & Inst2KernalYN) | 
                            (FinalRetir2 & Inst2KernalYN) | 
                            (FinalRetir2 & Inst2KernalYN) ;
-    assign CsrRetirMicOp =  {8{(FinalRetir1 & Inst1KernalYN)}} & ROBENTY[CheckInst1Ptr][101:93] | 
-                            {8{(FinalRetir2 & Inst2KernalYN)}} & ROBENTY[CheckInst2Ptr][101:93] | 
-                            {8{(FinalRetir3 & Inst3KernalYN)}} & ROBENTY[CheckInst3Ptr][101:93] | 
-                            {8{(FinalRetir4 & Inst4KernalYN)}} & ROBENTY[CheckInst4Ptr][101:93] ;
+    assign CsrRetirMicOp =  {8{(FinalRetir1 & Inst1KernalYN)}} & ROBENTY[CheckInst1Ptr][101:94] | 
+                            {8{(FinalRetir2 & Inst2KernalYN)}} & ROBENTY[CheckInst2Ptr][101:94] | 
+                            {8{(FinalRetir3 & Inst3KernalYN)}} & ROBENTY[CheckInst3Ptr][101:94] | 
+                            {8{(FinalRetir4 & Inst4KernalYN)}} & ROBENTY[CheckInst4Ptr][101:94] ;
                         
 
     assign RetirLAble1 = FinalRetir1 & Inst1LoadYN ; 
@@ -413,12 +414,22 @@ module ReOrderBuffer (
     assign RobReDirectAddr = {32{(FinalRetir1 & Inst1BrFault)}} & ROBENTY[CheckInst1Ptr][42:11]  | 
                              {32{(FinalRetir2 & Inst2BrFault)}} & ROBENTY[CheckInst2Ptr][42:11]  | 
                              {32{(FinalRetir3 & Inst3BrFault)}} & ROBENTY[CheckInst3Ptr][42:11]  | 
-                             {32{(FinalRetir4 & Inst4BrFault)}} & ROBENTY[CheckInst4Ptr][42:11]  | 
-                             {32{((InterruptType == 6'b111111) & Interrupt)}} & {InTlbEntryDate,7'd0} |
-                             {32{((InterruptType != 6'b111111) & Interrupt)}} & {InEntryDate,7'd0}    ;
+                             {32{(FinalRetir4 & Inst4BrFault)}} & ROBENTY[CheckInst4Ptr][42:11]  |
+                             {32{((InterruptType == 7'b0111111) && Interrupt)}} & {InTlbEntryDate,6'd0} |
+                             {32{((InterruptType != 7'b0111111) && Interrupt)}} & {InEntryDate,6'd0}    ;
 
-    assign    Inst1Map      = FinalRetir1  ;
-    assign    Inst1ArchReg  = ROBENTY[CheckInst1Ptr][42:11]
+    assign    Inst1Map       = FinalRetir1 & ROBENTY[CheckInst1Ptr][93] ;
+    assign    Inst1ArchReg   = ROBENTY[CheckInst1Ptr][92:88] ;
+    assign    Inst1RenameReg = ROBENTY[CheckInst1Ptr][87:81] ;
+    assign    Inst2Map       = FinalRetir2 & ROBENTY[CheckInst2Ptr][93] ;
+    assign    Inst2ArchReg   = ROBENTY[CheckInst2Ptr][92:88] ;
+    assign    Inst2RenameReg = ROBENTY[CheckInst2Ptr][87:81] ;
+    assign    Inst3Map       = FinalRetir3 & ROBENTY[CheckInst3Ptr][93] ;
+    assign    Inst3ArchReg   = ROBENTY[CheckInst3Ptr][92:88] ;
+    assign    Inst3RenameReg = ROBENTY[CheckInst3Ptr][87:81] ;
+    assign    Inst4Map       = FinalRetir4 & ROBENTY[CheckInst4Ptr][93] ;
+    assign    Inst4ArchReg   = ROBENTY[CheckInst4Ptr][92:88] ;
+    assign    Inst4RenameReg = ROBENTY[CheckInst4Ptr][87:81] ;
 
     wire Wu1_CRIQable = InInst1Able ;
     wire [5:0] CriqPreOut1          ;
@@ -537,14 +548,14 @@ module ReOrderBuffer (
             end
         end
         else begin
-            ROBENTY[Din1] <= InInst1Able ? {`AbleValue,InInst1MicOp,InInst1RdAble,InInst1RdAnum,InInst1RdRnum,InInsr1Pc,45'd0} : ROBENTY[Din1] ;
-            ROBENTY[Din2] <= InInst2Able ? {`AbleValue,InInst2MicOp,InInst2RdAble,InInst2RdAnum,InInst2RdRnum,InInsr2Pc,45'd0} : ROBENTY[Din2] ;
-            ROBENTY[Din3] <= InInst3Able ? {`AbleValue,InInst3MicOp,InInst3RdAble,InInst3RdAnum,InInst3RdRnum,InInsr3Pc,45'd0} : ROBENTY[Din3] ;
-            ROBENTY[Din4] <= InInst4Able ? {`AbleValue,InInst4MicOp,InInst4RdAble,InInst4RdAnum,InInst4RdRnum,InInsr4Pc,45'd0} : ROBENTY[Din4] ;
+            ROBENTY[Din1] <= InInst1Able ? {`AbleValue,InInst1MicOp,InInst1RdAble,InInst1RdAnum,InInst1RdRnum,InInsr1Pc,4'd0,45'd0} : ROBENTY[Din1] ;
+            ROBENTY[Din2] <= InInst2Able ? {`AbleValue,InInst2MicOp,InInst2RdAble,InInst2RdAnum,InInst2RdRnum,InInsr2Pc,4'd0,45'd0} : ROBENTY[Din2] ;
+            ROBENTY[Din3] <= InInst3Able ? {`AbleValue,InInst3MicOp,InInst3RdAble,InInst3RdAnum,InInst3RdRnum,InInsr3Pc,4'd0,45'd0} : ROBENTY[Din3] ;
+            ROBENTY[Din4] <= InInst4Able ? {`AbleValue,InInst4MicOp,InInst4RdAble,InInst4RdAnum,InInst4RdRnum,InInsr4Pc,4'd0,45'd0} : ROBENTY[Din4] ;
             ROBENTY[Alu1CoomePtr][44] <=    Alu1ComeAble ? Alu1ComeAble : ROBENTY[Alu1CoomePtr][44] ;
             ROBENTY[Alu2CoomePtr][44] <=    Alu2ComeAble ? Alu2ComeAble : ROBENTY[Alu2CoomePtr][44] ;
             ROBENTY[BruCoomePtr ][44:11] <= BruComeAble  ? {BruComeAble,BruCReDirType,BruCReDirPc} : ROBENTY[BruCoomePtr ][44:11] ;
-            ROBENTY[CsrCRobPtr  ][45:3]  <= CsrCRobReady ? {CsrCRobReady,1'b0,CsrCRobAddr,CsrInterrupt,CsrCRobCode} : ROBENTY[CsrCRobPtr  ][45:3] ;
+            ROBENTY[CsrCRobPtr  ][44:3]  <= CsrCRobReady ? {CsrCRobReady,1'b0,CsrCRobAddr,CsrInterrupt,CsrCRobCode} : ROBENTY[CsrCRobPtr  ][44:3] ;
             ROBENTY[LbComeRobPtr][44:0]  <= LbComeAble   ? {LbComeAble,1'b0,LbComeTrapAddr,LbComeTrap,LbComeTrapCode,LbComeBPtr} : ROBENTY[LbComeRobPtr][44:0] ; //在load和store指令中存放中断的addr的地址空间将会存放load和store的访存虚拟地址
             ROBENTY[StComeRobPtr][44:0]  <= StComeAble   ? {StComeAble,1'b0,StComeTrapAddr,StComeTrap,StComeTrapCode,StComeBPtr} : ROBENTY[StComeRobPtr][44:0] ;
         end

@@ -25,6 +25,7 @@ module StoreBuffer (
     output        wire                                 LLCtrlEnA        , //不正确的store了llsc的地址，或者
     //from AGUload
     input         wire                                 InSBAble         ,
+    input         wire      [`InstAddrBus]             InSBPc           ,
     input         wire      [`MicOperateCode]          InSBMicOp        ,
     input         wire      [`DataBus]                 InSBDate         ,
     input         wire      [1:0]                      InSBMAT          ,   
@@ -71,7 +72,7 @@ module StoreBuffer (
     localparam SWING    = 3'd2 ;
     localparam SWEITCOM = 3'd3 ;
 
-    reg    [124:0]  STOREBUFFER [1:7] ;
+    reg    [155:0]  STOREBUFFER [1:7] ;
 
     wire  Retir1Able = (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
                        (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
@@ -129,33 +130,33 @@ module StoreBuffer (
                              (STOREBUFFER[1][123:121] == SWING) ? 3'd1 : 3'd0 ;
 
 
-    wire         StoreBufferEmpty = ~STOREBUFFER[1][124] & 
-                                    ~STOREBUFFER[2][124] & 
-                                    ~STOREBUFFER[3][124] & 
-                                    ~STOREBUFFER[4][124] & 
-                                    ~STOREBUFFER[5][124] & 
-                                    ~STOREBUFFER[6][124] & 
-                                    ~STOREBUFFER[7][124] ;
-    wire         StoreBufferFull  = STOREBUFFER[1][124] & 
-                                    STOREBUFFER[2][124] & 
-                                    STOREBUFFER[3][124] & 
-                                    STOREBUFFER[4][124] & 
-                                    STOREBUFFER[5][124] & 
-                                    STOREBUFFER[6][124] & 
-                                    STOREBUFFER[7][124] ;
+    wire         StoreBufferEmpty = ~STOREBUFFER[1][155] & 
+                                    ~STOREBUFFER[2][155] & 
+                                    ~STOREBUFFER[3][155] & 
+                                    ~STOREBUFFER[4][155] & 
+                                    ~STOREBUFFER[5][155] & 
+                                    ~STOREBUFFER[6][155] & 
+                                    ~STOREBUFFER[7][155] ;
+    wire         StoreBufferFull  = STOREBUFFER[1][155] & 
+                                    STOREBUFFER[2][155] & 
+                                    STOREBUFFER[3][155] & 
+                                    STOREBUFFER[4][155] & 
+                                    STOREBUFFER[5][155] & 
+                                    STOREBUFFER[6][155] & 
+                                    STOREBUFFER[7][155] ;
 
     assign StoreEmpty = StoreBufferEmpty ;
     assign SbReq      = StoreBufferEmpty ;
 
     always @(posedge Clk) begin
         if(!Rest) begin
-            STOREBUFFER[1] <= 125'd0 ;
-            STOREBUFFER[2] <= 125'd0 ;
-            STOREBUFFER[3] <= 125'd0 ;
-            STOREBUFFER[4] <= 125'd0 ;
-            STOREBUFFER[5] <= 125'd0 ;
-            STOREBUFFER[6] <= 125'd0 ;
-            STOREBUFFER[7] <= 125'd0 ;
+            STOREBUFFER[1] <= 156'd0 ;
+            STOREBUFFER[2] <= 156'd0 ;
+            STOREBUFFER[3] <= 156'd0 ;
+            STOREBUFFER[4] <= 156'd0 ;
+            STOREBUFFER[5] <= 156'd0 ;
+            STOREBUFFER[6] <= 156'd0 ;
+            STOREBUFFER[7] <= 156'd0 ;
         end
         else if(SbStop) begin
             STOREBUFFER[1] <= STOREBUFFER[1] ;
@@ -167,22 +168,22 @@ module StoreBuffer (
             STOREBUFFER[7] <= STOREBUFFER[7] ;
         end
         else if(SbFlash) begin
-            STOREBUFFER[1] <= 125'd0 ;
-            STOREBUFFER[2] <= 125'd0 ;
-            STOREBUFFER[3] <= 125'd0 ;
-            STOREBUFFER[4] <= 125'd0 ;
-            STOREBUFFER[5] <= 125'd0 ;
-            STOREBUFFER[6] <= 125'd0 ;
-            STOREBUFFER[7] <= 125'd0 ; 
+            STOREBUFFER[1] <= 156'd0 ;
+            STOREBUFFER[2] <= 156'd0 ;
+            STOREBUFFER[3] <= 156'd0 ;
+            STOREBUFFER[4] <= 156'd0 ;
+            STOREBUFFER[5] <= 156'd0 ;
+            STOREBUFFER[6] <= 156'd0 ;
+            STOREBUFFER[7] <= 156'd0 ; 
         end
         else begin
-            STOREBUFFER[IndexSB]    <= InSBAble       ? {`AbleValue,SWRITE,InSBMicOp,InSBDate,InSBMAT,InSBPAddr,InSBTrap,InSBTrapCode,InSBWbAble,25'd0,InSBWbAddr,InSBRobPtr} : STOREBUFFER[IndexSB] ;
-            STOREBUFFER[RetirSPtr1] <= RetirSAble1    ? (~(STOREBUFFER[RetirSPtr1][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[RetirSPtr1][120:0]} : {125{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[RetirSPtr1][120:0]}) : STOREBUFFER[RetirSPtr1] ;
-            STOREBUFFER[RetirSPtr2] <= RetirSAble2    ? (~(STOREBUFFER[RetirSPtr2][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[RetirSPtr2][120:0]} : {125{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[RetirSPtr2][120:0]}) : STOREBUFFER[RetirSPtr2] ;
-            STOREBUFFER[RetirSPtr3] <= RetirSAble3    ? (~(STOREBUFFER[RetirSPtr3][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[RetirSPtr3][120:0]} : {125{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[RetirSPtr3][120:0]}) : STOREBUFFER[RetirSPtr3] ;
-            STOREBUFFER[RetirSPtr4] <= RetirSAble4    ? (~(STOREBUFFER[RetirSPtr4][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[RetirSPtr4][120:0]} : {125{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[RetirSPtr4][120:0]}) : STOREBUFFER[RetirSPtr4] ;
+            STOREBUFFER[IndexSB]    <= InSBAble       ? {`AbleValue,InSBPc,SWRITE,InSBMicOp,InSBDate,InSBMAT,InSBPAddr,InSBTrap,InSBTrapCode,InSBWbAble,25'd0,InSBWbAddr,InSBRobPtr} : STOREBUFFER[IndexSB] ;
+            STOREBUFFER[ReTirSPtr1] <= RetirSAble1    ? (~(STOREBUFFER[ReTirSPtr1][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][120:0]}) : STOREBUFFER[ReTirSPtr1] ;
+            STOREBUFFER[ReTirSPtr2] <= RetirSAble2    ? (~(STOREBUFFER[ReTirSPtr2][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][120:0]}) : STOREBUFFER[ReTirSPtr2] ;
+            STOREBUFFER[ReTirSPtr3] <= RetirSAble3    ? (~(STOREBUFFER[ReTirSPtr3][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][120:0]}) : STOREBUFFER[ReTirSPtr3] ;
+            STOREBUFFER[ReTirSPtr4] <= RetirSAble4    ? (~(STOREBUFFER[ReTirSPtr4][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][120:0]}) : STOREBUFFER[ReTirSPtr4] ;
             STOREBUFFER[IndexToSuc] <= DcdToSbSuccess ? {`AbleValue,SWEITCOM,STOREBUFFER[IndexToSuc][120:0]} : STOREBUFFER[IndexToSuc] ;
-            STOREBUFFER[DcdToSbBackPtr] <= DcdToSbBackAble ? 125'd0 : STOREBUFFER[DcdToSbBackPtr] 
+            STOREBUFFER[DcdToSbBackPtr] <= DcdToSbBackAble ? 156'd0 : STOREBUFFER[DcdToSbBackPtr] ;
         end
     end
     
@@ -203,7 +204,10 @@ module StoreBuffer (
     assign WBPhysicalDate = LLctrlBit ;
 
     assign ReDirect = Retir1Able | Retir2Able | Retir3Able | Retir4Able ;
-    assign ReDirectAddr = 
+    assign ReDirectAddr = Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 32'd0; 
 
 endmodule
 

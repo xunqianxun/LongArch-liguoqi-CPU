@@ -23,6 +23,7 @@ module LoadBuffer (
     output        wire      [`InstAddrBus]             LLSCAddr         ,
     //from AGUload
     input         wire                                 InLBAble         ,
+    input         wire      [`InstAddrBus]             InLBPc           ,
     input         wire      [`MicOperateCode]          InLBMicOp        ,
     input         wire      [1:0]                      InLBMAT          ,   
     input         wire      [`InstAddrBus]             InLBPAddr        ,

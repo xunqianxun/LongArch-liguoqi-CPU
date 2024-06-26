@@ -74,42 +74,42 @@ module StoreBuffer (
 
     reg    [155:0]  STOREBUFFER [1:7] ;
 
-    wire  Retir1Able = (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
-                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][78:41] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
+    wire  Retir1Able = (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
+                       (RetirSAble1 & (STOREBUFFER[ReTirSPtr1][77:46] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
 
-    wire  Retir2Able = (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
-                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][78:41] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
+    wire  Retir2Able = (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
+                       (RetirSAble2 & (STOREBUFFER[ReTirSPtr2][77:46] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
 
-    wire  Retir3Able = (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
-                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][78:41] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
+    wire  Retir3Able = (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
+                       (RetirSAble3 & (STOREBUFFER[ReTirSPtr3][77:46] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
 
-    wire  Retir4Able = (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
-                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][78:41] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
+    wire  Retir4Able = (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty1[31:0]) & (InLoadEnty1[34:32] == 3'd3)) | 
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty2[31:0]) & (InLoadEnty2[34:32] == 3'd3)) | 
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty3[31:0]) & (InLoadEnty3[34:32] == 3'd3)) |
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty4[31:0]) & (InLoadEnty4[34:32] == 3'd3)) | 
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty5[31:0]) & (InLoadEnty5[34:32] == 3'd3)) | 
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty6[31:0]) & (InLoadEnty6[34:32] == 3'd3)) | 
+                       (RetirSAble4 & (STOREBUFFER[ReTirSPtr4][77:46] == InLoadEnty7[31:0]) & (InLoadEnty7[34:32] == 3'd3)) ;
 
-    wire LLbCtrl     = ((STOREBUFFER[ReTirSPtr1][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
-                       ((STOREBUFFER[ReTirSPtr2][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
-                       ((STOREBUFFER[ReTirSPtr3][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
-                       ((STOREBUFFER[ReTirSPtr4][78:41] == LLSCAddrIn) & RetirSAble1) & LLSCAble ;
+    wire LLbCtrl     = ((STOREBUFFER[ReTirSPtr1][77:46] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr2][77:46] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr3][77:46] == LLSCAddrIn) & RetirSAble1) & LLSCAble |
+                       ((STOREBUFFER[ReTirSPtr4][77:46] == LLSCAddrIn) & RetirSAble1) & LLSCAble ;
     assign LLSCClean = LLbCtrl ;
     assign LLCtrlEnA = LLbCtrl ;
     
@@ -137,13 +137,13 @@ module StoreBuffer (
                                     ~STOREBUFFER[5][155] & 
                                     ~STOREBUFFER[6][155] & 
                                     ~STOREBUFFER[7][155] ;
-    wire         StoreBufferFull  = STOREBUFFER[1][155] & 
-                                    STOREBUFFER[2][155] & 
-                                    STOREBUFFER[3][155] & 
-                                    STOREBUFFER[4][155] & 
-                                    STOREBUFFER[5][155] & 
-                                    STOREBUFFER[6][155] & 
-                                    STOREBUFFER[7][155] ;
+    // wire         StoreBufferFull  = STOREBUFFER[1][155] & 
+    //                                 STOREBUFFER[2][155] & 
+    //                                 STOREBUFFER[3][155] & 
+    //                                 STOREBUFFER[4][155] & 
+    //                                 STOREBUFFER[5][155] & 
+    //                                 STOREBUFFER[6][155] & 
+    //                                 STOREBUFFER[7][155] ;
 
     assign StoreEmpty = StoreBufferEmpty ;
     assign SbReq      = StoreBufferEmpty ;
@@ -177,37 +177,37 @@ module StoreBuffer (
             STOREBUFFER[7] <= 156'd0 ; 
         end
         else begin
-            STOREBUFFER[IndexSB]    <= InSBAble       ? {`AbleValue,InSBPc,SWRITE,InSBMicOp,InSBDate,InSBMAT,InSBPAddr,InSBTrap,InSBTrapCode,InSBWbAble,25'd0,InSBWbAddr,InSBRobPtr} : STOREBUFFER[IndexSB] ;
-            STOREBUFFER[ReTirSPtr1] <= RetirSAble1    ? (~(STOREBUFFER[ReTirSPtr1][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][120:0]}) : STOREBUFFER[ReTirSPtr1] ;
-            STOREBUFFER[ReTirSPtr2] <= RetirSAble2    ? (~(STOREBUFFER[ReTirSPtr2][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][120:0]}) : STOREBUFFER[ReTirSPtr2] ;
-            STOREBUFFER[ReTirSPtr3] <= RetirSAble3    ? (~(STOREBUFFER[ReTirSPtr3][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][120:0]}) : STOREBUFFER[ReTirSPtr3] ;
-            STOREBUFFER[ReTirSPtr4] <= RetirSAble4    ? (~(STOREBUFFER[ReTirSPtr4][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][120:0]}) : STOREBUFFER[ReTirSPtr4] ;
-            STOREBUFFER[IndexToSuc] <= DcdToSbSuccess ? {`AbleValue,SWEITCOM,STOREBUFFER[IndexToSuc][120:0]} : STOREBUFFER[IndexToSuc] ;
+            STOREBUFFER[IndexSB]    <= InSBAble       ? {`AbleValue,SWRITE,InSBPc,InSBMicOp,InSBDate,InSBMAT,InSBPAddr,InSBTrap,InSBTrapCode,InSBWbAble,24'd0,InSBWbAddr,InSBRobPtr} : STOREBUFFER[IndexSB] ;
+            STOREBUFFER[ReTirSPtr1] <= RetirSAble1    ? (~(STOREBUFFER[ReTirSPtr1][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr1][151:0]}) : STOREBUFFER[ReTirSPtr1] ;
+            STOREBUFFER[ReTirSPtr2] <= RetirSAble2    ? (~(STOREBUFFER[ReTirSPtr2][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr2][151:0]}) : STOREBUFFER[ReTirSPtr2] ;
+            STOREBUFFER[ReTirSPtr3] <= RetirSAble3    ? (~(STOREBUFFER[ReTirSPtr3][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr3][151:0]}) : STOREBUFFER[ReTirSPtr3] ;
+            STOREBUFFER[ReTirSPtr4] <= RetirSAble4    ? (~(STOREBUFFER[ReTirSPtr4][120:113] == `InstScw) ? {`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][151:0]} : {156{LLctrlBit}}&{`AbleValue,SWING,STOREBUFFER[ReTirSPtr4][151:0]}) : STOREBUFFER[ReTirSPtr4] ;
+            STOREBUFFER[IndexToSuc] <= DcdToSbSuccess ? {`AbleValue,SWEITCOM,STOREBUFFER[IndexToSuc][151:0]} : STOREBUFFER[IndexToSuc] ;
             STOREBUFFER[DcdToSbBackPtr] <= DcdToSbBackAble ? 156'd0 : STOREBUFFER[DcdToSbBackPtr] ;
         end
     end
     
     assign SbToDcdAble = (IndexToSuc != 0) ;
-    assign SbToDcdAMat = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][80:79] : 2'b0 ;
+    assign SbToDcdAMat = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][79:78] : 2'b0 ;
     assign SbToDcdAPtr = (IndexToSuc != 0) ? IndexToSuc : 3'd0 ;
-    assign SbToDcdAPhyAddr = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][78:41]  : 32'd0 ;
-    assign SbToDcdAPhyDate = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][112:81] : 32'd0 ;
+    assign SbToDcdAPhyAddr = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][77:46]  : 32'd0 ;
+    assign SbToDcdAPhyDate = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][111:80] : 32'd0 ;
 
     assign CommitSAble   = InSBAble   ;
     assign CommitSRobPtr = InSBRobPtr ;
     assign CommitSTrap   = InSBTrap   ; 
     assign CommitSTrapCode = InSBTrapCode ;
-    assign CommitSBPtr   = InSBRobPtr ;
+    assign CommitSBPtr   = IndexSB    ;
 
-    assign WBPhysicalAble = STOREBUFFER[DcdToSbBackPtr][38] ;
+    assign WBPhysicalAble = STOREBUFFER[DcdToSbBackPtr][37] ;
     assign WBPhysicalAddr = STOREBUFFER[DcdToSbBackPtr][12:6] ;
-    assign WBPhysicalDate = LLctrlBit ;
+    assign WBPhysicalDate = {31'd0,LLctrlBit} ;
 
     assign ReDirect = Retir1Able | Retir2Able | Retir3Able | Retir4Able ;
-    assign ReDirectAddr = Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
-                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
-                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 
-                          Retir1Able ? STOREBUFFER[ReTirSPtr1][155:124]  : 32'd0; 
+    assign ReDirectAddr = Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 
+                          Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 32'd0; 
 
 endmodule
 

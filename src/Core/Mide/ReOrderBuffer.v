@@ -8,6 +8,8 @@ module ReOrderBuffer (
     //for ctrl 
     input         wire                               ROBStop        ,
     input         wire                               ROBFlash       ,
+    output        wire                               ROBFlashReq    ,
+    output        wire                               ROBStopReq     ,
     //for Icache 异常
     input         wire                               IcacheYc       ,
     input         wire       [6:0]                   IcacheYcCode   ,
@@ -140,7 +142,7 @@ module ReOrderBuffer (
     output        wire                               RobReDirectAble,
     output        wire       [`InstAddrBus]          RobReDirectAddr,
     //to aRAT
-    output        wire                               aRATRelaod     ,
+    output        wire                               InstReload     ,
     output        wire                               Inst1Map       ,
     output        wire       [`ArchRegBUs]           Inst1ArchReg   ,
     output        wire       [`ReNameRegBUs]         Inst1RenameReg ,
@@ -261,10 +263,6 @@ module ReOrderBuffer (
     wire Inst3Br        = (ROBENTY[CheckInst3Ptr][101:99] == 3'b111) ;
     wire Inst4Br        = (ROBENTY[CheckInst4Ptr][101:99] == 3'b111) ;
 
-    // wire Inst1IsIdle   = (ROBENTY[CheckInst1Ptr][101:93] == `InstIdle) ;
-    // wire Inst2IsIdle   = (ROBENTY[CheckInst2Ptr][101:93] == `InstIdle) ;
-    // wire Inst3IsIdle   = (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) ;
-    // wire Inst4IsIdle   = (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
 
     wire Inst1IsSysCall   = (ROBENTY[CheckInst1Ptr][101:94] == `InstSyscall) ;
     wire Inst2IsSysCall   = (ROBENTY[CheckInst2Ptr][101:94] == `InstSyscall) ;
@@ -296,6 +294,16 @@ module ReOrderBuffer (
     wire FinalRetir2 = FinalRetir1 & ~Inst1KernalYN & ~Inst1Br ;
     wire FinalRetir3 = FinalRetir2 & ~Inst2KernalYN & ~Inst2Br ;
     wire FinalRetir4 = FinalRetir3 & ~Inst3KernalYN & ~Inst3Br ;
+
+
+    wire Inst1IsIdle   = (ROBENTY[CheckInst1Ptr][101:93] == `InstIdle) ;
+    wire Inst2IsIdle   = (ROBENTY[CheckInst2Ptr][101:93] == `InstIdle) ;
+    wire Inst3IsIdle   = (ROBENTY[CheckInst3Ptr][101:93] == `InstIdle) ;
+    wire Inst4IsIdle   = (ROBENTY[CheckInst4Ptr][101:93] == `InstIdle) ;
+    assign ROBStopReq  = (FinalRetir1 & Inst1IsIdle) | 
+                         (FinalRetir2 & Inst2IsIdle) | 
+                         (FinalRetir3 & Inst3IsIdle) | 
+                         (FinalRetir4 & Inst4IsIdle) ;
 
     wire LastComit1  = FinalRetir1 & ~FinalRetir2 & ~FinalRetir3 & ~FinalRetir4 ;
     wire LastComit2  = FinalRetir1 &  FinalRetir2 & ~FinalRetir3 & ~FinalRetir4 ;
@@ -410,6 +418,8 @@ module ReOrderBuffer (
                              FinalRetir2 & Inst2BrFault | 
                              FinalRetir3 & Inst3BrFault | 
                              FinalRetir4 & Inst4BrFault | Interrupt ;
+    assign ROBFlashReq     = RobReDirectAble ;
+
 
     assign RobReDirectAddr = {32{(FinalRetir1 & Inst1BrFault)}} & ROBENTY[CheckInst1Ptr][42:11]  | 
                              {32{(FinalRetir2 & Inst2BrFault)}} & ROBENTY[CheckInst2Ptr][42:11]  | 
@@ -418,6 +428,7 @@ module ReOrderBuffer (
                              {32{((InterruptType == 7'b0111111) && Interrupt)}} & {InTlbEntryDate,6'd0} |
                              {32{((InterruptType != 7'b0111111) && Interrupt)}} & {InEntryDate,6'd0}    ;
 
+    assign    InstReload     = RobReDirectAble               ;
     assign    Inst1Map       = FinalRetir1 & ROBENTY[CheckInst1Ptr][93] ;
     assign    Inst1ArchReg   = ROBENTY[CheckInst1Ptr][92:88] ;
     assign    Inst1RenameReg = ROBENTY[CheckInst1Ptr][87:81] ;

@@ -6,7 +6,8 @@ module ArchState (
     input       wire                                Rest          ,
 
     input       wire                                ArchSStop     ,
-    
+    input       wire                                ArchSFlash    ,
+
     input       wire                                RetireReg1Able, //此处输入的数据需要为顺序，即r1就是此周期提交的几条指令中的第一条指令的寄存器映射
     input       wire         [`ArchRegBUs]          RetireAR1Addr ,
     input       wire         [`ReNameRegBUs]        RetirePR1Addr ,
@@ -19,8 +20,7 @@ module ArchState (
     input       wire                                RetireReg4Able,
     input       wire         [`ArchRegBUs]          RetireAR4Addr ,
     input       wire         [`ReNameRegBUs]        RetirePR4Addr ,
-    input       wire                                ReMapping     ,
-
+    
     output      wire         [`ReNameRegBUs]        ReMappingAS1  , 
     output      wire         [`ReNameRegBUs]        ReMappingAS2  , 
     output      wire         [`ReNameRegBUs]        ReMappingAS3  ,               
@@ -66,7 +66,12 @@ module ArchState (
             for (j = 0;j < 32 ;j = j+1) begin
                 ArchStateReg[j] <= ArchStateReg[j] ;
             end
-        end 
+        end
+        else  if(ArchSFlash) begin
+            for (j = 0;j < 32 ;j = j+1) begin
+                ArchStateReg[j] <= j[6:0]  ;
+            end
+        end  
         else begin
             ArchStateReg[RetireAR1Addr] <= RetireReg1Able ? RetirePR1Addr : ArchStateReg[RetireAR1Addr] ;
             ArchStateReg[RetireAR2Addr] <= RetireReg2Able ? RetirePR2Addr : ArchStateReg[RetireAR2Addr] ;
@@ -75,36 +80,36 @@ module ArchState (
         end
     end
 
-    assign ReMappingAS1 = ReMapping ? ArchStateReg[0] : 7'd0 ;
-    assign ReMappingAS2 = ReMapping ? ArchStateReg[1] : 7'd0 ;
-    assign ReMappingAS3 = ReMapping ? ArchStateReg[2] : 7'd0 ;
-    assign ReMappingAS4 = ReMapping ? ArchStateReg[3] : 7'd0 ;
-    assign ReMappingAS5 = ReMapping ? ArchStateReg[4] : 7'd0 ;
-    assign ReMappingAS6 = ReMapping ? ArchStateReg[5] : 7'd0 ;
-    assign ReMappingAS7 = ReMapping ? ArchStateReg[6] : 7'd0 ;
-    assign ReMappingAS8 = ReMapping ? ArchStateReg[7] : 7'd0 ;
-    assign ReMappingAS9 = ReMapping ? ArchStateReg[8] : 7'd0 ;
-    assign ReMappingAS10= ReMapping ? ArchStateReg[9] : 7'd0 ;
-    assign ReMappingAS11= ReMapping ? ArchStateReg[10] : 7'd0 ;
-    assign ReMappingAS12= ReMapping ? ArchStateReg[11] : 7'd0 ;
-    assign ReMappingAS13= ReMapping ? ArchStateReg[12] : 7'd0 ;
-    assign ReMappingAS14= ReMapping ? ArchStateReg[13] : 7'd0 ;
-    assign ReMappingAS15= ReMapping ? ArchStateReg[14] : 7'd0 ;
-    assign ReMappingAS16= ReMapping ? ArchStateReg[15] : 7'd0 ;
-    assign ReMappingAS17= ReMapping ? ArchStateReg[16] : 7'd0 ;
-    assign ReMappingAS18= ReMapping ? ArchStateReg[17] : 7'd0 ;
-    assign ReMappingAS19= ReMapping ? ArchStateReg[18] : 7'd0 ;
-    assign ReMappingAS20= ReMapping ? ArchStateReg[19] : 7'd0 ;
-    assign ReMappingAS21= ReMapping ? ArchStateReg[20] : 7'd0 ;
-    assign ReMappingAS22= ReMapping ? ArchStateReg[21] : 7'd0 ;
-    assign ReMappingAS23= ReMapping ? ArchStateReg[22] : 7'd0 ;
-    assign ReMappingAS24= ReMapping ? ArchStateReg[23] : 7'd0 ;
-    assign ReMappingAS25= ReMapping ? ArchStateReg[24] : 7'd0 ;
-    assign ReMappingAS26= ReMapping ? ArchStateReg[25] : 7'd0 ;
-    assign ReMappingAS27= ReMapping ? ArchStateReg[26] : 7'd0 ;
-    assign ReMappingAS28= ReMapping ? ArchStateReg[27] : 7'd0 ;
-    assign ReMappingAS29= ReMapping ? ArchStateReg[28] : 7'd0 ;
-    assign ReMappingAS30= ReMapping ? ArchStateReg[29] : 7'd0 ;
-    assign ReMappingAS31= ReMapping ? ArchStateReg[30] : 7'd0 ;
-    assign ReMappingAS32= ReMapping ? ArchStateReg[31] : 7'd0 ;
+    assign ReMappingAS1 =  ArchStateReg[0]  ;
+    assign ReMappingAS2 =  ArchStateReg[1]  ;
+    assign ReMappingAS3 =  ArchStateReg[2]  ;
+    assign ReMappingAS4 =  ArchStateReg[3]  ;
+    assign ReMappingAS5 =  ArchStateReg[4]  ;
+    assign ReMappingAS6 =  ArchStateReg[5]  ;
+    assign ReMappingAS7 =  ArchStateReg[6]  ;
+    assign ReMappingAS8 =  ArchStateReg[7]  ;
+    assign ReMappingAS9 =  ArchStateReg[8]  ;
+    assign ReMappingAS10=  ArchStateReg[9]  ;
+    assign ReMappingAS11=  ArchStateReg[10] ;
+    assign ReMappingAS12=  ArchStateReg[11] ;
+    assign ReMappingAS13=  ArchStateReg[12] ;
+    assign ReMappingAS14=  ArchStateReg[13] ;
+    assign ReMappingAS15=  ArchStateReg[14] ;
+    assign ReMappingAS16=  ArchStateReg[15] ;
+    assign ReMappingAS17=  ArchStateReg[16] ;
+    assign ReMappingAS18=  ArchStateReg[17] ;
+    assign ReMappingAS19=  ArchStateReg[18] ;
+    assign ReMappingAS20=  ArchStateReg[19] ;
+    assign ReMappingAS21=  ArchStateReg[20] ;
+    assign ReMappingAS22=  ArchStateReg[21] ;
+    assign ReMappingAS23=  ArchStateReg[22] ;
+    assign ReMappingAS24=  ArchStateReg[23] ;
+    assign ReMappingAS25=  ArchStateReg[24] ;
+    assign ReMappingAS26=  ArchStateReg[25] ;
+    assign ReMappingAS27=  ArchStateReg[26] ;
+    assign ReMappingAS28=  ArchStateReg[27] ;
+    assign ReMappingAS29=  ArchStateReg[28] ;
+    assign ReMappingAS30=  ArchStateReg[29] ;
+    assign ReMappingAS31=  ArchStateReg[30] ;
+    assign ReMappingAS32=  ArchStateReg[31] ;
 endmodule

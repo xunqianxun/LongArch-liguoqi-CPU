@@ -6,10 +6,9 @@ module PhysicalRegFile (
     input          wire                                 Rest                ,
     //for ctrl
     input          wire                                 PhysicalStop        ,
-    //input          wire                                 PhysicalFlash       ,
-    //output         wire                                 PhysicalReq         ,
+    input          wire                                 PhysicalFlash       ,
     //from aRAT 
-    input          wire                                 ReloadPhy           , //此信号等于flash,已经使用不改啦
+    //input          wire                                 ReloadPhy           , //此信号等于flash,已经使用不改啦
     input          wire      [`ReNameRegBUs]            Are1MapPregNum      ,
     input          wire      [`ReNameRegBUs]            Are2MapPregNum      ,
     input          wire      [`ReNameRegBUs]            Are3MapPregNum      ,
@@ -152,38 +151,38 @@ module PhysicalRegFile (
                  PhysicalReg[l+96] <= PhysicalReg[l+96] ;
         end
         else begin
-            PhysicalReg[0] <= (ReloadPhy ) ? PhysicalReg[Are1MapPregNum] : PhysicalReg[0] ;
-            PhysicalReg[1] <= (ReloadPhy ) ? PhysicalReg[Are2MapPregNum] : PhysicalReg[1] ;
-            PhysicalReg[2] <= (ReloadPhy ) ? PhysicalReg[Are3MapPregNum] : PhysicalReg[2] ;
-            PhysicalReg[3] <= (ReloadPhy ) ? PhysicalReg[Are4MapPregNum] : PhysicalReg[3] ;
-            PhysicalReg[4] <= (ReloadPhy ) ? PhysicalReg[Are5MapPregNum] : PhysicalReg[4] ;
-            PhysicalReg[5] <= (ReloadPhy ) ? PhysicalReg[Are6MapPregNum] : PhysicalReg[5] ;
-            PhysicalReg[6] <= (ReloadPhy ) ? PhysicalReg[Are7MapPregNum] : PhysicalReg[6] ;
-            PhysicalReg[7] <= (ReloadPhy ) ? PhysicalReg[Are8MapPregNum] : PhysicalReg[7] ;
-            PhysicalReg[8] <= (ReloadPhy ) ? PhysicalReg[Are9MapPregNum] : PhysicalReg[8] ;
-            PhysicalReg[9] <= (ReloadPhy ) ? PhysicalReg[Are10MapPregNum] : PhysicalReg[9] ;
-            PhysicalReg[10] <= (ReloadPhy ) ? PhysicalReg[Are11MapPregNum] : PhysicalReg[10] ;
-            PhysicalReg[11] <= (ReloadPhy ) ? PhysicalReg[Are12MapPregNum] : PhysicalReg[11] ;
-            PhysicalReg[12] <= (ReloadPhy ) ? PhysicalReg[Are13MapPregNum] : PhysicalReg[12] ;
-            PhysicalReg[13] <= (ReloadPhy ) ? PhysicalReg[Are14MapPregNum] : PhysicalReg[13] ;
-            PhysicalReg[14] <= (ReloadPhy ) ? PhysicalReg[Are15MapPregNum] : PhysicalReg[14] ;
-            PhysicalReg[15] <= (ReloadPhy ) ? PhysicalReg[Are16MapPregNum] : PhysicalReg[15] ;
-            PhysicalReg[16] <= (ReloadPhy ) ? PhysicalReg[Are17MapPregNum] : PhysicalReg[16] ;
-            PhysicalReg[17] <= (ReloadPhy ) ? PhysicalReg[Are18MapPregNum] : PhysicalReg[17] ;
-            PhysicalReg[18] <= (ReloadPhy ) ? PhysicalReg[Are19MapPregNum] : PhysicalReg[18] ;
-            PhysicalReg[19] <= (ReloadPhy ) ? PhysicalReg[Are20MapPregNum] : PhysicalReg[19] ;
-            PhysicalReg[20] <= (ReloadPhy ) ? PhysicalReg[Are21MapPregNum] : PhysicalReg[20] ;
-            PhysicalReg[21] <= (ReloadPhy ) ? PhysicalReg[Are22MapPregNum] : PhysicalReg[21] ;
-            PhysicalReg[22] <= (ReloadPhy ) ? PhysicalReg[Are23MapPregNum] : PhysicalReg[22] ;
-            PhysicalReg[23] <= (ReloadPhy ) ? PhysicalReg[Are24MapPregNum] : PhysicalReg[23] ;
-            PhysicalReg[24] <= (ReloadPhy ) ? PhysicalReg[Are25MapPregNum] : PhysicalReg[24] ;
-            PhysicalReg[25] <= (ReloadPhy ) ? PhysicalReg[Are26MapPregNum] : PhysicalReg[25] ;
-            PhysicalReg[26] <= (ReloadPhy ) ? PhysicalReg[Are27MapPregNum] : PhysicalReg[26] ;
-            PhysicalReg[27] <= (ReloadPhy ) ? PhysicalReg[Are28MapPregNum] : PhysicalReg[27] ;
-            PhysicalReg[28] <= (ReloadPhy ) ? PhysicalReg[Are29MapPregNum] : PhysicalReg[28] ;
-            PhysicalReg[29] <= (ReloadPhy ) ? PhysicalReg[Are30MapPregNum] : PhysicalReg[29] ;
-            PhysicalReg[30] <= (ReloadPhy ) ? PhysicalReg[Are31MapPregNum] : PhysicalReg[30] ;
-            PhysicalReg[31] <= (ReloadPhy ) ? PhysicalReg[Are32MapPregNum] : PhysicalReg[31] ;
+            PhysicalReg[0] <= (PhysicalFlash ) ? PhysicalReg[Are1MapPregNum] : PhysicalReg[0] ;
+            PhysicalReg[1] <= (PhysicalFlash ) ? PhysicalReg[Are2MapPregNum] : PhysicalReg[1] ;
+            PhysicalReg[2] <= (PhysicalFlash ) ? PhysicalReg[Are3MapPregNum] : PhysicalReg[2] ;
+            PhysicalReg[3] <= (PhysicalFlash ) ? PhysicalReg[Are4MapPregNum] : PhysicalReg[3] ;
+            PhysicalReg[4] <= (PhysicalFlash ) ? PhysicalReg[Are5MapPregNum] : PhysicalReg[4] ;
+            PhysicalReg[5] <= (PhysicalFlash ) ? PhysicalReg[Are6MapPregNum] : PhysicalReg[5] ;
+            PhysicalReg[6] <= (PhysicalFlash ) ? PhysicalReg[Are7MapPregNum] : PhysicalReg[6] ;
+            PhysicalReg[7] <= (PhysicalFlash ) ? PhysicalReg[Are8MapPregNum] : PhysicalReg[7] ;
+            PhysicalReg[8] <= (PhysicalFlash ) ? PhysicalReg[Are9MapPregNum] : PhysicalReg[8] ;
+            PhysicalReg[9] <= (PhysicalFlash ) ? PhysicalReg[Are10MapPregNum] : PhysicalReg[9] ;
+            PhysicalReg[10] <= (PhysicalFlash ) ? PhysicalReg[Are11MapPregNum] : PhysicalReg[10] ;
+            PhysicalReg[11] <= (PhysicalFlash ) ? PhysicalReg[Are12MapPregNum] : PhysicalReg[11] ;
+            PhysicalReg[12] <= (PhysicalFlash ) ? PhysicalReg[Are13MapPregNum] : PhysicalReg[12] ;
+            PhysicalReg[13] <= (PhysicalFlash ) ? PhysicalReg[Are14MapPregNum] : PhysicalReg[13] ;
+            PhysicalReg[14] <= (PhysicalFlash ) ? PhysicalReg[Are15MapPregNum] : PhysicalReg[14] ;
+            PhysicalReg[15] <= (PhysicalFlash ) ? PhysicalReg[Are16MapPregNum] : PhysicalReg[15] ;
+            PhysicalReg[16] <= (PhysicalFlash ) ? PhysicalReg[Are17MapPregNum] : PhysicalReg[16] ;
+            PhysicalReg[17] <= (PhysicalFlash ) ? PhysicalReg[Are18MapPregNum] : PhysicalReg[17] ;
+            PhysicalReg[18] <= (PhysicalFlash ) ? PhysicalReg[Are19MapPregNum] : PhysicalReg[18] ;
+            PhysicalReg[19] <= (PhysicalFlash ) ? PhysicalReg[Are20MapPregNum] : PhysicalReg[19] ;
+            PhysicalReg[20] <= (PhysicalFlash ) ? PhysicalReg[Are21MapPregNum] : PhysicalReg[20] ;
+            PhysicalReg[21] <= (PhysicalFlash ) ? PhysicalReg[Are22MapPregNum] : PhysicalReg[21] ;
+            PhysicalReg[22] <= (PhysicalFlash ) ? PhysicalReg[Are23MapPregNum] : PhysicalReg[22] ;
+            PhysicalReg[23] <= (PhysicalFlash ) ? PhysicalReg[Are24MapPregNum] : PhysicalReg[23] ;
+            PhysicalReg[24] <= (PhysicalFlash ) ? PhysicalReg[Are25MapPregNum] : PhysicalReg[24] ;
+            PhysicalReg[25] <= (PhysicalFlash ) ? PhysicalReg[Are26MapPregNum] : PhysicalReg[25] ;
+            PhysicalReg[26] <= (PhysicalFlash ) ? PhysicalReg[Are27MapPregNum] : PhysicalReg[26] ;
+            PhysicalReg[27] <= (PhysicalFlash ) ? PhysicalReg[Are28MapPregNum] : PhysicalReg[27] ;
+            PhysicalReg[28] <= (PhysicalFlash ) ? PhysicalReg[Are29MapPregNum] : PhysicalReg[28] ;
+            PhysicalReg[29] <= (PhysicalFlash ) ? PhysicalReg[Are30MapPregNum] : PhysicalReg[29] ;
+            PhysicalReg[30] <= (PhysicalFlash ) ? PhysicalReg[Are31MapPregNum] : PhysicalReg[30] ;
+            PhysicalReg[31] <= (PhysicalFlash ) ? PhysicalReg[Are32MapPregNum] : PhysicalReg[31] ;
             PhysicalReg[WriteBackAlu1Addr] <= (WriteBackAlu1 ) ? WriteBackAlu1Date : PhysicalReg[WriteBackAlu1Addr] ;
             PhysicalReg[WriteBackAlu2Addr] <= (WriteBackAlu2 ) ? WriteBackAlu2Date : PhysicalReg[WriteBackAlu2Addr] ;
             PhysicalReg[WriteBackDivAddr ] <= (WriteBackDiv  ) ? WriteBackDivDate  : PhysicalReg[WriteBackDivAddr ] ;

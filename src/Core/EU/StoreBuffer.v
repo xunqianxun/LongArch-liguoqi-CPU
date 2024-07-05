@@ -7,7 +7,10 @@ module StoreBuffer (
 
     input         wire                                 SbStop           ,
     input         wire                                 SbFlash          ,
-    output        wire                                 SbReq            ,
+    output        wire                                 SbWlFlash        ,
+    output        wire                                 SbWlStop         ,
+
+    output        wire                                 SbReq            , //表示buffer full
     //to store buffer
     input         wire      [34:0]                     InLoadEnty1      ,
     input         wire      [34:0]                     InLoadEnty2      ,
@@ -121,13 +124,14 @@ module StoreBuffer (
                           STOREBUFFER[6][124] ? 3'd6 : 
                           STOREBUFFER[7][124] ? 3'd7 : 3'd0 ;
 
-    wire [2:0]  IndexToSuc = (STOREBUFFER[7][123:121] == SWING) ? 3'd7 : 
-                             (STOREBUFFER[6][123:121] == SWING) ? 3'd6 : 
-                             (STOREBUFFER[5][123:121] == SWING) ? 3'd5 : 
-                             (STOREBUFFER[4][123:121] == SWING) ? 3'd4 : 
-                             (STOREBUFFER[3][123:121] == SWING) ? 3'd3 : 
-                             (STOREBUFFER[2][123:121] == SWING) ? 3'd2 : 
-                             (STOREBUFFER[1][123:121] == SWING) ? 3'd1 : 3'd0 ;
+    wire [2:0]  IndexToSuc = (STOREBUFFER[7][123:121] == SWING) & ((STOREBUFFER[7][120:113]!=`InstDbar)|(STOREBUFFER[7][120:113]!=`InstIbar)) ? 3'd7 : 
+                             (STOREBUFFER[6][123:121] == SWING) & ((STOREBUFFER[6][120:113]!=`InstDbar)|(STOREBUFFER[6][120:113]!=`InstIbar)) ? 3'd6 : 
+                             (STOREBUFFER[5][123:121] == SWING) & ((STOREBUFFER[5][120:113]!=`InstDbar)|(STOREBUFFER[5][120:113]!=`InstIbar)) ? 3'd5 : 
+                             (STOREBUFFER[4][123:121] == SWING) & ((STOREBUFFER[4][120:113]!=`InstDbar)|(STOREBUFFER[4][120:113]!=`InstIbar)) ? 3'd4 : 
+                             (STOREBUFFER[3][123:121] == SWING) & ((STOREBUFFER[3][120:113]!=`InstDbar)|(STOREBUFFER[3][120:113]!=`InstIbar)) ? 3'd3 : 
+                             (STOREBUFFER[2][123:121] == SWING) & ((STOREBUFFER[2][120:113]!=`InstDbar)|(STOREBUFFER[2][120:113]!=`InstIbar)) ? 3'd2 : 
+                             (STOREBUFFER[1][123:121] == SWING) & ((STOREBUFFER[1][120:113]!=`InstDbar)|(STOREBUFFER[1][120:113]!=`InstIbar)) ? 3'd1 : 3'd0 ;
+
 
 
     wire         StoreBufferEmpty = ~STOREBUFFER[1][155] & 
@@ -191,7 +195,10 @@ module StoreBuffer (
     assign SbToDcdAMat = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][79:78] : 2'b0 ;
     assign SbToDcdAPtr = (IndexToSuc != 0) ? IndexToSuc : 3'd0 ;
     assign SbToDcdAPhyAddr = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][77:46]  : 32'd0 ;
-    assign SbToDcdAPhyDate = (IndexToSuc != 0) ? STOREBUFFER[IndexToSuc][111:80] : 32'd0 ;
+    assign SbToDcdAPhyDate = (IndexToSuc != 0) ? ({32{((STOREBUFFER[IndexToSuc][120:113]) == `InstStw)}}         & STOREBUFFER[IndexToSuc][111:80]) |
+                                                 ({16'd0,{16{((STOREBUFFER[IndexToSuc][120:113]) == `InstSth)}}} & STOREBUFFER[IndexToSuc][111:80]) |  
+                                                 ({24'd0,{8{((STOREBUFFER[IndexToSuc][120:113]) == `InstStb)}}}  & STOREBUFFER[IndexToSuc][111:80]) | 
+                                                 ({32{((STOREBUFFER[IndexToSuc][120:113]) == `InstScw)}}         & STOREBUFFER[IndexToSuc][111:80]) : 32'd0 ;
 
     assign CommitSAble   = InSBAble   ;
     assign CommitSRobPtr = InSBRobPtr ;
@@ -209,5 +216,12 @@ module StoreBuffer (
                           Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 
                           Retir1Able ? STOREBUFFER[ReTirSPtr1][151:120]  : 32'd0; 
 
+    assign SbWlFlash = ReDirect ;
+    assign SbWlStop  = (STOREBUFFER[1][120:113] == `InstIbar) | (STOREBUFFER[1][120:113] == `InstDbar) 
+
 endmodule
+
+//TODO list:
+// no1 : Reorder buffer need check load and store instrucation Dbat or Ibar then stop the instrucation it new than the Inst 
+// No2 : 
 
